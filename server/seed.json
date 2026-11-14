@@ -1,0 +1,558 @@
+{
+  "settings": {
+    "brandName": "进化蓝图",
+    "logo": "/assets/icons/mark.svg",
+    "avatar": "/assets/icons/user.svg",
+    "gateCover": "/assets/covers/focus.svg",
+    "welcomeTitle": "让学习成为日常",
+    "gateTitle": "开启你的进化蓝图",
+    "gateDescription": "输入课程提供方发放的兑换码，开始学习。",
+    "nav": [
+      {
+        "id": "home",
+        "label": "首页",
+        "icon": "/assets/icons/home.svg"
+      },
+      {
+        "id": "learn",
+        "label": "学习",
+        "icon": "/assets/icons/book.svg"
+      },
+      {
+        "id": "profile",
+        "label": "我的",
+        "icon": "/assets/icons/user.svg"
+      }
+    ],
+    "help": [
+      "选择主题后，点击课程目录即可进入对应的小章节。",
+      "学习记录将同步到当前账号。"
+    ],
+    "about": [
+      "进化蓝图是一个专注于课程学习的小程序。"
+    ],
+    "redeemHelp": [
+      "卡密由课程提供方发放，兑换后获得对应课程的访问权限。"
+    ]
+  },
+  "categories": [
+    {
+      "id": "focus-category",
+      "title": "自我管理"
+    },
+    {
+      "id": "thinking-category",
+      "title": "思维方式"
+    },
+    {
+      "id": "energy-category",
+      "title": "身心成长"
+    }
+  ],
+  "courses": [
+    {
+      "id": "focus",
+      "categoryId": "focus-category",
+      "title": "专注力重建",
+      "subtitle": "把注意力带回重要的事",
+      "description": "从注意力的底层机制出发，建立更稳定的专注系统。你将学会识别分心、设计环境，并把重要的事推进下去。",
+      "duration": "3 小时 20 分",
+      "cover": "/assets/covers/focus.svg",
+      "published": true,
+      "chapters": [
+        {
+          "id": "focus-chapter-0",
+          "title": "重新认识注意力",
+          "legacyIndex": 0,
+          "sections": [
+            {
+              "id": "focus-chapter-0-question",
+              "title": "问题导入",
+              "question": "你最容易在什么时候分心？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "focus-chapter-0-reading",
+              "title": "重点阅读",
+              "question": "你最容易在什么时候分心？",
+              "body": [
+                "注意力会被环境、任务难度和身体状态共同影响。开始之前，先观察自己，而不是要求自己立刻进入最佳状态。",
+                "回想最近一次能连续投入的经历：当时做什么、在什么地方、有没有被打断？把这些条件记录下来，它们是你可以重复利用的线索。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "focus-chapter-0-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "记录一次专注和一次分心的情境，找出两者最大的不同。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "focus-chapter-1",
+          "title": "找到你的分心开关",
+          "legacyIndex": 1,
+          "sections": [
+            {
+              "id": "focus-chapter-1-question",
+              "title": "问题导入",
+              "question": "哪些提醒真的需要立刻回应？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "focus-chapter-1-reading",
+              "title": "重点阅读",
+              "question": "哪些提醒真的需要立刻回应？",
+              "body": [
+                "分心常常有固定的触发点。一次消息提醒、一张开着的网页，甚至任务本身不够清楚，都可能让你暂时离开原来的事情。",
+                "把触发点写在纸上。先选择一个最容易调整的地方，比如关闭非必要提醒，或把手机放到伸手拿不到的位置。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "focus-chapter-1-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "关闭一项非必要通知，尝试连续工作十分钟。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "focus-chapter-2",
+          "title": "设计专注环境",
+          "legacyIndex": 2,
+          "sections": [
+            {
+              "id": "focus-chapter-2-question",
+              "title": "问题导入",
+              "question": "你的桌面在帮助你，还是打断你？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "focus-chapter-2-reading",
+              "title": "重点阅读",
+              "question": "你的桌面在帮助你，还是打断你？",
+              "body": [
+                "一个好的环境不必复杂，只需要降低开始的阻力。把需要的材料提前放好，让下一步清楚可见。",
+                "每次开始之前，用一分钟整理桌面和屏幕。只留下当前任务要用到的东西。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "focus-chapter-2-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "为下一次学习准备一个不被打断的小空间。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "focus-chapter-3",
+          "title": "练习深度工作",
+          "legacyIndex": 3,
+          "sections": [
+            {
+              "id": "focus-chapter-3-question",
+              "title": "问题导入",
+              "question": "这段时间里，你只需要完成什么？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "focus-chapter-3-reading",
+              "title": "重点阅读",
+              "question": "这段时间里，你只需要完成什么？",
+              "body": [
+                "把任务缩小到一次可以完成的行动。与其写“学习课程”，不如写“读完一个章节并记下一句话”。",
+                "为这件小事设一个合理的时间边界。结束后检查实际完成了什么，再决定下一步，而不是无限延长。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "focus-chapter-3-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "写下一项明确的小任务，给它安排二十分钟。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "focus-chapter-4",
+          "title": "建立复盘节奏",
+          "legacyIndex": 4,
+          "sections": [
+            {
+              "id": "focus-chapter-4-question",
+              "title": "问题导入",
+              "question": "哪些做法值得在明天继续？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "focus-chapter-4-reading",
+              "title": "重点阅读",
+              "question": "哪些做法值得在明天继续？",
+              "body": [
+                "复盘不是给自己打分，而是找到能够继续使用的方法。看见有效的条件，也看见还可以调整的地方。",
+                "结束一天之前，记录一件有效的事和一个待调整的点。下一次只改动一个条件，更容易看清变化。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "focus-chapter-4-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "写下今天让你更专注的一件小事。",
+              "legacyIndex": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "thinking",
+      "categoryId": "thinking-category",
+      "title": "清晰思考练习",
+      "subtitle": "在复杂问题里找到线索",
+      "description": "用一套简单的提问框架拆解复杂问题，让判断更清楚，行动更有方向。",
+      "duration": "2 小时 45 分",
+      "cover": "/assets/covers/thinking.svg",
+      "published": true,
+      "chapters": [
+        {
+          "id": "thinking-chapter-0",
+          "title": "问题从哪里开始",
+          "legacyIndex": 0,
+          "sections": [
+            {
+              "id": "thinking-chapter-0-question",
+              "title": "问题导入",
+              "question": "你想解决的，究竟是哪一个问题？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "thinking-chapter-0-reading",
+              "title": "重点阅读",
+              "question": "你想解决的，究竟是哪一个问题？",
+              "body": [
+                "问题说得越具体，下一步越容易行动。先写下发生了什么，再写希望有什么变化。",
+                "暂时不要急着给出解决方案。把问题改写成一句可以被他人理解的话，检查里面是否有含糊的判断。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "thinking-chapter-0-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "用一句话描述一个最近遇到的问题。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "thinking-chapter-1",
+          "title": "拆开事实与判断",
+          "legacyIndex": 1,
+          "sections": [
+            {
+              "id": "thinking-chapter-1-question",
+              "title": "问题导入",
+              "question": "这句话是观察，还是推断？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "thinking-chapter-1-reading",
+              "title": "重点阅读",
+              "question": "这句话是观察，还是推断？",
+              "body": [
+                "事实是可以核对的观察，判断则是我们对事实的解释。把两者分开，能让讨论更清楚。",
+                "同一个现象可能有不同的原因。写出自己的推断，同时标记仍然缺少的信息。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "thinking-chapter-1-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "把一个结论拆成已知事实和个人判断两列。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "thinking-chapter-2",
+          "title": "寻找关键变量",
+          "legacyIndex": 2,
+          "sections": [
+            {
+              "id": "thinking-chapter-2-question",
+              "title": "问题导入",
+              "question": "哪一个因素最值得先验证？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "thinking-chapter-2-reading",
+              "title": "重点阅读",
+              "question": "哪一个因素最值得先验证？",
+              "body": [
+                "复杂问题往往有很多相关因素，但并非每个因素都同样重要。寻找最可能改变结果的那一个。",
+                "列出两到三个候选因素，思考改变它们的成本，以及结果是否容易观察。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "thinking-chapter-2-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "选一个变量，设计一次小范围的验证。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "thinking-chapter-3",
+          "title": "做出可验证的选择",
+          "legacyIndex": 3,
+          "sections": [
+            {
+              "id": "thinking-chapter-3-question",
+              "title": "问题导入",
+              "question": "什么结果会让你改变原来的想法？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "thinking-chapter-3-reading",
+              "title": "重点阅读",
+              "question": "什么结果会让你改变原来的想法？",
+              "body": [
+                "一个清楚的选择应当留下验证的空间。提前约定观察什么、观察多久、怎样判断是否有效。",
+                "如果结果与预期不同，不必立即否定全部思路。先检查执行条件和信息是否足够。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "thinking-chapter-3-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "为一个决定写下可观察的验证条件。",
+              "legacyIndex": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "energy",
+      "categoryId": "energy-category",
+      "title": "能量管理指南",
+      "subtitle": "让精力支持你的长期目标",
+      "description": "从睡眠、节奏和情绪三个维度，构建更可持续的个人能量系统。",
+      "duration": "2 小时 10 分",
+      "cover": "/assets/covers/energy.svg",
+      "published": true,
+      "chapters": [
+        {
+          "id": "energy-chapter-0",
+          "title": "看见能量曲线",
+          "legacyIndex": 0,
+          "sections": [
+            {
+              "id": "energy-chapter-0-question",
+              "title": "问题导入",
+              "question": "一天中，你在哪段时间最有精神？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "energy-chapter-0-reading",
+              "title": "重点阅读",
+              "question": "一天中，你在哪段时间最有精神？",
+              "body": [
+                "精力并非全天保持不变。记录几天自己的状态，比单纯要求坚持更有帮助。",
+                "把需要思考的任务安排在状态较好的时段，把机械任务放在较平缓的时段。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "energy-chapter-0-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "在早、中、晚各记录一次自己的精力状态。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "energy-chapter-1",
+          "title": "休息也是一种能力",
+          "legacyIndex": 1,
+          "sections": [
+            {
+              "id": "energy-chapter-1-question",
+              "title": "问题导入",
+              "question": "休息之后，你真的恢复了吗？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "energy-chapter-1-reading",
+              "title": "重点阅读",
+              "question": "休息之后，你真的恢复了吗？",
+              "body": [
+                "休息的目的，是让身体与注意力得到恢复。不同的疲惫，需要不同的方式。",
+                "长时间看屏幕后，可以离开座位走动，或把视线移向远处。给自己一段没有消息提醒的空白。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "energy-chapter-1-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "安排一次十分钟、不看屏幕的休息。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "energy-chapter-2",
+          "title": "整理情绪负荷",
+          "legacyIndex": 2,
+          "sections": [
+            {
+              "id": "energy-chapter-2-question",
+              "title": "问题导入",
+              "question": "哪些事情一直占据着你的心思？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "energy-chapter-2-reading",
+              "title": "重点阅读",
+              "question": "哪些事情一直占据着你的心思？",
+              "body": [
+                "未完成的事情会反复提醒我们。先把它们写下来，不要求立刻解决所有问题。",
+                "区分可以行动的事项和暂时无法控制的事项。为能行动的部分安排一个很小的下一步。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "energy-chapter-2-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "把一件挂心的事写下来，并列出一个可做的小动作。",
+              "legacyIndex": 2
+            }
+          ]
+        },
+        {
+          "id": "energy-chapter-3",
+          "title": "建立日常节奏",
+          "legacyIndex": 3,
+          "sections": [
+            {
+              "id": "energy-chapter-3-question",
+              "title": "问题导入",
+              "question": "什么样的节奏能够持续一个月？",
+              "body": [
+                "带着这个问题阅读本节，联系自己的实际经历思考。"
+              ],
+              "practice": "",
+              "legacyIndex": 0
+            },
+            {
+              "id": "energy-chapter-3-reading",
+              "title": "重点阅读",
+              "question": "什么样的节奏能够持续一个月？",
+              "body": [
+                "好的日常节奏应当允许波动，而不是依赖每天都状态完美。先安排最基本、最容易重复的行动。",
+                "保留学习、工作和休息之间的转换时间。计划不需要填满，留白也是安排的一部分。"
+              ],
+              "practice": "",
+              "legacyIndex": 1
+            },
+            {
+              "id": "energy-chapter-3-exercise",
+              "title": "随堂练习",
+              "question": "把本节所学用起来",
+              "body": [],
+              "practice": "为明天安排一个固定的开始时间与结束时间。",
+              "legacyIndex": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

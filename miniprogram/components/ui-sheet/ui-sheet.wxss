@@ -1,0 +1,12 @@
+:host { position: relative; z-index: 1000; }
+.sheet-root { position: fixed; z-index: 1000; top: 0; right: 0; bottom: 0; left: 0; }
+.sheet-mask { position: absolute; top: 0; right: 0; bottom: 0; left: 0; background: rgba(23,43,67,.22); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); }
+.sheet-panel { position: absolute; right: 12rpx; bottom: 0; left: 12rpx; box-sizing: border-box; overflow: hidden; padding: 14rpx 30rpx 24rpx; padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); border-radius: 48rpx 48rpx 0 0; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 -16rpx 80rpx rgba(23,43,67,.12); }
+.sheet-handle { width: 64rpx; height: 7rpx; margin: 0 auto 16rpx; border-radius: 999rpx; background: rgba(23,43,67,.16); }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 16rpx; }
+.sheet-title { color: #172b43; font-size: 35rpx; font-weight: 600; }
+.sheet-close { display: flex; align-items: center; justify-content: center; width: 76rpx; height: 76rpx; padding: 18rpx; border-radius: 50%; background: rgba(255,255,255,.35); }
+.sheet-close image { width: 32rpx; height: 32rpx; }
+.sheet-scroll { max-height: 55vh; height: 55vh; }
+.sheet-content { padding: 4rpx 0 12rpx; }
+.sheet-footer { padding-top: 18rpx; }

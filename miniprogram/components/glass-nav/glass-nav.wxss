@@ -1,0 +1,12 @@
+:host { position: fixed; left: 0; right: 0; bottom: 0; z-index: 100; }
+.dock-wrap { box-sizing: border-box; position: fixed; z-index: 100; left: 32rpx; right: 32rpx; bottom: 20rpx; bottom: calc(20rpx + env(safe-area-inset-bottom)); }
+.dock { box-sizing: border-box; display: flex; align-items: center; padding: 10rpx; height: 116rpx; border-radius: 999rpx; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,.78); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 12rpx 40rpx rgba(23,43,67,.12), inset 0 1px 0 rgba(255,255,255,.85); }
+.dock-item { box-sizing: border-box; position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 5rpx; width: 33.333%; height: 94rpx; padding: 8rpx 4rpx 12rpx; margin: 0; border: 0; border-radius: 999rpx; background: transparent; font-family: inherit; color: #172b43; line-height: 1.25; }
+.dock-item::after { border: 0; }
+.dock-icon { width: 38rpx; height: 38rpx; opacity: .65; }
+.dock-label { font-size: 22rpx; font-weight: 400; }
+.is-active { background: rgba(65,107,240,.085); color: #416bf0; }
+.is-active .dock-icon { opacity: 1; }
+.is-active .dock-label { font-weight: 600; }
+.dock-dot { position: absolute; bottom: 5rpx; width: 5rpx; height: 5rpx; border-radius: 50%; background: #416bf0; }
+.dock-pressed { background: rgba(65,107,240,.09); }

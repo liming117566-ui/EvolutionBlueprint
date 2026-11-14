@@ -1,0 +1,15 @@
+{
+  "pages": ["pages/gate/gate", "pages/home/home", "pages/learn/learn", "pages/profile/profile", "pages/lesson/lesson"],
+  "window": {
+    "navigationBarTitleText": "进化蓝图",
+    "navigationBarBackgroundColor": "#F3F6FB",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#F3F6FB"
+  },
+  "usingComponents": {
+    "ui-button": "/components/ui-button/ui-button",
+    "ui-sheet": "/components/ui-sheet/ui-sheet",
+    "glass-nav": "/components/glass-nav/glass-nav"
+  },
+  "sitemapLocation": "sitemap.json"
+}

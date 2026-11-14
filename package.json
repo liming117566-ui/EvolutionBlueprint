@@ -1,0 +1,18 @@
+{
+  "name": "evolution-blueprint-mini-program",
+  "version": "0.1.0",
+  "private": true,
+  "description": "进化蓝图课程管理服务与微信小程序",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "test": "node --test scripts/test.cjs scripts/documents.test.cjs scripts/learning-flow.test.cjs scripts/backend.test.cjs"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^2.5.0",
+    "sharp": "^0.35.5",
+    "yauzl": "^3.4.0"
+  }
+}

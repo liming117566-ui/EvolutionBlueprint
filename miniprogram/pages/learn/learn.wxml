@@ -1,0 +1,13 @@
+<view class="scene" aria-hidden="true"></view>
+<view class="page learn-page">
+  <text class="page-heading">{{settings.nav[1].label}} · 课程</text>
+  <view wx:if="{{loading}}" class="state-card glass-card">正在加载课程与权限…</view>
+  <view wx:if="{{error}}" class="state-card glass-card"><text>{{error}}</text><button class="text-link" bindtap="retry">重试</button><button class="text-link" bindtap="redeem">登录 / 兑换课程</button></view>
+  <view wx:if="{{!loading && !error && !courses.length}}" class="state-card glass-card">暂时没有已发布课程。</view>
+  <view class="course-tabs" role="tablist"><button wx:for="{{courses}}" wx:key="id" class="course-tab {{active === index ? 'is-active' : ''}}" bindtap="selectCourse" data-id="{{item.id}}" role="tab" aria-label="{{item.category}}{{active === index ? '，已选择' : ''}}" hover-class="pressed">{{item.category}} · {{item.title}}</button></view>
+  <view wx:if="{{current}}" class="learning-card glass-card"><view class="learning-cover"><image class="cover" src="{{current.cover}}" mode="aspectFill" /></view><view class="learning-body"><view class="learning-title-row"><text class="learning-title">{{current.title}}</text><text class="label">{{current.accessible ? '已授权' : '待兑换'}}</text></view><text class="learning-description">{{current.description}}</text><view class="learning-status"><text>{{current.lessons}} 节课程</text><text>已完成 {{current.completed.length}} 节</text></view><view class="learning-action"><ui-button label="{{current.accessible ? (current.progress ? '继续学习' : '开始学习') : '兑换此课程'}}" bind:activate="start" /></view></view></view>
+  <view wx:if="{{current.accessible}}" class="section-bar"><text class="section-title">课程目录</text><text class="meta">共 {{chapters.length}} 节</text></view>
+  <view wx:if="{{current.accessible && !chapters.length}}" class="state-card glass-card">课程暂未添加章节。</view>
+  <view class="chapter-card glass-card"><button wx:for="{{chapters}}" wx:key="id" class="chapter-row {{item.current ? 'is-current' : ''}}" bindtap="openChapter" data-id="{{item.id}}" hover-class="pressed"><view class="chapter-index"><image wx:if="{{item.done}}" src="/assets/icons/check.svg" /><text wx:else>{{index + 1}}</text></view><view class="chapter-main"><text class="chapter-name">{{item.title}}</text><text class="chapter-status">{{item.done ? '已完成，可再次学习' : '图文课程'}}</text></view><image class="chapter-chevron" src="/assets/icons/arrow.svg" /></button></view>
+</view>
+<glass-nav id="main-nav" active="learn" settings="{{settings}}" />

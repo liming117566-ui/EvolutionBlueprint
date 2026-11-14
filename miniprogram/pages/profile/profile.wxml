@@ -1,0 +1,14 @@
+<view class="scene" aria-hidden="true"></view>
+<view class="page profile-page">
+  <text class="page-heading">{{settings.nav[2].label}}</text>
+  <view wx:if="{{loading}}" class="state-card glass-card">正在加载账号与学习记录…</view>
+  <view wx:if="{{error}}" class="state-card glass-card"><text>{{error}}</text><button class="text-link" bindtap="retry">重试</button></view>
+  <view class="identity-card glass-card"><view class="identity-avatar"><image src="{{settings.avatar}}" /></view><view class="identity-main"><text class="identity-name">{{user.nickname || '蓝图学员'}}</text><text class="identity-caption">{{testSession ? '本地测试账号（非微信身份）' : '欢迎来到你的学习空间'}}</text></view><text class="label">{{hasAccess ? '账号已授权' : '暂无课程权益'}}</text></view>
+  <view class="section-bar"><text class="section-title">学习记录</text><button class="text-link" bindtap="goLearn">课程目录<image src="/assets/icons/arrow.svg" /></button></view>
+  <view wx:if="{{!loading && !error && !courses.length}}" class="state-card glass-card">暂无课程记录，课程发布后可在这里查看。</view>
+  <view class="records-card glass-card"><button wx:for="{{courses}}" wx:key="id" class="record-row" data-id="{{item.id}}" bindtap="openCourse" hover-class="pressed"><view class="record-icon"><image src="/assets/icons/book.svg" /></view><view class="record-main"><text class="record-title">{{item.title}}</text><text class="record-caption">{{!item.accessible ? '暂无访问权限' : (item.completed.length ? '已完成 ' + item.completed.length + ' / ' + item.lessons + ' 节' : '还未开始，随时可以学习')}}</text></view><image class="row-arrow" src="/assets/icons/arrow.svg" /></button></view>
+  <view class="section-bar"><text class="section-title">服务与帮助</text></view>
+  <view class="services-card glass-card"><button class="service-row" bindtap="redeem"><text>兑换更多课程</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button><button class="service-row" data-type="redeem" bindtap="showInfo"><text>兑换说明</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button><button class="service-row" data-type="help" bindtap="showInfo"><text>使用帮助</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button><button class="service-row" data-type="about" bindtap="showInfo"><text>关于{{settings.brandName}}</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button><button class="service-row" bindtap="importLegacy"><text>导入本机旧学习记录</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button><button class="service-row" bindtap="logout"><text>退出当前账号</text><image class="row-arrow" src="/assets/icons/arrow.svg" /></button></view>
+</view>
+<glass-nav id="main-nav" active="profile" settings="{{settings}}" />
+<ui-sheet id="help-sheet" compact="{{true}}" visible="{{!!info}}" title="{{info.title}}" bind:close="closeInfo"><text wx:for="{{info.paragraphs}}" wx:key="*this" class="help-paragraph">{{item}}</text><ui-button slot="footer" label="我知道了" bind:activate="closeInfo" /></ui-sheet>

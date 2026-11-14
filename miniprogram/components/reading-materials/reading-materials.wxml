@@ -1,0 +1,21 @@
+<view class="materials-card">
+  <view class="materials-heading">延伸阅读</view>
+  <view class="materials-caption">PDF 与 Word 资料 · 在微信内阅读</view>
+  <view wx:if="{{loading}}" class="materials-state" role="status">正在加载学习资料…</view>
+  <view wx:elif="{{error}}" class="materials-state" role="alert">
+    <text>{{error}}</text>
+    <button class="retry-button" bindtap="loadMaterials" aria-label="重新加载学习资料">重新加载</button>
+  </view>
+  <view wx:elif="{{!materials.length}}" class="materials-state">暂无学习资料，后续更新将在这里显示。</view>
+  <view wx:else class="materials-list">
+    <button wx:for="{{materials}}" wx:key="id" class="material-row" data-id="{{item.id}}" bindtap="openMaterial" disabled="{{!!openingId}}" aria-label="阅读{{item.title}}，{{item.typeLabel}}，{{item.sizeLabel}}">
+      <view class="material-type">{{item.typeLabel}}</view>
+      <view class="material-copy">
+        <view class="material-title">{{item.title}}</view>
+        <view class="material-meta">{{item.sizeLabel}} · {{openingId === item.id ? '正在打开…' : '点击阅读'}}</view>
+      </view>
+      <text class="material-arrow" aria-hidden="true">›</text>
+    </button>
+  </view>
+  <view wx:if="{{openError}}" class="materials-open-error" role="alert">{{openError}}。可点击资料重新打开。</view>
+</view>

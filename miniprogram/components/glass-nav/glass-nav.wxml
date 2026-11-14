@@ -1,0 +1,9 @@
+<view class="dock-wrap">
+  <view class="dock" role="navigation" aria-label="主导航">
+    <button wx:for="{{tabs}}" wx:key="id" class="dock-item {{active === item.id ? 'is-active' : ''}}" data-page="{{item.id}}" bindtap="navigate" hover-class="dock-pressed" aria-label="{{item.label}}{{active === item.id ? '，当前页面' : ''}}">
+      <image class="dock-icon" src="{{item.icon}}" aria-hidden="true" />
+      <text class="dock-label">{{item.label}}</text>
+      <view wx:if="{{active === item.id}}" class="dock-dot"></view>
+    </button>
+  </view>
+</view>

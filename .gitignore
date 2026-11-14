@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.local
+server/data/
+artifacts/
+.claude/settings.local.json
+.claude/*.local.json
+miniprogram/project.private.config.json
+*.log
+*.pem
+*.key
+*.p12
+*.pfx
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
