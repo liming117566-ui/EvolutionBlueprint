@@ -45,7 +45,13 @@ async function load() {
   const [boot, me, courses] = await Promise.all([catalog.bootstrap(), session.me(), catalog.list()]);
   await refresh();
   const completeCourses = await Promise.all(courses.map(async course => course.accessible ? { ...course, ...await catalog.full(course.id) } : course));
-  return { settings: boot.settings, me, courses: completeCourses.map(decorate) };
+  return { settings: boot.settings, boards: boot.boards || [], me, courses: completeCourses.map(decorate) };
+}
+// Catalog browsing is public. Only authenticated, entitled requests load course bodies.
+async function browse() {
+  if (session.current()) return load();
+  const [boot, courses] = await Promise.all([catalog.bootstrap(), catalog.list()]);
+  return { settings: boot.settings, boards: boot.boards || [], me: { hasAccess: false }, courses };
 }
 function decorate(course) {
   const saved = state();
@@ -85,6 +91,6 @@ async function record(courseId, chapterId, sectionId, complete) {
   wx.setStorageSync(session.userKey('learning'), current);
   wx.setStorageSync(session.userKey('currentCourse'), courseId);
 }
-module.exports = { authorized, load, refresh, state, decorate, chapters, flush, record,
+module.exports = { authorized, load, browse, refresh, state, decorate, chapters, flush, record,
   remember: (courseId, chapterId, sectionId) => record(courseId, chapterId, sectionId, false),
   currentCourse: () => session.current() && wx.getStorageSync(session.userKey('currentCourse')) };

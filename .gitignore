@@ -1,4 +1,10 @@
 node_modules/
+server/english-web/
+server/math-web/
+server/junior-math-web/
+integrations/tainai-junior-math/dist/
+integrations/english-starry-sky/dist/
+integrations/english-starry-sky/*.tsbuildinfo
 .env
 .env.local
 server/data/

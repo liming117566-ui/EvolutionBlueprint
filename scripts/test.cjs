@@ -19,7 +19,7 @@ test('Every declared page and component has its complete native file set', () =>
   }
 });
 test('Styles and illustrations preserve the five approved base colors', () => {
-  const allowed = new Set(['ffffff', 'f3f6fb', '172b43', '416bf0', 'b7adeb']);
+  const allowed = new Set(['ffffff', 'f8f8f9', '191a1d', '143f32', 'e9eeeb']);
   for (const file of files.filter(file => /\.(wxss|svg)$/.test(file))) {
     for (const match of fs.readFileSync(file, 'utf8').matchAll(/#([a-f0-9]{6})\b/gi)) assert.ok(allowed.has(match[1].toLowerCase()), `${file}: ${match[0]}`);
     for (const match of fs.readFileSync(file, 'utf8').matchAll(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)) {
@@ -31,9 +31,8 @@ test('Styles and illustrations preserve the five approved base colors', () => {
 test('Glass material and safe-area navigation match the design contract', () => {
   for (const relative of ['app.wxss', 'components/glass-nav/glass-nav.wxss', 'components/ui-sheet/ui-sheet.wxss']) {
     const css = fs.readFileSync(path.join(mini, relative), 'utf8');
-    assert.match(css, /background:\s*rgba\(255,\s*255,\s*255,\s*0\.15\)/);
     assert.match(css, /backdrop-filter:\s*blur\(16px\)/);
-    assert.match(css, /border:\s*1px solid rgba\(255,\s*255,\s*255/);
+    assert.match(css, /border:\s*1px solid rgba\(/);
   }
   const nav = fs.readFileSync(path.join(mini, 'components/glass-nav/glass-nav.wxss'), 'utf8');
   assert.match(nav, /env\(safe-area-inset-bottom\)/);

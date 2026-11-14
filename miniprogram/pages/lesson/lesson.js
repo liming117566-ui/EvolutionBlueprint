@@ -6,6 +6,7 @@ Page({
   onLoad(options) {
     this._courseId = options.course;
     this._chapterId = options.chapter || null;
+    this._sectionId = options.section || null;
     learning.authorized();
   },
   onShow() { return this.retry(); },
@@ -26,6 +27,11 @@ Page({
       if (chapterId && !course.chapters.some(c => c.id === chapterId)) throw new Error('这个章节已调整或下架，请返回课程目录');
       this.loadChapter(course, chapterId);
       wx.setNavigationBarTitle({ title: course.title });
+      if (this._sectionId) {
+        const id = this._sectionId; this._sectionId = null;
+        this.setData({ loading: false });
+        await this.openSection({ currentTarget: { dataset: { id } } });
+      }
     } catch (error) { if (version === this._version) this.setData({ error: error.message, course: null, sections: [], section: null }); }
     finally { if (version === this._version) this.setData({ loading: false }); }
   },

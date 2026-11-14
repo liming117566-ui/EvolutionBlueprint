@@ -1,0 +1,1 @@
+Component({ properties: { board: Object, variant: { type: String, value: 'compact' } }, methods: { open() { if (this.properties.board) this.triggerEvent('open', { id: this.properties.board.id }); } } });

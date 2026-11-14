@@ -1,34 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="400" viewBox="0 0 720 400" fill="none">
   <defs>
-    <linearGradient id="background" x1="60" y1="0" x2="660" y2="400" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F3F6FB"/></linearGradient>
-    <linearGradient id="glass" x1="156" y1="62" x2="537" y2="320" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".94"/><stop offset=".45" stop-color="#B7ADEB" stop-opacity=".35"/><stop offset="1" stop-color="#416BF0" stop-opacity=".27"/></linearGradient>
-    <linearGradient id="rim" x1="180" y1="66" x2="540" y2="310" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset=".42" stop-color="#B7ADEB"/><stop offset="1" stop-color="#416BF0"/></linearGradient>
-    <linearGradient id="core" x1="300" y1="120" x2="430" y2="266" gradientUnits="userSpaceOnUse"><stop stop-color="#416BF0"/><stop offset=".65" stop-color="#416BF0" stop-opacity=".9"/><stop offset="1" stop-color="#172B43"/></linearGradient>
-    <linearGradient id="plane" x1="160" y1="90" x2="620" y2="270" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".85"/><stop offset="1" stop-color="#B7ADEB" stop-opacity=".25"/></linearGradient>
-    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="#416BF0" stroke-opacity=".09" stroke-width="1"/></pattern>
+    <linearGradient id="background" x1="60" y1="0" x2="660" y2="400" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#f8f8f9"/></linearGradient>
+    <linearGradient id="glass" x1="156" y1="62" x2="537" y2="320" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".94"/><stop offset=".45" stop-color="#e9eeeb" stop-opacity=".35"/><stop offset="1" stop-color="#143f32" stop-opacity=".27"/></linearGradient>
+    <linearGradient id="rim" x1="180" y1="66" x2="540" y2="310" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF"/><stop offset=".42" stop-color="#e9eeeb"/><stop offset="1" stop-color="#143f32"/></linearGradient>
+    <linearGradient id="core" x1="300" y1="120" x2="430" y2="266" gradientUnits="userSpaceOnUse"><stop stop-color="#143f32"/><stop offset=".65" stop-color="#143f32" stop-opacity=".9"/><stop offset="1" stop-color="#191a1d"/></linearGradient>
+    <linearGradient id="plane" x1="160" y1="90" x2="620" y2="270" gradientUnits="userSpaceOnUse"><stop stop-color="#FFFFFF" stop-opacity=".85"/><stop offset="1" stop-color="#e9eeeb" stop-opacity=".25"/></linearGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" stroke="#143f32" stroke-opacity=".09" stroke-width="1"/></pattern>
     <radialGradient id="fade"><stop stop-color="#FFFFFF" stop-opacity=".95"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient>
     <mask id="gridFade"><rect width="720" height="400" fill="url(#fade)"/></mask>
     <filter id="shadow" x="60" y="240" width="610" height="150" filterUnits="userSpaceOnUse"><feGaussianBlur stdDeviation="17"/></filter>
   </defs>
   <rect width="720" height="400" fill="url(#background)"/>
   <rect width="720" height="400" fill="url(#grid)" mask="url(#gridFade)"/>
-  <ellipse cx="365" cy="315" rx="225" ry="21" fill="#172B43" opacity=".12" filter="url(#shadow)"/>
+  <ellipse cx="365" cy="315" rx="225" ry="21" fill="#191a1d" opacity=".12" filter="url(#shadow)"/>
   <path d="M123 158L422 65L597 150L298 245Z" fill="url(#plane)" stroke="#FFFFFF" stroke-width="2"/>
-  <path d="M160 260L482 160L626 229L304 330Z" fill="url(#plane)" stroke="#B7ADEB" stroke-opacity=".46" stroke-width="1.5"/>
-  <path d="M160 260V268L304 338L626 237V229L304 330Z" fill="#B7ADEB" opacity=".23"/>
+  <path d="M160 260L482 160L626 229L304 330Z" fill="url(#plane)" stroke="#e9eeeb" stroke-opacity=".46" stroke-width="1.5"/>
+  <path d="M160 260V268L304 338L626 237V229L304 330Z" fill="#e9eeeb" opacity=".23"/>
   <g transform="rotate(-18 360 191)">
-    <ellipse cx="360" cy="211" rx="222" ry="139" fill="#416BF0" opacity=".19" stroke="#416BF0" stroke-opacity=".25" stroke-width="2"/>
-    <path d="M138 191V211M582 191V211" stroke="#B7ADEB" stroke-width="2"/>
+    <ellipse cx="360" cy="211" rx="222" ry="139" fill="#143f32" opacity=".19" stroke="#143f32" stroke-opacity=".25" stroke-width="2"/>
+    <path d="M138 191V211M582 191V211" stroke="#e9eeeb" stroke-width="2"/>
     <ellipse cx="360" cy="191" rx="222" ry="139" fill="url(#glass)" stroke="url(#rim)" stroke-width="3"/>
     <ellipse cx="360" cy="191" rx="187" ry="116" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="2"/>
-    <ellipse cx="360" cy="196" rx="151" ry="94" fill="#F3F6FB" fill-opacity=".5" stroke="#416BF0" stroke-opacity=".3" stroke-width="2"/>
+    <ellipse cx="360" cy="196" rx="151" ry="94" fill="#f8f8f9" fill-opacity=".5" stroke="#143f32" stroke-opacity=".3" stroke-width="2"/>
     <ellipse cx="360" cy="191" rx="147" ry="91" stroke="#FFFFFF" stroke-opacity=".9" stroke-width="3"/>
-    <ellipse cx="360" cy="197" rx="107" ry="67" fill="#172B43" opacity=".18"/>
+    <ellipse cx="360" cy="197" rx="107" ry="67" fill="#191a1d" opacity=".18"/>
     <ellipse cx="360" cy="188" rx="107" ry="67" fill="url(#core)" stroke="#FFFFFF" stroke-opacity=".8" stroke-width="2"/>
     <path d="M282 168C308 136 365 129 409 146" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
     <path d="M164 149C189 111 236 80 293 68" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
-    <path d="M443 311C493 295 535 270 555 241" stroke="#416BF0" stroke-opacity=".4" stroke-width="2" stroke-linecap="round"/>
+    <path d="M443 311C493 295 535 270 555 241" stroke="#143f32" stroke-opacity=".4" stroke-width="2" stroke-linecap="round"/>
   </g>
   <path d="M491 113L553 93L601 116L539 136Z" fill="#FFFFFF" fill-opacity=".56" stroke="#FFFFFF" stroke-width="2"/>
-  <path d="M539 136V146L601 126V116" fill="#B7ADEB" fill-opacity=".28" stroke="#B7ADEB" stroke-opacity=".4"/>
+  <path d="M539 136V146L601 126V116" fill="#e9eeeb" fill-opacity=".28" stroke="#e9eeeb" stroke-opacity=".4"/>
 </svg>

@@ -9,9 +9,83 @@ function initCatalog(store) {
     store.run('INSERT INTO revisions VALUES(1,?,?)', body, now());
     registerEntities(store, seed);
   });
+  // Upgrade each snapshot independently; preserve any unpublished course edits.
+  const row = store.get('SELECT * FROM catalog WHERE id=1');
+  if (!Object.hasOwn(JSON.parse(row.published), 'boards') || !Object.hasOwn(JSON.parse(row.draft), 'boards')) store.transaction(() => {
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      if (Object.hasOwn(tree, 'boards')) return tree;
+      const english = require('./english-seed');
+      if (!tree.categories.some(c => c.id === english.category.id)) tree.categories.push(english.category);
+      if (!tree.courses.some(c => c.id === english.course.id)) tree.courses.push(english.course);
+      tree.boards = require('./boards').initial(tree.categories);
+      registerEntities(store, tree);
+      return tree;
+    };
+    const pub = upgrade(row.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, JSON.stringify(pub), now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', JSON.stringify(upgrade(row.draft)), JSON.stringify(pub), next);
+  });
+  const experienceRow = store.get('SELECT * FROM catalog WHERE id=1');
+  const needsExperience = raw => (JSON.parse(raw).boards || []).some(b => b.id === 'junior-english' && b.experience === undefined);
+  if (needsExperience(experienceRow.draft) || needsExperience(experienceRow.published)) store.transaction(() => {
+    const upgrade = raw => { const tree = JSON.parse(raw); tree.boards = (tree.boards || []).map(b => b.id === 'junior-english' && b.experience === undefined ? { ...b, experience: 'english-starry-sky' } : b); return JSON.stringify(tree); };
+    const pub = upgrade(experienceRow.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(experienceRow.draft), pub, next);
+  });
+  // A recorded migration adds the new board once; deleting it later must be respected.
+  if (!store.get('SELECT version FROM migrations WHERE version=2')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      if (!(tree.boards || []).some(b => b.id === 'math-taxonomy')) {
+        const board = require('../miniprogram/utils/board-defaults').mathBoard();
+        const position = tree.boards.findIndex(b => b.id === 'junior-english');
+        tree.boards.splice(position < 0 ? tree.boards.length : position + 1, 0, board);
+      }
+      registerEntities(store, tree);
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(2,?)', now());
+  });
+  if (!store.get('SELECT version FROM migrations WHERE version=3')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      if (!(tree.boards || []).some(b => b.id === 'junior-math')) {
+        const board = require('../miniprogram/utils/board-defaults').juniorMathBoard();
+        const position = tree.boards.findIndex(b => b.id === 'junior-english');
+        tree.boards.splice(position < 0 ? tree.boards.length : position + 1, 0, board);
+      }
+      registerEntities(store, tree);
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(3,?)', now());
+  });
+  // Apply the requested title to existing snapshots once; future admin edits remain editable.
+  if (!store.get('SELECT version FROM migrations WHERE version=4')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const rename = raw => {
+      const tree = JSON.parse(raw);
+      tree.boards = (tree.boards || []).map(board => board.id === 'math-taxonomy' ? { ...board, title: '中小学高中知识图谱' } : board);
+      return JSON.stringify(tree);
+    };
+    const pub = rename(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', rename(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(4,?)', now());
+  });
 }
 function entries(tree) {
   const result = [];
+  for (const b of tree.boards || []) result.push({ id: b.id, type: 'board', parent: '' });
   for (const c of tree.categories) result.push({ id: c.id, type: 'category', parent: '' });
   for (const c of tree.courses) {
     result.push({ id: c.id, type: 'course', parent: '' });
@@ -71,7 +145,8 @@ function validateTree(store, input, forPublish = false) {
     if (forPublish && course.published && (!course.chapters.length || course.chapters.some(ch => !ch.sections.length || ch.sections.some(s => !s.question && !s.body.length && !s.practice)))) fail(400, '发布课程须有章节、小章节和阅读内容');
     return course;
   });
-  const tree = { settings, categories, courses };
+  const boards = require('./boards').validate(input.boards === undefined ? draft(store).boards || [] : input.boards, categories, value => assetReference(store, value), ident);
+  const tree = { settings, categories, courses, boards };
   for (const item of entries(tree)) {
     const old = store.get('SELECT * FROM entities WHERE id=?', item.id);
     if (old && (old.type !== item.type || old.parent !== item.parent)) fail(400, '已有内容不可跨层级移动或复用 ID');

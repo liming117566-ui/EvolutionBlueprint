@@ -1,0 +1,37 @@
+/* Retain course layout, semantic colors, diagrams and controls on white surfaces. */
+:root {
+  --paper: #ffffff;
+  --paper-deep: #f3f5f4;
+  --card: #ffffff;
+  --line: #e0e5e2;
+  --shadow: 0 14px 36px rgba(25, 42, 33, .05);
+}
+
+html, body, #root, .site-shell, .body-layout, .main-content {
+  background: #ffffff;
+}
+.topbar, .sidebar, footer {
+  background: #ffffff;
+}
+.home-link.active, .home-link:hover, .sidebar-note, .unit-group button:hover,
+.course-nav details, .example-card, .practice-card, .lesson-pager button {
+  background-color: #ffffff;
+}
+.stage-card, .lesson-hero, .reassurance, .understanding-check, .completion-card {
+  background-color: #ffffff;
+}
+.math-visual, .math-visual-canvas-wrap, .math-visual canvas {
+  background-color: #ffffff;
+}
+.welcome-card, .lesson-hero.grade-seven, .lesson-hero.grade-eight, .lesson-hero.grade-nine {
+  background: #ffffff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.welcome-card::before, .welcome-card::after { border-color: rgba(40,99,79,.08); }
+.welcome-card .eyebrow { color: var(--green); }
+.welcome-lead, .welcome-progress > p, .progress-ring span { color: var(--muted); }
+.progress-ring { background: conic-gradient(var(--green) var(--progress), var(--paper-deep) 0); }
+.progress-ring > div { background: #ffffff; color: var(--green-dark); }
+.primary-button { background: var(--green); color: #ffffff; }
+.primary-button:hover { background: var(--green-dark); }

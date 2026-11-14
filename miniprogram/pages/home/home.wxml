@@ -1,20 +1,20 @@
 <view class="scene" aria-hidden="true"></view>
 <view class="page home-page">
-  <view class="home-header"><view class="brand"><image src="{{settings.logo}}" class="brand-mark" /><text>{{settings.brandName}}</text></view><button class="profile-shortcut glass-card" bindtap="goProfile" aria-label="我的账户" hover-class="pressed"><image src="{{settings.avatar}}" /></button></view>
-  <view class="welcome"><view><text class="welcome-date">{{weekday}}，欢迎回来</text><text class="page-heading">{{settings.welcomeTitle}}</text></view><view class="access-label"><view></view><text>{{hasAccess ? '账号权益已验证' : '等待兑换课程'}}</text></view></view>
-  <view wx:if="{{loading}}" class="state-card glass-card">正在加载课程与权限…</view>
-  <view wx:if="{{error}}" class="state-card glass-card"><text>{{error}}</text><button class="text-link" bindtap="retry">重试</button><button class="text-link" bindtap="redeem">登录 / 兑换课程</button></view>
-  <view wx:if="{{!loading && !error && !courses.length}}" class="state-card glass-card">暂时没有已发布课程。</view>
-  <view class="section-bar"><text class="section-title">{{featured.progress ? '接着学这一课' : '从这门课开始'}}</text><button class="text-link" bindtap="goLearn">全部课程<image src="/assets/icons/arrow.svg" /></button></view>
-  <view wx:if="{{featured}}" class="featured-card glass-card pressable" bindtap="openCourse" data-id="{{featured.id}}" hover-class="pressed" role="button" aria-label="查看{{featured.title}}">
-    <view class="featured-cover"><image class="cover" src="{{featured.cover}}" mode="aspectFill" /><text class="cover-label">{{featured.category}}</text><view class="cover-play"><image src="/assets/icons/play.svg" /></view></view>
-    <view class="featured-body"><view class="featured-title-row"><text class="featured-title">{{featured.title}}</text><text class="lesson-count">{{featured.lessons}} 节</text></view><text class="featured-subtitle">{{featured.subtitle}}</text><view class="featured-footer"><text class="meta">{{!featured.accessible ? '需要兑换此课程' : (featured.progress ? '已完成 ' + featured.progress + '%' : '按章节学习 · 随时回看')}}</text><view class="course-action">查看课程<image src="/assets/icons/arrow.svg" /></view></view></view>
-  </view>
-  <view class="section-bar more-heading"><text class="section-title">更多好课</text><text class="meta">为成长留一点时间</text></view>
-  <view class="course-grid"><view wx:for="{{recommendations}}" wx:key="id" class="course-card glass-card pressable" bindtap="openCourse" data-id="{{item.id}}" hover-class="pressed" role="button" aria-label="查看{{item.title}}"><view class="course-cover"><image class="cover" src="{{item.cover}}" mode="aspectFill" /></view><view class="course-body"><text class="course-title">{{item.title}}</text><text class="course-subtitle">{{item.subtitle}}</text><view class="course-bottom"><text>{{item.category}}</text><text>{{item.lessons}} 节</text></view></view></view></view>
+  <view class="home-header"><view class="brand"><image src="{{settings.logo}}" /><text>{{settings.brandName}}</text></view><button class="avatar-button" bindtap="goProfile" aria-label="我的账户" hover-class="pressed"><image src="{{settings.avatar}}" /></button></view>
+  <view class="welcome"><text class="eyebrow">{{dateLabel}}</text><text class="page-heading">{{settings.welcomeTitle}}</text><text class="page-caption">找到感兴趣的方向，让每次打开都有收获。</text></view>
+  <view wx:if="{{loading}}" class="skeleton-stack" aria-label="正在加载学习板块"><view class="skeleton skeleton-hero"></view><view class="skeleton skeleton-line"></view><view class="skeleton skeleton-hero"></view></view>
+  <view wx:elif="{{error}}" class="empty-state surface-card"><image src="/assets/icons/book.svg" /><text class="empty-title">暂时没有连接上</text><text class="empty-copy">{{error}}</text><ui-button size="small" label="重新加载" bind:activate="retry" /></view>
+  <block wx:else>
+    <button wx:if="{{featured}}" class="spotlight pressable tone--{{featured.tone}}" bindtap="openFeatured" hover-class="pressed" aria-label="进入{{featured.title}}">
+      <view class="spotlight-top"><view class="spotlight-badge"><view></view><text>{{featured.badge || '精选学习空间'}}</text></view><text class="spotlight-number">循序渐进 · 持续生长</text></view>
+      <view class="spotlight-body"><view class="spotlight-copy"><text class="spotlight-title">{{featured.title}}</text><text class="spotlight-subtitle">{{featured.subtitle}}</text><view class="spotlight-action">进入学习空间<image src="/assets/icons/arrow.svg" /></view></view><image class="spotlight-art" src="{{featured.cover}}" mode="aspectFill" /></view>
+      <view class="spotlight-foot"><text>{{featured.metaLabel || (featured.courseCount ? featured.courseCount + ' 门系统课程' : '课程内容筹备中')}}</text><text>{{featured.featureLabel}}</text></view>
+    </button>
+    <view class="section-bar"><view><text class="section-title">探索学习板块</text><text class="section-caption">从兴趣出发，找到适合你的路径</text></view><button class="subtle-action" bindtap="goLearn" aria-label="查看全部学习板块">全部<image src="/assets/icons/arrow.svg" /></button></view>
+    <view wx:if="{{!boards.length}}" class="empty-state surface-card"><text class="empty-title">新的学习空间正在准备</text><text class="empty-copy">发布后，板块会出现在这里。</text></view>
+    <view class="board-grid"><board-card wx:for="{{boards}}" wx:key="id" board="{{item}}" bind:open="openBoard" /></view>
+    <button wx:if="{{continuing}}" class="resume-card surface-card" bindtap="continueCourse" hover-class="pressed"><view class="resume-icon"><image src="/assets/icons/play.svg" /></view><view class="resume-content"><text class="eyebrow">继续上次的学习</text><text class="resume-title">{{continuing.title}}</text></view><text class="resume-progress">{{continuing.progress}}%</text><image class="small-arrow" src="/assets/icons/arrow.svg" /></button>
+    <view class="page-endnote"><view></view><text>每一点积累，都算数</text><view></view></view>
+  </block>
 </view>
 <glass-nav id="main-nav" active="home" settings="{{settings}}" />
-<ui-sheet id="course-sheet" visible="{{!!selected}}" title="{{selected.title}}" bind:close="closeCourse">
-  <view wx:if="{{selected}}"><view class="preview-cover"><image class="cover" src="{{selected.cover}}" mode="aspectFill" /></view><view class="preview-meta"><text class="label">{{selected.category}}</text><text class="meta">{{selected.lessons}} 节课程</text></view><text class="preview-description">{{selected.description}}</text><text class="preview-heading">{{selected.accessible ? '课程目录' : '此课程尚未授权，兑换后查看目录与正文'}}</text><view wx:for="{{selectedChapters}}" wx:key="id" class="chapter-row"><text class="chapter-index">{{index + 1}}</text><text class="chapter-name chapter-main">{{item.title}}</text><image wx:if="{{item.done}}" class="chapter-check" src="/assets/icons/check.svg" /></view></view>
-  <ui-button id="start-course" slot="footer" label="{{selected.accessible ? (selected.progress ? '继续学习' : '开始学习') : '兑换此课程'}}" bind:activate="startCourse" />
-</ui-sheet>

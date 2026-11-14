@@ -46,6 +46,7 @@ function shell() {
   const workspace = el('main', { id: 'workspace', class: 'workspace', tabindex: '-1' });
   const nav = el('nav', { class: 'nav', 'aria-label': '管理导航' });
   const routes = [
+    ['boards', '学习板块', renderCatalog],
     ['catalog', '内容与发布', renderCatalog], ['materials', '课程资料', renderMaterials], ['assets', '资源库', renderAssets],
     ['users', '用户与权益', renderUsers], ['cards', '卡密与核销', renderCards], ['audit', '操作审计', (host, ctx) => renderLogs(host, ctx, 'audit')]
   ];
@@ -53,7 +54,7 @@ function shell() {
     if (workspace.querySelector('[aria-busy="true"]')) { notify('操作正在提交，请等待结果后再切换页面'); return; }
     if (context.pending.size && !confirmDanger('此页面有未保存的表单。离开将丢弃表单内容，确定继续？')) return;
     if (document.querySelector('dialog[open]')) return;
-    if (context.view === 'catalog' && id !== 'catalog' && context.catalogDirty) notify('内容草稿尚未保存，已暂存于此标签页；请返回“内容与发布”保存，刷新页面会丢失更改。');
+    if (['catalog', 'boards'].includes(context.view) && !['catalog', 'boards'].includes(id) && context.catalogDirty) notify('内容草稿尚未保存，已暂存于此标签页；请返回“内容与发布”保存，刷新页面会丢失更改。');
     context.pending.clear(); context.view = id;
     const stamp = ++transition;
     nav.querySelectorAll('button').forEach(n => n.setAttribute('aria-current', n.dataset.view === id ? 'page' : 'false'));

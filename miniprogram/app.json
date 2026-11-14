@@ -1,15 +1,27 @@
 {
-  "pages": ["pages/gate/gate", "pages/home/home", "pages/learn/learn", "pages/profile/profile", "pages/lesson/lesson"],
+  "pages": [
+    "pages/home/home",
+    "pages/learn/learn",
+    "pages/board/board",
+    "pages/english/english",
+    "pages/math/math",
+    "pages/junior-math/junior-math",
+    "pages/course/course",
+    "pages/gate/gate",
+    "pages/profile/profile",
+    "pages/lesson/lesson"
+  ],
   "window": {
     "navigationBarTitleText": "进化蓝图",
-    "navigationBarBackgroundColor": "#F3F6FB",
+    "navigationBarBackgroundColor": "#F8F8F9",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F3F6FB"
+    "backgroundColor": "#F8F8F9"
   },
   "usingComponents": {
     "ui-button": "/components/ui-button/ui-button",
     "ui-sheet": "/components/ui-sheet/ui-sheet",
-    "glass-nav": "/components/glass-nav/glass-nav"
+    "glass-nav": "/components/glass-nav/glass-nav",
+    "board-card": "/components/board-card/board-card"
   },
   "sitemapLocation": "sitemap.json"
 }

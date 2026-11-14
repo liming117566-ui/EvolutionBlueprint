@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "esModuleInterop": true
+  },
+  "include": ["app/page.tsx", "app/blueprint-main.tsx", "app/components/**/*.tsx", "app/curriculum/**/*.ts", "app/curriculum.ts", "app/visuals/**/*.ts", "vite.blueprint.config.ts"]
+}

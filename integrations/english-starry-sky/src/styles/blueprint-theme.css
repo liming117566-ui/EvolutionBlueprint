@@ -1,0 +1,128 @@
+/* Color adaptation only. Keep the original page structure, dimensions and controls. */
+:root {
+  --paper: #ffffff;
+  --paper-2: #f8f8f9;
+  --paper-3: #e9eeeb;
+  --card: #ffffff;
+  --card-2: #f3f6f4;
+  --ink: #191a1d;
+  --ink-2: #4b5e53;
+  --ink-3: #748179;
+  --ink-4: #9aa59e;
+  --line: #dbe1dd;
+  --line-strong: #c7d4cb;
+  --terra: #143f32;
+  --terra-ink: #143f32;
+  --terra-soft: #e9eeeb;
+  --ochre: #346b51;
+  --ochre-soft: #edf3ef;
+  --sage: #346b51;
+  --sage-ink: #143f32;
+  --sage-soft: #e9eeeb;
+  --sky: #4b7b64;
+  --sky-soft: #edf4ef;
+  --plum: #587161;
+  --glow: transparent;
+  --mark: rgba(20, 63, 50, .14);
+  --error: #b84b49;
+  --error-soft: #fbefee;
+  --shadow-sm: 0 1px 2px rgba(25, 26, 29, .04), 0 2px 6px -2px rgba(25, 26, 29, .04);
+  --shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 1px 2px rgba(25, 26, 29, .035), 0 18px 40px -24px rgba(25, 26, 29, .13);
+  --shadow-lg: 0 30px 80px -30px rgba(25, 26, 29, .2), 0 8px 24px -12px rgba(25, 26, 29, .12);
+}
+
+/* Retain the existing dark-mode setting, using the same green color family. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111a16; --paper-2: #19271f; --paper-3: #283c31;
+    --card: #17231c; --card-2: #1e2d24;
+    --ink: #edf3ef; --ink-2: #c0d7c7; --ink-3: #96aa9d; --ink-4: #6e8375;
+    --line: rgba(192,215,199,.12); --line-strong: rgba(192,215,199,.22);
+    --terra: #a8cdb6; --terra-ink: #bbdbc6; --terra-soft: #263e30;
+    --ochre: #8ebba0; --ochre-soft: #25392d;
+    --sage: #8ebba0; --sage-ink: #bbdbc6; --sage-soft: #25392d;
+    --sky: #9ac4ad; --sky-soft: #263e30; --plum: #a5c4af;
+    --glow: transparent; --mark: rgba(142,187,160,.23);
+    --error: #e49a94; --error-soft: #3a2524;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #111a16; --paper-2: #19271f; --paper-3: #283c31;
+  --card: #17231c; --card-2: #1e2d24;
+  --ink: #edf3ef; --ink-2: #c0d7c7; --ink-3: #96aa9d; --ink-4: #6e8375;
+  --line: rgba(192,215,199,.12); --line-strong: rgba(192,215,199,.22);
+  --terra: #a8cdb6; --terra-ink: #bbdbc6; --terra-soft: #263e30;
+  --ochre: #8ebba0; --ochre-soft: #25392d;
+  --sage: #8ebba0; --sage-ink: #bbdbc6; --sage-soft: #25392d;
+  --sky: #9ac4ad; --sky-soft: #263e30; --plum: #a5c4af;
+  --glow: transparent; --mark: rgba(142,187,160,.23);
+  --error: #e49a94; --error-soft: #3a2524;
+}
+
+html, body, #root, .app, .main { background: var(--paper); }
+body::before { background-image: none; }
+.topbar, .tabbar { background: var(--paper); border-color: var(--line); }
+.tabbar a.is-on, .tabbar a.is-on svg { color: var(--terra); }
+.panel, .sheet, .palette, .book-switch-pop { background-color: var(--card); }
+.btn-primary, .btn-terra { background: #143f32; color: #ffffff; box-shadow: 0 10px 24px -12px rgba(20,63,50,.25); }
+.btn-primary:hover:not(:disabled), .btn-terra:hover:not(:disabled) { box-shadow: 0 16px 30px -14px rgba(20,63,50,.3); }
+.btn-sage { background: #346b51; color: #ffffff; }
+.journey { background: #143f32; }
+.journey::before { background: linear-gradient(180deg, rgba(20,63,50,0) 20%, rgba(20,63,50,.55) 55%, rgba(20,63,50,.96) 100%); }
+.journey h2 b { color: #c0d7c7; }
+.journey .btn-primary { background: #ffffff; color: #143f32; box-shadow: 0 16px 40px -16px rgba(0,0,0,.3); }
+@media (max-width: 759px) {
+  .journey { background: #143f32; }
+  .journey::before { background: linear-gradient(180deg, transparent 0, transparent calc(62.5vw - 140px), #143f32 calc(62.5vw - 30px)); }
+}
+@media (min-width: 760px) {
+  .journey::before { background: linear-gradient(90deg, rgba(20,63,50,.96) 0%, rgba(20,63,50,.55) 38%, rgba(20,63,50,0) 68%); }
+}
+.illo, .plate, .plate-rule::after { background-color: var(--paper-2); }
+.book-switch-btn[aria-expanded="true"], .book-switch-pop li button.is-on { background-color: var(--terra-soft); }
+.ambience-btn, .topbar-tools .icon-btn { color: var(--terra); }
+.treasury-btn .chest-body { fill: #346b51; stroke: #143f32; }
+.treasury-btn .chest-band { fill: #c0d7c7; stroke: #143f32; }
+.treasury-btn .chest-lock { fill: #ffffff; stroke: #143f32; }
+.badge-btn .medal-mark stop { stop-color: #8ebba0; }
+.badge-btn .medal-mark [stroke] { stroke: #143f32; }
+.mark svg radialGradient stop:first-child { stop-color: #346b51; }
+.mark svg radialGradient stop:last-child { stop-color: #143f32; }
+.mark svg linearGradient stop:first-child { stop-color: #e9eeeb; }
+.mark svg linearGradient stop:last-child { stop-color: #8ebba0; }
+.mark svg [stroke="#5FE3FF"], .mark svg [stroke="#9FDFFF"], .mark svg [stroke="#CFF6FF"], .mark svg [stroke="#A78BFF"], .mark svg [stroke="#8FF6FF"] { stroke: #c0d7c7; }
+.mark svg [fill="#8FF6FF"] { fill: #e9eeeb; }
+.mark svg [fill="#070C1E"] { fill: #143f32; }
+
+/* Preserve red/green answer semantics while primary actions become green. */
+.option.is-chosen, .slot.is-bad, .pt-fill input.is-bad, .pt-sentence.is-bad, .rd-opt.is-wrong, .rd-pick.is-wrong { border-color: var(--error); background: var(--error-soft); }
+.option.is-chosen .option-mark, .slot.is-bad, .feedback.is-wrong .feedback-verdict, .pt-feedback.is-wrong .feedback-verdict, .rd-opt.is-wrong, .rd-pick.is-wrong { color: var(--error); }
+.feedback.is-wrong .feedback-inner { background: color-mix(in srgb, var(--error-soft) 70%, var(--card)); }
+.typing-text .is-bad, .typing-text.is-miss .is-caret { color: var(--error); background: var(--error-soft); box-shadow: -2px 0 0 var(--error); }
+.summary-words li.is-wrong .illo { box-shadow: 0 0 0 2.5px var(--error); }
+
+/* Collections and reward dialogs use the same surfaces, retaining tier labels and artwork. */
+.chest-sheet { --tier: #4b7b64; --tier-soft: rgba(20,63,50,.12); --tier-deep: #143f32; }
+.chest-sheet.tier-unit { --tier: #346b51; --tier-soft: rgba(52,107,81,.16); --tier-deep: #143f32; }
+.chest-sheet.tier-challenge { --tier: #6b957c; --tier-soft: rgba(107,149,124,.16); --tier-deep: #143f32; }
+.chest-sheet.tier-weekly { --tier: #143f32; --tier-soft: rgba(20,63,50,.2); --tier-deep: #143f32; }
+.sheet.chest-sheet { background: var(--card); color: var(--ink); }
+.chest-sheet .sheet-close { color: var(--ink); background: var(--paper-2); }
+.chest-sheet .sheet-grip { background: var(--line-strong); }
+.chest-sky i { background: var(--terra); }
+.chest-tier { background: var(--terra-soft); color: var(--terra-ink); }
+.chest-hint { color: var(--ink-3); }
+.chest-sheet .chest-actions .btn-primary, .btn-tier-unit, .btn-tier-weekly { background: #143f32; color: #ffffff; }
+.btn-tier-unit:hover:not(:disabled) { background: #205741; }
+.chest-sheet .chest-actions .btn-ghost { color: var(--ink-2); border-color: var(--line-strong); background: var(--card); }
+.chest-slot .chest-slot-tier { background: var(--terra-soft); color: var(--terra-ink); }
+.chest-slot.is-ready { border-color: var(--line-strong); background: var(--card); box-shadow: 0 0 0 3px var(--terra-soft), 0 12px 24px -16px rgba(20,63,50,.2); }
+.chest-slot.is-ready .chest-slot-note { color: var(--terra-ink); }
+.chest-art .chest-body { fill: #346b51; stroke: #143f32; }
+.chest-art .chest-band { fill: #c0d7c7; stroke: #143f32; }
+.chest-art .chest-lock { fill: #ffffff; stroke: #143f32; }
+.chest-sheet .prize-common, .chest-sheet .prize-rare, .chest-sheet .prize-legend { background: var(--card-2); border-color: var(--line-strong); box-shadow: var(--shadow-sm); }
+.chest-sheet .prize-common::before, .chest-sheet .prize-rare::before, .chest-sheet .prize-legend::before { background: var(--terra); }
+.chest-sheet .prize-common .prize-icon, .chest-sheet .prize-rare .prize-icon, .chest-sheet .prize-legend .prize-icon { background: var(--terra-soft); color: var(--terra-ink); }
+.chest-sheet .prize-common .prize-tag, .chest-sheet .prize-rare .prize-tag, .chest-sheet .prize-legend .prize-tag { background: #143f32; color: #ffffff; }
+.chest-sheet .prize-rare .prize-text b, .chest-sheet .prize-legend .prize-text b, .rd-level.lv-stretch, .rd-score.is-good { color: var(--terra-ink); }

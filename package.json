@@ -6,6 +6,9 @@
   "scripts": {
     "dev": "node server/index.js",
     "start": "node server/index.js",
+    "build:english": "node scripts/build-english.cjs",
+    "build:math": "node scripts/build-math.cjs",
+    "build:junior-math": "node scripts/build-junior-math.cjs",
     "test": "node --test scripts/test.cjs scripts/documents.test.cjs scripts/learning-flow.test.cjs scripts/backend.test.cjs"
   },
   "dependencies": {

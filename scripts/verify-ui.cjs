@@ -37,15 +37,21 @@ const report = { checks: [], exceptions: [], screenshots: [], status: 'running' 
     const input = await page.$('.code-input'); await input.input(process.env.UI_TEST_CODE);
     await (await (await page.$('#redeem-action')).$('.button')).tap();
     page = await settle('pages/home/home');
-    await page.waitFor('.featured-card');
+    await page.waitFor('.board-grid');
     check('Real redemption reaches remote course home', !(await page.data('error')) && (await page.data('courses')).length > 0);
     await shot('cms-01-home');
     const courses = await page.data('courses');
     const chosen = courses.find(c => c.accessible && c.chapters && c.chapters.some(ch => ch.sections.length));
     check('A disposable card authorizes a real published course', chosen);
-    await (await page.$('#main-nav')).$('[data-page="learn"]').then(tab => tab.tap());
-    page = await settle('pages/learn/learn');
-    await invoke('selectCourse', { currentTarget: { dataset: { id: chosen.id } } });
+    const boards = await page.data('boards');
+    const board = boards.find(b => b.categoryIds.includes(chosen.categoryId));
+    check('The authorized course belongs to a published learning board', board);
+    await mp.navigateTo('/pages/board/board?id=' + encodeURIComponent(board.id));
+    page = await settle('pages/board/board');
+    check('The secondary page only lists courses in its configured categories', (await page.data('courses')).every(c => board.categoryIds.includes(c.categoryId)));
+    await shot('cms-02-board');
+    await invoke('openCourse', { currentTarget: { dataset: { id: chosen.id } } });
+    page = await settle('pages/course/course');
     const chapter = chosen.chapters.find(ch => ch.sections.length);
     await mp.pageScrollTo(500);
     await invoke('openChapter', { currentTarget: { dataset: { id: chapter.id } } });
@@ -81,7 +87,7 @@ const report = { checks: [], exceptions: [], screenshots: [], status: 'running' 
         wx.getStorageInfoSync().keys.filter(key => (key.startsWith('blueprint') || key === 'currentCourse') && !originalKeys.has(key)).forEach(key => wx.removeStorageSync(key));
         records.forEach(r => wx.setStorageSync(r.key, r.value));
       }, original);
-      await mp.reLaunch('/pages/gate/gate');
+      await mp.reLaunch('/pages/home/home');
     }
     fs.writeFileSync(path.join(out, 'cms-verification.json'), JSON.stringify(report, null, 2));
     if (report.status === 'passed') fs.unlinkSync(path.join(out, 'test-storage-backup.json'));

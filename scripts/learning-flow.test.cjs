@@ -33,7 +33,10 @@ function environment(options = {}) {
         let response;
         if (options.respond) response = await options.respond(route, value, data);
         if (!response) {
-          if (route === '/api/bootstrap') response = { settings: data.settings, categories: seed.categories, version: 1 };
+          if (route === '/api/bootstrap') response = { settings: data.settings, categories: seed.categories, boards: require('../miniprogram/utils/board-defaults').defaults(), version: 1 };
+          else if (route === '/api/integrations/english') response = { ready: true, basePath: '/english/' };
+          else if (route === '/api/integrations/math') response = { ready: true, basePath: '/math/' };
+          else if (route === '/api/integrations/junior-math') response = { ready: true, basePath: '/junior-math/' };
           else if (route === '/api/auth/wechat') {
             if (data.wechatStatus !== 200) return value.success({ statusCode: data.wechatStatus, data: { error: '微信登录未配置 AppSecret', code: 'WECHAT_NOT_CONFIGURED' } });
             response = { token: 'token-wechat', user: { id: 'wechat', nickname: '微信学员' } };
@@ -161,10 +164,9 @@ test('401 revokes the current session rather than accepting cached access', asyn
   assert.equal(env.load('utils/session').current(), null);
 });
 test('Theme directory links use stable chapter IDs, without a mode layer', async () => {
-  const env = environment(), learn = env.page('learn'); await learn.onShow();
-  learn.selectCourse(tap({ id: 'thinking' }));
-  assert.equal(learn.data.current.id, 'thinking');
-  learn.openChapter(tap({ id: 'thinking-chapter-2' }));
+  const env = environment(), course = env.page('course'); course.onLoad({ id: 'thinking' }); await course.onShow();
+  assert.equal(course.data.current.id, 'thinking');
+  course.openChapter(tap({ id: 'thinking-chapter-2' }));
   assert.equal(env.navigation.at(-1), '/pages/lesson/lesson?course=thinking&chapter=thinking-chapter-2');
   const page = await lesson(env, 'thinking', 'thinking-chapter-2');
   assert.equal(page.data.active, 2); assert.equal(page.data.sections.length, 3); assert.equal(page.data.section, null);
@@ -275,8 +277,104 @@ test('Brand, help, avatar and all three navigation names/icons use published con
 test('Empty catalog, no access and failed refreshes have explicit state instead of crashing', async () => {
   const env = environment(); env.data.courses = [];
   for (const name of ['home', 'learn', 'profile']) { const page = env.page(name); await page.onShow(); assert.equal(page.data.courses.length, 0); assert.equal(page.data.error, ''); }
-  const denied = environment({ access: false }), learn = denied.page('learn'); await learn.onShow();
-  assert.equal(learn.data.chapters.length, 0); assert.equal(learn.data.current.accessible, false); learn.start(); assert.match(denied.navigation.at(-1), /gate.*redeem=1/);
+  const denied = environment({ access: false }), course = denied.page('course'); course.onLoad({ id: 'focus' }); await course.onShow();
+  assert.equal(course.data.chapters.length, 0); assert.equal(course.data.current.accessible, false); course.start(); assert.match(denied.navigation.at(-1), /gate.*redeem=1/);
+});
+test('Guests can discover boards and course descriptions without requesting protected bodies', async () => {
+  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
+  assert.equal(home.data.boards.length, 6); assert.equal(env.navigation.length, 0);
+  const board = env.page('board'); board.onLoad({ id: 'focus-space' }); await board.onShow();
+  assert.equal(board.data.courses[0].id, 'focus'); assert.equal(board.data.exercises.length, 0);
+  assert(!env.calls.some(c => c.url && /\/api\/(me|courses\/)/.test(c.url)));
+  const course = env.page('course'); course.onLoad({ id: 'focus' }); await course.onShow();
+  assert.equal(course.data.chapters.length, 0); assert.equal(course.data.current.accessible, false);
+});
+test('Learning classification and search combine, and clearing restores all visible boards', async () => {
+  const env = environment(), page = env.page('learn'); await page.onShow();
+  page.selectGroup(tap({ id: 'growth' })); assert.equal(page.data.filtered.length, 2);
+  page.search({ detail: { value: '专注' } }); assert.equal(page.data.filtered[0].id, 'focus-space');
+  page.search({ detail: { value: '没有的分类' } }); assert.equal(page.data.filtered.length, 0);
+  page.clearSearch(); assert.equal(page.data.filtered.length, 6);
+});
+test('Board course and exercise entries stay scoped to linked categories with stable navigation IDs', async () => {
+  const env = environment(), page = env.page('board'); page.onLoad({ id: 'thinking-space' }); await page.onShow();
+  assert.deepEqual(clone(page.data.courses.map(c => c.id)), ['thinking']);
+  assert(page.data.exercises.length > 0); assert(page.data.exercises.every(e => e.courseId === 'thinking'));
+  const exercise = page.data.exercises[0]; page.openExercise(tap({ id: exercise.id }));
+  assert.equal(env.navigation.at(-1), '/pages/lesson/lesson?course=thinking&chapter=' + exercise.chapterId + '&section=' + exercise.id);
+  const reader = env.page('lesson'); reader.onLoad({ course: 'thinking', chapter: exercise.chapterId, section: exercise.id }); await reader.onShow();
+  assert.equal(reader.data.section.id, exercise.id);
+});
+test('A hidden or removed board is an explicit unavailable state and never exposes cached courses', async () => {
+  const env = environment(), page = env.page('board'); page.onLoad({ id: 'removed-board' }); await page.onShow();
+  assert.match(page.data.error, /下架/); assert.equal(page.data.board, null); assert.equal(page.data.courses.length, 0);
+});
+test('Home and learning English entries open the integrated UI without requesting a login', async () => {
+  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
+  home.openFeatured(); assert.equal(env.navigation.at(-1), '/pages/english/english?id=junior-english');
+  const learn = env.page('learn'); await learn.onShow(); learn.openBoard({ detail: { id: 'junior-english' } });
+  assert.equal(env.navigation.at(-1), '/pages/english/english?id=junior-english');
+  const english = env.page('english'); await english.onLoad({ id: 'junior-english' });
+  assert.equal(english.data.error, ''); assert.equal(english.data.src, 'http://127.0.0.1:3002/english/?embedded=1#/');
+  english.onWebLoad(); assert.equal(english.data.loaded, true);
+  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
+});
+test('English integration does not open when the board is disabled or its build is unavailable', async () => {
+  for (const respond of [
+    route => route === '/api/bootstrap' ? { boards: [], settings: seed.settings } : null,
+    route => route === '/api/integrations/english' ? { ready: false } : null
+  ]) {
+    const env = environment({ signedIn: false, respond }), page = env.page('english'); await page.onLoad({ id: 'junior-english' });
+    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
+  }
+});
+test('Math entries from home and learning open the local project without authentication', async () => {
+  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
+  const math = home.data.boards.find(b => b.id === 'math-taxonomy');
+  assert.equal(math.metaLabel, '小学至高中');
+  home.openBoard({ detail: { id: math.id } }); assert.equal(env.navigation.at(-1), '/pages/math/math?id=math-taxonomy');
+  const learn = env.page('learn'); await learn.onShow(); learn.selectGroup(tap({ id: 'subject' }));
+  assert.equal(learn.data.filtered.length, 3);
+  learn.openBoard({ detail: { id: math.id } }); assert.equal(env.navigation.at(-1), '/pages/math/math?id=math-taxonomy');
+  const page = env.page('math'); await page.onLoad({ id: math.id });
+  assert.equal(page.data.src, 'http://127.0.0.1:3002/math/?embedded=1'); assert.equal(page.data.error, '');
+  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
+});
+test('Math host respects disabled boards, wrong experience, missing builds and page disposal', async () => {
+  for (const respond of [
+    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [] } : null,
+    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: 'math-taxonomy', enabled: true, experience: 'courses' }] } : null,
+    route => route === '/api/integrations/math' ? { ready: false } : null
+  ]) {
+    const env = environment({ signedIn: false, respond }), page = env.page('math'); await page.onLoad({ id: 'math-taxonomy' });
+    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
+  }
+  const env = environment({ signedIn: false }), page = env.page('math');
+  const pending = page.onLoad({ id: 'math-taxonomy' }); page.onUnload(); await pending;
+  assert.equal(page.data.src, '');
+});
+test('Junior mathematics opens from both board lists and stays separate from the knowledge graph', async () => {
+  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
+  assert(home.data.boards.some(b => b.id === 'math-taxonomy'));
+  const board = home.data.boards.find(b => b.id === 'junior-math'); assert.equal(board.title, '初中数学');
+  home.openBoard({ detail: { id: 'junior-math' } }); assert.equal(env.navigation.at(-1), '/pages/junior-math/junior-math?id=junior-math');
+  const learn = env.page('learn'); await learn.onShow(); learn.openBoard({ detail: { id: 'junior-math' } });
+  assert.equal(env.navigation.at(-1), '/pages/junior-math/junior-math?id=junior-math');
+  const page = env.page('junior-math'); await page.onLoad({ id: 'junior-math' });
+  assert.equal(page.data.error, ''); assert.equal(page.data.src, 'http://127.0.0.1:3002/junior-math/');
+  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
+});
+test('Junior mathematics rejects hidden boards, other experience types, missing builds and stale loads', async () => {
+  for (const respond of [
+    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [] } : null,
+    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: 'junior-math', enabled: true, experience: 'cn-math-taxonomy' }] } : null,
+    route => route === '/api/integrations/junior-math' ? { ready: false } : null
+  ]) {
+    const env = environment({ signedIn: false, respond }), page = env.page('junior-math'); await page.onLoad({ id: 'junior-math' });
+    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
+  }
+  const env = environment({ signedIn: false }), page = env.page('junior-math'); const pending = page.onLoad({ id: 'junior-math' }); page.onUnload(); await pending;
+  assert.equal(page.data.src, '');
 });
 test('Reader has no modes and registers authenticated materials at course, chapter and subsection scopes', () => {
   const config = require('../miniprogram/pages/lesson/lesson.json');

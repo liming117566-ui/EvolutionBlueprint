@@ -15,6 +15,9 @@ function createApp(overrides = {}) {
   app.disable('x-powered-by');
   app.set('trust proxy', false);
   app.locals.store = store; app.locals.config = config; app.locals.close = () => store.close();
+  require('./english-web').mount(app);
+  require('./math-web').mount(app);
+  require('./junior-math-web').mount(app);
   function audit(actor, action, target, detail = {}) { store.run('INSERT INTO audit(actor,action,target,detail,created_at) VALUES(?,?,?,?,?)', actor, action, String(target), JSON.stringify(detail), now()); }
   const auth = createAuth(store, config, audit), business = createBusiness(store, audit);
   const media = createMedia(store, config, auth, business, audit);
@@ -29,6 +32,9 @@ function createApp(overrides = {}) {
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
   app.get('/', (_req, res) => res.redirect('/admin/'));
   app.get('/api/health', (_req, res) => res.json({ ok: true, name: catalog.published(store).settings.brandName, wechatConfigured: !!config.appSecret }));
+  app.get('/api/integrations/english', (_req, res) => res.json(require('./english-web').status()));
+  app.get('/api/integrations/math', (_req, res) => res.json(require('./math-web').status()));
+  app.get('/api/integrations/junior-math', (_req, res) => res.json(require('./junior-math-web').status()));
   app.use('/admin', express.static(path.join(__dirname, 'admin'), { index: 'index.html', dotfiles: 'deny', etag: true }));
   app.use('/assets', express.static(path.join(__dirname, '..', 'miniprogram', 'assets'), { dotfiles: 'deny', fallthrough: false }));
   const admin = express.Router();
@@ -107,7 +113,7 @@ function createApp(overrides = {}) {
   });
   app.use('/api/admin', admin);
   auth.registerUserRoutes(app);
-  app.get('/api/bootstrap', (_req, res) => { const tree = catalog.published(store); res.json({ version: tree.version, settings: tree.settings, categories: tree.categories }); });
+  app.get('/api/bootstrap', (_req, res) => { const tree = catalog.published(store); res.json({ version: tree.version, settings: tree.settings, categories: tree.categories, boards: (tree.boards || []).filter(b => b.enabled) }); });
   app.get('/api/assets/:id', media.assetRoute);
   app.get('/api/courses', (req, res, next) => {
     const render = () => {

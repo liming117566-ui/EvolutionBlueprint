@@ -3,20 +3,20 @@
 .gate-brand image { width: 56rpx; height: 56rpx; }
 .gate-art { position: relative; height: 330rpx; margin: 20rpx -40rpx 32rpx; }
 .gate-art > .cover { mix-blend-mode: multiply; }
-.art-label { position: absolute; bottom: -6rpx; left: 50%; display: flex; align-items: center; gap: 12rpx; padding: 14rpx 25rpx; border-radius: 999rpx; transform: translateX(-50%); white-space: nowrap; color: #172b43; font-size: 22rpx; }
+.art-label { position: absolute; bottom: -6rpx; left: 50%; display: flex; align-items: center; gap: 12rpx; padding: 14rpx 25rpx; border-radius: 999rpx; transform: translateX(-50%); white-space: nowrap; color: #191a1d; font-size: 22rpx; }
 .art-label image { width: 26rpx; height: 26rpx; }
 .gate-intro { margin-top: 40rpx; text-align: center; }
 .gate-intro .page-heading { font-size: 44rpx; }
 .gate-intro .page-caption { margin-top: 10rpx; }
 .gate-form { margin-top: 34rpx; padding: 32rpx 28rpx 25rpx; }
 .input-label { display: block; margin-bottom: 14rpx; font-size: 24rpx; font-weight: 500; }
-.input-wrap { display: flex; align-items: center; min-height: 96rpx; margin-bottom: 24rpx; padding: 0 24rpx; border: 1px solid rgba(23,43,67,.11); border-radius: 24rpx; background: rgba(255,255,255,.38); }
-.input-wrap:focus-within, .input-wrap.has-error { border-color: #416bf0; box-shadow: 0 0 0 5rpx rgba(65,107,240,.07); }
-.code-input { width: 100%; height: 96rpx; color: #172b43; font-size: 28rpx; line-height: 1.4; }
-.input-placeholder { color: rgba(23,43,67,.5); }
-.form-error { display: block; margin: -8rpx 0 20rpx; color: #172b43; font-size: 23rpx; line-height: 1.6; }
+.input-wrap { display: flex; align-items: center; min-height: 96rpx; margin-bottom: 24rpx; padding: 0 24rpx; border: 1px solid rgba(25,26,29,.11); border-radius: 24rpx; background: rgba(255,255,255,.38); }
+.input-wrap:focus-within, .input-wrap.has-error { border-color: #143f32; box-shadow: 0 0 0 5rpx rgba(20,63,50,.07); }
+.code-input { width: 100%; height: 96rpx; color: #191a1d; font-size: 28rpx; line-height: 1.4; }
+.input-placeholder { color: rgba(25,26,29,.5); }
+.form-error { display: block; margin: -8rpx 0 20rpx; color: #191a1d; font-size: 23rpx; line-height: 1.6; }
 .form-hint { display: block; margin-top: 20rpx; color: var(--muted); font-size: 21rpx; text-align: center; }
-.gate-help { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin: 12rpx auto 0; color: #416bf0; font-size: 23rpx; }
-.gate-footnote { display: block; margin-top: 24rpx; color: rgba(23,43,67,.5); text-align: center; font-size: 21rpx; }
-.help-copy { display: block; margin-bottom: 24rpx; color: rgba(23,43,67,.85); font-size: 27rpx; line-height: 1.8; }
+.gate-help { display: flex; align-items: center; justify-content: center; min-height: 88rpx; margin: 12rpx auto 0; color: #143f32; font-size: 23rpx; }
+.gate-footnote { display: block; margin-top: 24rpx; color: rgba(25,26,29,.5); text-align: center; font-size: 21rpx; }
+.help-copy { display: block; margin-bottom: 24rpx; color: rgba(25,26,29,.85); font-size: 27rpx; line-height: 1.8; }
 @media (max-height: 700px) { .gate-art { height: 230rpx; margin-top: 10rpx; } .gate-intro { margin-top: 24rpx; } .gate-footnote { margin-top: 4rpx; } }

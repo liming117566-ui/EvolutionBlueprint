@@ -1,44 +1,26 @@
 const learning = require('../../utils/learning');
 const catalog = require('../../utils/catalog');
-const legacy = require('../../utils/legacy');
+const boards = require('../../utils/boards');
 Page({
-  data: { courses: [], featured: null, recommendations: [], selected: null, selectedChapters: [], weekday: '', settings: catalog.settings(), loading: false, error: '', hasAccess: false },
-  onLoad() { learning.authorized(); },
+  data: { courses: [], boards: [], featured: null, continuing: null, settings: catalog.settings(), loading: true, error: '', dateLabel: '' },
   onShow() { return this.retry(); },
-  onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [], featured: null, recommendations: [], selected: null, selectedChapters: [] }); },
+  onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [], continuing: null }); },
   onUnload() { this._version = (this._version || 0) + 1; },
   async retry() {
-    if (!learning.authorized()) return;
     const version = this._version = (this._version || 0) + 1;
-    this.setData({ loading: true, error: '', courses: [], featured: null, recommendations: [], selected: null });
+    this.setData({ loading: true, error: '', boards: [], featured: null });
     try {
-      const result = await learning.load();
+      const result = await learning.browse();
       if (version !== this._version || !result) return;
-      if (await legacy.offer(result.courses)) {
-        await learning.refresh();
-        result.courses = result.courses.map(learning.decorate);
-      }
-      if (version !== this._version) return;
-      const courses = result.courses;
-      const currentId = learning.currentCourse();
-      const featured = courses.find(c => c.id === currentId && c.accessible) || courses.find(c => c.accessible) || courses[0] || null;
-      this.setData({ courses, settings: result.settings, hasAccess: result.me.hasAccess, featured, recommendations: courses.filter(c => !featured || c.id !== featured.id), weekday: ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date().getDay()] });
+      const items = boards.decorate(result.boards, result.courses, 'home');
+      const now = new Date(), day = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][now.getDay()];
+      this.setData({ settings: result.settings, courses: result.courses, boards: items, featured: items.find(b => b.featured) || items[0] || null, continuing: result.courses.find(c => c.id === learning.currentCourse() && c.accessible) || null, dateLabel: (now.getMonth() + 1) + ' 月 ' + now.getDate() + ' 日 · ' + day });
     } catch (error) { if (version === this._version) this.setData({ error: error.message }); }
     finally { if (version === this._version) this.setData({ loading: false }); }
   },
-  openCourse(event) {
-    const selected = this.data.courses.find(course => course.id === event.currentTarget.dataset.id);
-    if (selected) this.setData({ selected, selectedChapters: learning.chapters(selected) });
-  },
-  closeCourse() { this.setData({ selected: null }); },
-  startCourse() {
-    const course = this.data.selected || this.data.featured;
-    if (!course) return;
-    if (!course.accessible) return this.redeem();
-    this.closeCourse();
-    wx.navigateTo({ url: '/pages/lesson/lesson?course=' + encodeURIComponent(course.id) });
-  },
-  redeem() { wx.redirectTo({ url: '/pages/gate/gate?redeem=1' }); },
+  openBoard(event) { const id = event.detail.id || event.currentTarget.dataset.id; const board = this.data.boards.find(b => b.id === id); if (board) boards.open(id, board.experience); },
+  openFeatured() { if (this.data.featured) boards.open(this.data.featured.id, this.data.featured.experience); },
+  continueCourse() { if (this.data.continuing) boards.course(this.data.continuing.id); },
   goLearn() { wx.redirectTo({ url: '/pages/learn/learn' }); },
   goProfile() { wx.redirectTo({ url: '/pages/profile/profile' }); }
 });

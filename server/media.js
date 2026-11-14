@@ -153,7 +153,7 @@ function createMedia(store, config, auth, business, audit) {
     if (!row) fail(404, '图片不存在');
     const ref = '/api/assets/' + row.id;
     const tree = catalog.published(store);
-    const publicTree = { settings: tree.settings, courses: tree.courses.filter(c => c.published).map(c => ({ cover: c.cover })) };
+    const publicTree = { settings: tree.settings, boards: (tree.boards || []).filter(b => b.enabled).map(b => ({ icon: b.icon, cover: b.cover, features: b.features.map(f => ({ icon: f.icon })) })), courses: tree.courses.filter(c => c.published).map(c => ({ cover: c.cover })) };
     if (JSON.stringify(publicTree).includes(ref)) return sendAsset(row, res);
     auth.admin(req, res, error => { if (error) return next(Object.assign(new Error('图片不存在'), { status: 404 })); sendAsset(row, res); });
   }

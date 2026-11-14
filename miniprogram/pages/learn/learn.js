@@ -1,41 +1,25 @@
 const learning = require('../../utils/learning');
 const catalog = require('../../utils/catalog');
+const boards = require('../../utils/boards');
 Page({
-  data: { courses: [], active: 0, current: null, chapters: [], loading: false, error: '', settings: catalog.settings() },
-  onLoad() { learning.authorized(); },
+  data: { courses: [], boards: [], filtered: [], groups: boards.GROUPS, group: 'all', query: '', loading: true, error: '', settings: catalog.settings() },
   onShow() { return this.retry(); },
-  onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [], current: null, chapters: [] }); },
+  onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [] }); },
   onUnload() { this._version = (this._version || 0) + 1; },
   async retry() {
-    if (!learning.authorized()) return;
     const version = this._version = (this._version || 0) + 1;
-    this.setData({ loading: true, error: '', courses: [], current: null, chapters: [] });
+    this.setData({ loading: true, error: '', boards: [], filtered: [] });
     try {
-      const result = await learning.load();
+      const result = await learning.browse();
       if (version !== this._version || !result) return;
-      const courses = result.courses;
-      const current = courses.find(c => c.id === this._selectedId) || courses[0] || null;
-      this.setData({ courses, current, active: Math.max(0, courses.indexOf(current)), chapters: learning.chapters(current), settings: result.settings });
+      this.setData({ courses: result.courses, boards: boards.decorate(result.boards, result.courses, 'learn'), settings: result.settings }); this.filter();
     } catch (error) { if (version === this._version) this.setData({ error: error.message }); }
     finally { if (version === this._version) this.setData({ loading: false }); }
   },
-  selectCourse(event) {
-    const current = this.data.courses.find(c => c.id === event.currentTarget.dataset.id);
-    if (!current) return;
-    this._selectedId = current.id;
-    this.setData({ active: this.data.courses.indexOf(current), current, chapters: learning.chapters(current) });
-  },
-  start() {
-    const current = this.data.current;
-    if (!current) return;
-    if (!current.accessible) return this.redeem();
-    wx.navigateTo({ url: '/pages/lesson/lesson?course=' + encodeURIComponent(current.id) });
-  },
-  openChapter(event) {
-    const current = this.data.current;
-    const chapterId = event.currentTarget.dataset.id;
-    if (!current || !current.accessible || !current.chapters.some(c => c.id === chapterId)) return;
-    wx.navigateTo({ url: '/pages/lesson/lesson?course=' + encodeURIComponent(current.id) + '&chapter=' + encodeURIComponent(chapterId) });
-  },
-  redeem() { wx.redirectTo({ url: '/pages/gate/gate?redeem=1' }); }
+  filter() { const q = this.data.query.trim().toLowerCase(); this.setData({ filtered: this.data.boards.filter(b => (this.data.group === 'all' || b.group === this.data.group) && (!q || (b.title + ' ' + b.subtitle + ' ' + b.description).toLowerCase().includes(q))) }); },
+  selectGroup(event) { this.setData({ group: event.currentTarget.dataset.id }); this.filter(); },
+  search(event) { this.setData({ query: event.detail.value }); this.filter(); },
+  clearQuery() { this.setData({ query: '' }); this.filter(); },
+  clearSearch() { this.setData({ query: '', group: 'all' }); this.filter(); },
+  openBoard(event) { const board = this.data.filtered.find(b => b.id === event.detail.id); if (board) boards.open(board.id, board.experience); }
 });

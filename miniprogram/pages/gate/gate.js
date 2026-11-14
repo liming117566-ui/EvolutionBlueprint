@@ -25,6 +25,7 @@ Page({
   onInput(event) { this.setData({ code: event.detail.value.toUpperCase(), error: '' }); },
   help() { this.setData({ showHelp: true }); },
   closeHelp() { this.setData({ showHelp: false }); },
+  browse() { wx.redirectTo({ url: '/pages/home/home' }); },
   async authenticate(test) {
     if (this.data.loading) return;
     this.setData({ loading: true, error: '' });

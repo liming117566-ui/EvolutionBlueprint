@@ -13,6 +13,7 @@ const { createApp } = require('../server/app');
 const { passwordHash, hash } = require('../server/security');
 const seed = require('../server/seed.json');
 const sharp = require('sharp');
+const catalogModule = require('../server/catalog');
 const binary = require('./backend-fixtures.cjs');
 
 const ORIGIN = 'http://127.0.0.1:3002';
@@ -113,6 +114,175 @@ async function fixture(t, overrides = {}) {
   return f;
 }
 
+test('boards: draft edits remain private until publish, order and placements survive restart, hidden boards disappear', async t => {
+  const f = await fixture(t);
+  const before = (await f.request('/api/bootstrap')).body;
+  assert.equal(before.boards.length, 6);
+  const tree = await f.tree();
+  tree.boards[0].title = '英语进阶空间'; tree.boards[0].home = false;
+  tree.boards[0].features[0].title = '我的英语课程';
+  tree.boards[1].enabled = false;
+  tree.boards.reverse();
+  const saved = await f.save(tree);
+  assert.equal((await f.request('/api/bootstrap')).body.boards[0].title, before.boards[0].title);
+  await f.publish(saved);
+  await f.stop(); await f.start(); await f.login();
+  const boot = (await f.request('/api/bootstrap')).body;
+  assert.equal(boot.boards.length, 5); assert.equal(boot.boards[0].id, 'energy-space');
+  const english = boot.boards.find(b => b.id === 'junior-english');
+  assert.equal(english.title, '英语进阶空间'); assert.equal(english.home, false); assert.equal(english.learn, true);
+  assert.equal(english.features[0].title, '我的英语课程');
+  noContent(boot);
+});
+test('boards: reject unknown targets, invalid features, duplicate IDs and non-image asset references', async t => {
+  const f = await fixture(t), original = await f.tree();
+  for (const mutate of [
+    tree => { tree.boards[0].categoryIds = ['missing']; },
+    tree => { tree.boards[0].features = []; },
+    tree => { tree.boards[0].features[0].type = 'https://untrusted.example'; },
+    tree => { tree.boards[0].features[1].id = tree.boards[0].features[0].id; },
+    tree => { tree.boards[0].id = tree.categories[0].id; },
+    tree => { tree.boards[0].cover = 'javascript:alert(1)'; },
+    tree => { tree.boards[0].experience = 'https://untrusted.example'; }
+  ]) {
+    const tree = clone(original); mutate(tree);
+    await f.admin('/catalog', { method: 'PUT', json: tree, status: 400 });
+  }
+  assert.equal((await f.tree()).version, original.version);
+});
+test('English integration readiness is public while admin responses keep their security policy', async t => {
+  const f = await fixture(t);
+  const result = await f.request('/api/integrations/english');
+  assert.equal(typeof result.body.ready, 'boolean'); assert.equal(result.body.basePath, '/english/');
+  const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
+  assert(!admin.headers.get('content-security-policy').includes("'unsafe-inline'"));
+  if (result.body.ready) {
+    const english = await f.request('/english/');
+    assert.match(english.headers.get('content-type'), /text\/html/);
+    assert.match(english.bytes.toString(), /英语星空/);
+    assert(!english.headers.get('x-frame-options'));
+    assert.match(english.headers.get('content-security-policy'), /media-src 'self'/);
+    const index = (await f.request('/english/atlas/index.json')).body;
+    assert(index.words.length > 200);
+    const audio = await f.request('/english/atlas/audio/uk/' + index.words.find(w => w[6] & 2)[0] + '.mp3', { headers: { Range: 'bytes=0-63' }, status: 206 });
+    assert.equal(audio.bytes.length, 64);
+    await f.request('/english/licenses/CONTENT_LICENSE.md');
+  }
+});
+test('boards: uploaded covers are public only after the referencing board is published and enabled', async t => {
+  const f = await fixture(t);
+  const png = await sharp({ create: { width: 20, height: 20, channels: 3, background: '#416bf0' } }).png().toBuffer();
+  const asset = (await f.upload('board-cover.png', png)).asset;
+  const tree = await f.tree(); tree.boards[0].cover = asset.url;
+  const saved = await f.save(tree);
+  await f.request(asset.url, { status: 404 });
+  await f.publish(saved); await f.request(asset.url);
+  const hidden = await f.tree(); hidden.boards[0].enabled = false;
+  await f.publish(await f.save(hidden));
+  await f.request(asset.url, { status: 404 });
+});
+test('boards: upgrading old snapshots preserves unpublished text, progress, accounts, and runs only once', async t => {
+  const f = await fixture(t), row = f.store.get('SELECT * FROM catalog WHERE id=1');
+  const published = JSON.parse(row.published), draft = JSON.parse(row.draft);
+  delete published.boards; delete draft.boards;
+  draft.courses[0].title = '保留未发布的课程标题';
+  f.store.run('UPDATE catalog SET draft=?,published=? WHERE id=1', JSON.stringify(draft), JSON.stringify(published));
+  const admins = f.store.get('SELECT count(*) AS n FROM admins').n;
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).courses[0].title, '保留未发布的课程标题');
+  assert.notEqual(catalogModule.published(f.store).courses[0].title, '保留未发布的课程标题');
+  assert.equal(f.store.get('SELECT count(*) AS n FROM admins').n, admins);
+  const version = catalogModule.draft(f.store).version;
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).version, version);
+  assert.equal(catalogModule.published(f.store).courses.filter(c => c.id === 'english-foundations').length, 1);
+});
+test('math: static pages and data use original CSS, remove About and keep admin policy isolated', async t => {
+  const f = await fixture(t), result = await f.request('/api/integrations/math');
+  assert.equal(typeof result.body.ready, 'boolean'); assert.equal(result.body.basePath, '/math/');
+  const board = (await f.request('/api/bootstrap')).body.boards.find(b => b.id === 'math-taxonomy');
+  assert.equal(board.experience, 'cn-math-taxonomy'); assert.equal(board.home, true); assert.equal(board.learn, true);
+  if (result.body.ready) {
+    for (const route of ['/math/', '/math/explore/', '/math/diagnose/', '/math/children/', '/math/children/history.html']) {
+      const res = await f.request(route); assert.match(res.headers.get('content-type'), /text\/html/);
+      assert.doesNotMatch(res.bytes.toString(), />\s*关于\s*<\/a>/);
+      assert(!res.headers.get('x-frame-options'));
+    }
+    const css = await f.request('/math/assets/site.css');
+    assert.equal(css.bytes.toString(), fs.readFileSync(path.join(__dirname, '../integrations/cn-math-taxonomy/assets/site.css'), 'utf8'));
+    for (const file of ['topics', 'questions', 'dependencies']) assert(Array.isArray((await f.request('/math/data/' + file + '.json')).body));
+    await f.request('/math/assets/vendor/cytoscape.min.js'); await f.request('/math/LICENSE'); await f.request('/math/NOTICE.md');
+    await f.request('/math/missing.html', { status: 404 });
+  }
+  const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
+  assert(!admin.headers.get('content-security-policy').includes("'unsafe-inline'"));
+});
+test('math: one-time migration preserves draft changes and respects later deletion or disabling', async t => {
+  const f = await fixture(t), row = f.store.get('SELECT * FROM catalog WHERE id=1');
+  const draft = JSON.parse(row.draft), published = JSON.parse(row.published);
+  draft.boards = draft.boards.filter(b => b.id !== 'math-taxonomy'); published.boards = published.boards.filter(b => b.id !== 'math-taxonomy');
+  draft.boards[0].title = '保留未发布板块名称';
+  f.store.run('DELETE FROM migrations WHERE version=2');
+  f.store.run('UPDATE catalog SET draft=?,published=? WHERE id=1', JSON.stringify(draft), JSON.stringify(published));
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).boards[0].title, '保留未发布板块名称');
+  assert.notEqual(catalogModule.published(f.store).boards[0].title, '保留未发布板块名称');
+  assert.equal(catalogModule.published(f.store).boards.filter(b => b.id === 'math-taxonomy').length, 1);
+  let tree = await f.tree(); tree.boards.find(b => b.id === 'math-taxonomy').enabled = false; await f.publish(await f.save(tree));
+  await f.stop(); await f.start(); await f.login();
+  assert(!(await f.request('/api/bootstrap')).body.boards.some(b => b.id === 'math-taxonomy'));
+  tree = await f.tree(); tree.boards = tree.boards.filter(b => b.id !== 'math-taxonomy'); await f.publish(await f.save(tree));
+  await f.stop(); await f.start();
+  assert(!catalogModule.published(f.store).boards.some(b => b.id === 'math-taxonomy'));
+});
+test('junior math: local assets use the new name, white theme and isolated security policy', async t => {
+  const f = await fixture(t), ready = (await f.request('/api/integrations/junior-math')).body;
+  assert.equal(typeof ready.ready, 'boolean'); assert.equal(ready.basePath, '/junior-math/');
+  const boards = (await f.request('/api/bootstrap')).body.boards;
+  assert.equal(boards.find(b => b.id === 'junior-math').experience, 'tainai-junior-math');
+  assert(boards.some(b => b.id === 'math-taxonomy'));
+  if (ready.ready) {
+    const response = await f.request('/junior-math/'), html = response.bytes.toString();
+    assert.match(html, /<title>初中数学｜零基础初中数学课程<\/title>/);
+    assert.doesNotMatch(html, /小包子学数学/); assert(!response.headers.get('x-frame-options'));
+    const js = html.match(/src="([^"]+\.js)"/)[1], css = html.match(/href="([^"]+\.css)"/)[1];
+    await f.request(js); const style = (await f.request(css)).bytes.toString();
+    assert.match(style, /--paper:\s*#fff(?:fff)?\b/); assert.match(style, /background:\s*#fff(?:fff)?\b/);
+    await f.request('/junior-math/NOTICE.md'); await f.request('/junior-math/not-found', { status: 404 });
+  }
+  const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
+});
+test('junior math: migration preserves drafts and does not recreate a deleted board', async t => {
+  const f = await fixture(t), row = f.store.get('SELECT * FROM catalog WHERE id=1');
+  const draft = JSON.parse(row.draft), published = JSON.parse(row.published);
+  draft.boards = draft.boards.filter(b => b.id !== 'junior-math'); published.boards = published.boards.filter(b => b.id !== 'junior-math');
+  draft.boards[0].title = '保留原有草稿修改';
+  f.store.run('DELETE FROM migrations WHERE version=3');
+  f.store.run('UPDATE catalog SET draft=?,published=? WHERE id=1', JSON.stringify(draft), JSON.stringify(published));
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).boards[0].title, '保留原有草稿修改');
+  assert.notEqual(catalogModule.published(f.store).boards[0].title, '保留原有草稿修改');
+  assert.equal(catalogModule.published(f.store).boards.filter(b => b.id === 'junior-math').length, 1);
+  const tree = await f.tree(); tree.boards = tree.boards.filter(b => b.id !== 'junior-math'); await f.publish(await f.save(tree));
+  await f.stop(); await f.start(); assert(!catalogModule.published(f.store).boards.some(b => b.id === 'junior-math'));
+});
+test('taxonomy: title upgrade changes both snapshots once and preserves other draft fields', async t => {
+  const f = await fixture(t), row = f.store.get('SELECT * FROM catalog WHERE id=1');
+  const draft = JSON.parse(row.draft), published = JSON.parse(row.published);
+  draft.boards.find(b => b.id === 'math-taxonomy').title = '数学学习';
+  draft.boards.find(b => b.id === 'math-taxonomy').subtitle = '保留未发布副标题';
+  published.boards.find(b => b.id === 'math-taxonomy').title = '数学学习';
+  f.store.run('DELETE FROM migrations WHERE version=4');
+  f.store.run('UPDATE catalog SET draft=?,published=? WHERE id=1', JSON.stringify(draft), JSON.stringify(published));
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).boards.find(b => b.id === 'math-taxonomy').title, '中小学高中知识图谱');
+  assert.equal(catalogModule.published(f.store).boards.find(b => b.id === 'math-taxonomy').title, '中小学高中知识图谱');
+  assert.equal(catalogModule.draft(f.store).boards.find(b => b.id === 'math-taxonomy').subtitle, '保留未发布副标题');
+  const tree = await f.tree(); tree.boards.find(b => b.id === 'math-taxonomy').title = '后台后续修改';
+  await f.publish(await f.save(tree)); await f.stop(); await f.start();
+  assert.equal(catalogModule.published(f.store).boards.find(b => b.id === 'math-taxonomy').title, '后台后续修改');
+});
+
 function noContent(value) {
   if (!value || typeof value !== 'object') return;
   for (const [key, item] of Object.entries(value)) {
@@ -167,7 +337,7 @@ test('admin: login Origin/CSRF checks and password change revoke all older admin
 test('public metadata: anonymous and authenticated listings never include chapter bodies', async t => {
   const f = await fixture(t), user = await f.user();
   const bootstrap = (await f.request('/api/bootstrap')).body;
-  assert.deepEqual(Object.keys(bootstrap).sort(), ['categories', 'settings', 'version']); noContent(bootstrap);
+  assert.deepEqual(Object.keys(bootstrap).sort(), ['boards', 'categories', 'settings', 'version']); noContent(bootstrap);
   for (const options of [{}, { token: user.token }]) {
     const result = (await f.request('/api/courses', options)).body;
     noContent(result); assert(result.courses.length > 0);
