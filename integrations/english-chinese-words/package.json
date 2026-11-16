@@ -1,0 +1,13 @@
+{
+  "name": "English Words",
+  "version": "1.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "set NODE_OPTIONS=--max-old-space-size=16384 && rspress build",
+    "preview": "rspress preview"
+  },
+  "devDependencies": {
+    "@rspress/core": "^2.0.0"
+  }
+}

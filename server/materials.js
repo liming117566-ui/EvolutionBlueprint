@@ -113,6 +113,26 @@ function createMaterialsRouter(options = {}) {
       res.json({ materials });
     } catch (error) { res.status(error.status || 500).json({ error: error.status ? error.message : '资料目录暂时不可用，请稍后重试', code: error.code }); }
   });
+  router.get('/library', async (req, res) => {
+    try {
+      const materials = [];
+      for (const entry of await catalog()) {
+        try {
+          if (options.authorize) await options.authorize(req, entry);
+        } catch (error) {
+          // An aggregate library omits inaccessible or unpublished owners, but
+          // authentication failures and service errors must not become partial success.
+          if (error.status === 403 || error.status === 404) continue;
+          throw error;
+        }
+        const file = await availableFile(entry);
+        if (!file) continue;
+        await file.handle.close();
+        materials.push({ id: entry.id, title: entry.title, fileType: fileType(entry.file), url: '/api/materials/' + entry.id + '/file', sizeBytes: file.sizeBytes, scope: entry.scope, ownerId: entry.ownerId });
+      }
+      res.json({ materials });
+    } catch (error) { res.status(error.status || 500).json({ error: error.status ? error.message : '资料目录暂时不可用，请稍后重试', code: error.code }); }
+  });
   router.get('/:id/file', async (req, res) => {
     if (!ID.test(req.params.id)) return res.status(404).json({ error: '未找到可用的资料' });
     let file;

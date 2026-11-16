@@ -3,9 +3,10 @@ const session = require('../../utils/session');
 const catalog = require('../../utils/catalog');
 const config = require('../../utils/config');
 Page({
-  data: { code: '', error: '', loading: false, showHelp: false, statusBarHeight: 24, settings: catalog.settings(), signedIn: false, testSession: false, canDevLogin: false, hasAccess: false },
+  data: { code: '', error: '', loading: false, showHelp: false, statusBarHeight: 24, settings: catalog.settings(), signedIn: false, testSession: false, canDevLogin: false, testMode: false, hasAccess: false },
   async onLoad(options) {
     this._redeeming = options && options.redeem === '1';
+    this._boardId = options && options.board || '';
     const info = wx.getWindowInfo ? wx.getWindowInfo() : wx.getSystemInfoSync();
     this.setData({ statusBarHeight: info.statusBarHeight || 24, canDevLogin: config.canDevLogin() });
     await this.retry();
@@ -14,7 +15,11 @@ Page({
     this.setData({ error: '' });
     try {
       const boot = await catalog.bootstrap();
-      this.setData({ settings: boot.settings });
+      const testMode = boot.testLoginEnabled === true && config.canDevLogin();
+      this.setData({ settings: boot.settings, testMode, canDevLogin: testMode });
+      if (testMode && !session.current()) await session.devLogin();
+      const board = (boot.boards || []).find(b => b.id === this._boardId);
+      if (board) this.setData({ settings: { ...boot.settings, gateTitle: '解锁' + board.title, gateDescription: '兑换此板块专属兑换码，或使用全部板块兑换码。' } });
       if (session.current()) {
         const me = await session.me();
         this.setData({ signedIn: true, testSession: session.current().test, hasAccess: me.hasAccess });
@@ -30,7 +35,7 @@ Page({
     if (this.data.loading) return;
     this.setData({ loading: true, error: '' });
     try {
-      await (test ? session.devLogin() : session.login());
+      await (test || this.data.testMode ? session.devLogin() : session.login());
       const me = await session.me();
       this.setData({ signedIn: true, testSession: session.current().test, hasAccess: me.hasAccess });
       if (me.hasAccess && !this._redeeming) wx.redirectTo({ url: '/pages/home/home' });
@@ -45,7 +50,7 @@ Page({
     if (!code) return this.setData({ error: '请输入课程提供方发给你的兑换码。' });
     this.setData({ loading: true, error: '' });
     try {
-      if (!session.current()) await session.login();
+      if (!session.current()) await (this.data.testMode ? session.devLogin() : session.login());
       this.setData({ signedIn: true, testSession: session.current().test });
       const result = await api.request('/api/redeem', { method: 'POST', data: { code } });
       if (!result.ok) throw new Error('兑换未完成，请重试');

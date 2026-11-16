@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}新建诊断 · 数学图谱{% endblock %}
+{% block content %}
+<div class="row justify-content-center fade-in">
+  <div class="col-12 col-lg-9">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title"><i class="bi bi-search text-gradient"></i> 录入错题</h1>
+        <p class="page-sub">输入错题信息，系统将自动映射到知识点并沿依赖链回溯找到根因</p>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+      <div class="card-body p-4 p-md-5">
+        <form method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-4">
+            <label class="form-label">题目内容 <span class="text-danger">*</span></label>
+            <textarea name="question" class="form-control" rows="4" required
+              placeholder="输入完整的题目内容，尽可能包含关键数学术语..."></textarea>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">题目图片</label>
+            <div class="upload-area border rounded-3 p-4 text-center" id="uploadArea"
+              style="border-style: dashed !important; cursor: pointer; transition: all 0.2s;">
+              <input type="file" name="image" id="imageInput" accept="image/*" capture="environment"
+                style="display: none;">
+              <div id="uploadPlaceholder">
+                <i class="bi bi-camera" style="font-size: 2rem; color: var(--slate-400);"></i>
+                <p class="mt-2 mb-1" style="color: var(--slate-500);">点击上传或拍照</p>
+                <p class="small mb-0" style="color: var(--slate-400);">支持 PNG / JPG / GIF / WebP / BMP，最大 16MB</p>
+              </div>
+              <div id="uploadPreview" style="display: none;">
+                <img id="previewImg" src="" alt="预览" class="mb-2 rounded"
+                  style="max-height: 200px; max-width: 100%;">
+                <div>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" id="removeImage">
+                    <i class="bi bi-x-circle"></i> 移除
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-4">
+              <label class="form-label">年级</label>
+              <select name="grade" class="form-select">
+                <option value="">不限</option>
+                {% for g in grades %}
+                <option value="{{ g }}">{{ grade_info[g].short }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label">错误类型</label>
+              <select name="error_type" class="form-select">
+                <option value="">—</option>
+                <option value="概念混淆">概念混淆</option>
+                <option value="计算失误">计算失误</option>
+                <option value="方法不熟">方法不熟</option>
+                <option value="审题偏差">审题偏差</option>
+              </select>
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-12 col-md-6">
+              <label class="form-label">你的答案</label>
+              <input type="text" name="wrong_answer" class="form-control" placeholder="选填">
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label">正确答案</label>
+              <input type="text" name="correct_answer" class="form-control" placeholder="选填">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-search"></i> 开始诊断
+          </button>
+        </form>
+
+        {% if result and not result.success %}
+        <hr>
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i> {{ result.message }}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  const uploadArea = document.getElementById('uploadArea');
+  const imageInput = document.getElementById('imageInput');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  const uploadPreview = document.getElementById('uploadPreview');
+  const previewImg = document.getElementById('previewImg');
+  const removeBtn = document.getElementById('removeImage');
+
+  // 点击上传区域触发文件选择
+  uploadArea.addEventListener('click', function(e) {
+    if (e.target === removeBtn || removeBtn.contains(e.target)) return;
+    imageInput.click();
+  });
+
+  // 拖拽支持
+  uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.style.borderColor = 'var(--primary)';
+    uploadArea.style.backgroundColor = 'rgba(99, 102, 241, 0.03)';
+  });
+
+  uploadArea.addEventListener('dragleave', function() {
+    uploadArea.style.borderColor = '';
+    uploadArea.style.backgroundColor = '';
+  });
+
+  uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.style.borderColor = '';
+    uploadArea.style.backgroundColor = '';
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      imageInput.files = files;
+      showPreview(files[0]);
+    }
+  });
+
+  // 文件选择后预览
+  imageInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+      showPreview(this.files[0]);
+    }
+  });
+
+  function showPreview(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      previewImg.src = e.target.result;
+      uploadPlaceholder.style.display = 'none';
+      uploadPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // 移除图片
+  removeBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    imageInput.value = '';
+    uploadPlaceholder.style.display = '';
+    uploadPreview.style.display = 'none';
+    previewImg.src = '';
+  });
+})();
+</script>
+{% endblock %}

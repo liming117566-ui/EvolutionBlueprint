@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}错题本 · 数学图谱{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-journal-x text-gradient"></i> 错题本</h1>
+    <p class="page-sub">记录你的错题，逐一攻克薄弱点</p>
+  </div>
+  <a href="{{ url_for('practice.index') }}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-pencil"></i> 去练习
+  </a>
+</div>
+
+{% if wqs %}
+<div class="row g-4 fade-in">
+  {% for wq in wqs %}
+  <div class="col-12 col-md-6">
+    <div class="card shadow-sm border-0 h-100 {% if wq.status == 'conquered' %}opacity-50{% endif %}">
+      <div class="card-header d-flex justify-content-between align-items-center bg-light">
+        <small class="text-muted"><i class="bi bi-clock"></i> {{ wq.created_at.strftime('%m-%d %H:%M') }}</small>
+        {% if wq.status == 'conquered' %}
+        <span class="badge bg-success"><i class="bi bi-check-circle"></i> 已攻克</span>
+        {% else %}
+        <span class="badge bg-danger"><i class="bi bi-flag"></i> 待攻克</span>
+        {% endif %}
+      </div>
+      <div class="card-body">
+        {% if wq.image_path %}
+        <div class="mb-3 text-center">
+          <img src="{{ url_for('diagnose.uploaded_file', filename=wq.image_path) }}" alt="错题图片"
+               class="rounded" style="max-height: 160px; max-width: 100%;">
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+          <div class="fw-medium">{{ wq.question_text[:200] }}{% if wq.question_text|length > 200 %}...{% endif %}</div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <small class="text-muted d-block mb-1">你的答案</small>
+            <div class="p-2 card-soft rounded small">{{ wq.wrong_answer or '—' }}</div>
+          </div>
+          <div class="col-6">
+            <small class="text-success d-block mb-1">正确答案</small>
+            <div class="p-2 card-soft rounded small">{{ wq.correct_answer or '—' }}</div>
+          </div>
+        </div>
+
+        {% if wq.error_type %}
+        <div class="mb-3">
+          <span class="badge bg-warning text-dark"><i class="bi bi-tag"></i> {{ wq.error_type }}</span>
+        </div>
+        {% endif %}
+
+        {% if wq.error_analysis %}
+        <div class="mb-3">
+          <small class="text-muted"><i class="bi bi-lightbulb"></i> {{ wq.error_analysis }}</small>
+        </div>
+        {% endif %}
+
+        {% if wq.status != 'conquered' %}
+        <div class="d-flex flex-wrap gap-1">
+          <a href="{{ url_for('graph.topic_detail', topic_id=wq.topic_id) }}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-book"></i> 知识点
+          </a>
+          <a href="{{ url_for('practice.start', topic_id=wq.topic_id) }}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil"></i> 去练习
+          </a>
+          <a href="{{ url_for('diagnose.new') }}" class="btn btn-sm btn-outline-danger">
+            <i class="bi bi-search"></i> 诊断
+          </a>
+          <form method="post" action="{{ url_for('practice.conquer_wrong_question', wq_id=wq.id) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-sm btn-success">
+              <i class="bi bi-check"></i> 已攻克
+            </button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- 分页 -->
+{% if pagination.pages > 1 %}
+<nav class="mt-4 fade-in">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+      <a class="page-link" href="{{ url_for('practice.wrong_questions', page=pagination.prev_num) if pagination.has_prev else '#' }}">上一页</a>
+    </li>
+    {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+      {% if p %}
+      <li class="page-item {{ 'active' if p == pagination.page }}">
+        <a class="page-link" href="{{ url_for('practice.wrong_questions', page=p) }}">{{ p }}</a>
+      </li>
+      {% else %}
+      <li class="page-item disabled"><span class="page-link">...</span></li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+      <a class="page-link" href="{{ url_for('practice.wrong_questions', page=pagination.next_num) if pagination.has_next else '#' }}">下一页</a>
+    </li>
+  </ul>
+  <div class="text-center text-muted small">共 {{ pagination.total }} 条，第 {{ pagination.page }}/{{ pagination.pages }} 页</div>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="card border-0 shadow-sm fade-in">
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-journal-check"></i></div>
+    <h5>暂无错题记录</h5>
+    <p>开始练习，错题会自动收录到这里</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

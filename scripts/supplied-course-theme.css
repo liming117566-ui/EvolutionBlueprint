@@ -1,0 +1,16 @@
+/* New supplied courses extend the current native learning palette. */
+body[data-xbt-pack]{--paper:#f8f9fa;--white:#fff;--ink:#242823;--muted:#6e736f;--green:#242823;--teal:#242823;--teal-dark:#242823;--mint:#e7efe8;--line:#e9ece7;--border:#e9ece7;background:#f8f9fa;color:#242823}
+body[data-xbt-pack] .brand{letter-spacing:0}
+body[data-xbt-pack] .brand-mark{background:#f8d849;border-radius:12px;overflow:hidden;flex-shrink:0}
+body[data-xbt-pack] .brand-mark img{width:100%;height:100%;display:block;object-fit:cover}
+body[data-xbt-pack] .brand small{letter-spacing:0;font-size:10px}
+body[data-xbt-pack] :is(.sidebar,.topbar){background:#fff;border-color:#e9ece7}
+body[data-xbt-pack] :is(.hero,.welcome){background:#fff5c7;border-color:#e9ece7;border-radius:20px}
+body[data-xbt-pack] :is(.hero h1,.hero h1 em,.welcome h1,.hero p){color:#242823}
+body[data-xbt-pack] :is(.model-card,.topic-card,.experiment-panel,.reading-panel,.insight-card,.paper-card,.daily-card,.growth-card,.progress-box){border-radius:20px;border-color:#e9ece7}
+body[data-xbt-pack] :is(.button.primary,.button.primary:hover,.main-nav a.active){background:#f8d849;color:#242823;border-color:#f8d849}
+body[data-xbt-pack] :is(.daily-card,.growth-card){background:#e7efe8}
+body[data-xbt-pack] #about-button{display:none}
+body[data-xbt-pack] :is(img,svg){max-width:100%}
+body[data-xbt-pack] :is(main,.app-shell,.shell){min-width:0}
+@media(max-width:600px){body[data-xbt-pack] .brand small{font-size:9px}body[data-xbt-pack] :is(.page-intro,.page-heading){min-width:0}body[data-xbt-pack] :is(input,select,textarea){max-width:100%}}

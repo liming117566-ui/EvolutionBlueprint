@@ -1,11 +1,11 @@
 {
   "settings": {
-    "brandName": "进化蓝图",
-    "logo": "/assets/icons/mark.svg",
+    "brandName": "新博途",
+    "logo": "/assets/generated/app-icon.webp",
     "avatar": "/assets/icons/user.svg",
-    "gateCover": "/assets/covers/focus.svg",
+    "gateCover": "/assets/generated/home-hero.webp",
     "welcomeTitle": "让学习成为日常",
-    "gateTitle": "开启你的进化蓝图",
+    "gateTitle": "开启你的新博途",
     "gateDescription": "输入课程提供方发放的兑换码，开始学习。",
     "nav": [
       {
@@ -29,7 +29,7 @@
       "学习记录将同步到当前账号。"
     ],
     "about": [
-      "进化蓝图是一个专注于课程学习的小程序。"
+      "新博途是一个专注于课程学习的小程序。"
     ],
     "redeemHelp": [
       "卡密由课程提供方发放，兑换后获得对应课程的访问权限。"

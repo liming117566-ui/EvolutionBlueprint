@@ -1,10 +1,10 @@
 {
-  "description": "进化蓝图课程小程序",
+  "description": "新博途课程小程序",
   "packOptions": { "ignore": [] },
   "setting": { "urlCheck": false, "es6": true, "enhance": true, "postcss": true, "minified": true },
   "compileType": "miniprogram",
   "libVersion": "3.6.5",
   "appid": "wx08fe2b1891297fce",
-  "projectname": "进化蓝图",
+  "projectname": "新博途",
   "condition": {}
 }

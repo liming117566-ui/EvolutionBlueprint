@@ -4,6 +4,8 @@ import { imageField } from './assets.js';
 const uid = () => crypto.randomUUID();
 export async function renderCatalog(host, context) {
   let catalog = await context.getCatalog();
+  const integrations = (await api('/api/admin/integrations/modules')).modules;
+  const websites = (await api('/api/admin/websites')).items;
   catalog.boards ||= [];
   if (context.view === 'boards' && !['board', 'new-board'].includes(context.selection?.type)) context.selection = catalog.boards[0] ? { type: 'board', id: catalog.boards[0].id } : { type: 'settings', id: '' };
   let selection = context.selection || { type: 'settings', id: '' }, mode = 'edit', revision = 0;
@@ -123,7 +125,7 @@ export async function renderCatalog(host, context) {
     drawParagraphs(); editor.append(paragraphs, el('hr', { class: 'divider' }), bind('随堂练习', item, 'practice', { type: 'textarea', maxlength: 10000 }));
   }
   function renderBoard(item) {
-    editor.append(bind('打开页面', item, 'experience', { type: 'select', options: [{ value: 'courses', label: '课程与练习空间' }, { value: 'english-starry-sky', label: '英语星空 · 初中英语' }, { value: 'cn-math-taxonomy', label: '数学知识图谱 · 自适应诊断' }, { value: 'tainai-junior-math', label: '初中数学 · 分步课程与动画' }], hint: '独立学习模块使用各自的界面和本机记录，无需额外登录。下方主题与功能配置仅影响课程空间。' }));
+    editor.append(bind('打开页面', item, 'experience', { type: 'select', options: [{ value: 'courses', label: '课程与练习空间' }, { value: 'english-starry-sky', label: '初中英语' }, { value: 'cn-math-taxonomy', label: '数学知识图谱 · 自适应诊断' }, { value: 'tainai-junior-math', label: '初中数学 · 分步课程与动画' }].concat(integrations.map(module => ({ value: module.slug, label: module.title + (module.ready ? '' : '（尚未构建）') })), websites.map(website => ({ value: 'website:' + website.id, label: '上传网页 · ' + website.title }))), hint: '所有板块须登录并兑换对应板块码或全通码。上传网页请先在“学习网页”上传，选择后保存草稿并发布。下方课程主题用于关联原生课程与资料。' }));
     editor.append(el('p', { class: 'muted' }, '首页与学习页只展示板块入口。进入二级页面后，展示关联主题下的课程、练习和进度；课程权限保持独立校验。'), bind('板块名称', item, 'title', { maxlength: 40, required: true }), bind('一句话介绍', item, 'subtitle', { maxlength: 100 }), bind('二级页面介绍', item, 'description', { type: 'textarea', maxlength: 1000 }), el('div', { class: 'form-grid' }, bind('所属分组', item, 'group', { type: 'select', options: [{ value: 'subject', label: '学科提升' }, { value: 'growth', label: '自我成长' }, { value: 'life', label: '生活方式' }] }), bind('材质配色', item, 'tone', { type: 'select', options: [{ value: 'blue', label: '晨光蓝' }, { value: 'lilac', label: '柔雾紫' }, { value: 'ink', label: '安静深蓝' }] })), bind('推荐标签', item, 'badge', { maxlength: 16 }), imageField('入口图标', item.icon, value => { item.icon = value; dirty(); }), imageField('推荐位封面', item.cover, value => { item.cover = value; dirty(); }), el('h3', { class: 'section-label' }, '展示位置'), bind('启用此板块', item, 'enabled', { type: 'checkbox' }), bind('显示在首页', item, 'home', { type: 'checkbox' }), bind('显示在学习页', item, 'learn', { type: 'checkbox' }), bind('作为首页主推荐', item, 'featured', { type: 'checkbox', hint: '多个主推荐启用时，按板块排序取第一个。可用上移、下移调整顺序。' }), el('h3', { class: 'section-label' }, '关联课程主题'), el('p', { class: 'muted' }, '可关联多个主题。主题下新发布的课程会自动加入此板块。未关联主题时，前端显示内容筹备状态。'));
     const checks = el('div', { class: 'check-list' });
     for (const c of catalog.categories) {

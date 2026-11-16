@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# 虚拟环境
+venv/
+.env
+
+# 数据库
+instance/
+*.db
+*.sqlite3
+
+# 上传文件
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# 日志
+*.log
+
+# 其他
+node_modules/
+*.zip
+package-lock.json
+package.json

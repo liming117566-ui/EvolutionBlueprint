@@ -182,7 +182,7 @@ export function Me({ privateAvailable }: { privateAvailable: boolean }) {
       </div>
       <details className="panel resource-notice">
         <summary>教材与资源许可</summary>
-        <p className="muted">本模块改编自 <a href="https://github.com/wenchester8-droid/english-starry-sky" target="_blank" rel="noreferrer">英语星空 English Galaxy</a>，已修改界面与账号功能。部分插画与美音来自 <a href="https://github.com/designfuchen/word-atlas" target="_blank" rel="noreferrer">Word Atlas contributors</a>，采用 <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>。教材及试题版权归原权利人，内容授权详见<a href={`${import.meta.env.BASE_URL}licenses/CONTENT_LICENSE.md`} target="_blank" rel="noreferrer">资源许可说明</a>。</p>
+        <p className="muted">教材、插画、音频及试题的版权归各自权利人所有。内容来源、修改说明及授权条件请查阅<a href={`${import.meta.env.BASE_URL}licenses/CONTENT_LICENSE.md`} target="_blank" rel="noreferrer">教材与资源许可说明</a>。</p>
       </details>
     </div>
   );

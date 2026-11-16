@@ -2,7 +2,7 @@ const api = require('./api');
 const config = require('./config');
 const session = require('./session');
 const defaults = {
-  brandName: '进化蓝图', logo: '/assets/icons/mark.svg', avatar: '/assets/icons/user.svg', gateCover: '/assets/covers/focus.svg',
+  brandName: '新博途', logo: '/assets/generated/app-icon.webp', avatar: '/assets/icons/user.svg', gateCover: '/assets/generated/home-hero.webp',
   welcomeTitle: '让学习成为日常', gateTitle: '开启你的学习空间', gateDescription: '登录并兑换课程，开始学习。',
   nav: [{ id: 'home', label: '首页', icon: '/assets/icons/home.svg' }, { id: 'learn', label: '学习', icon: '/assets/icons/book.svg' }, { id: 'profile', label: '我的', icon: '/assets/icons/user.svg' }],
   help: [], about: [], redeemHelp: []
@@ -26,7 +26,7 @@ function normalizeSettings(source) {
   return result;
 }
 async function bootstrap() {
-  const result = await api.request('/api/bootstrap', { auth: false });
+  const result = await api.request('/api/bootstrap', { auth: Boolean(session.current()) });
   settings = normalizeSettings(result.settings);
   try { getApp().globalData.settings = settings; } catch (_) {}
   return { ...result, settings };

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}知识图谱 · 数学图谱{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-diagram-3 text-gradient"></i> 知识图谱</h1>
+    <p class="page-sub">选择年级浏览对应的知识图谱结构</p>
+  </div>
+  <form action="{{ url_for('graph.search') }}" method="get">
+    <div class="input-group">
+      <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search"></i></span>
+      <input type="text" name="q" class="form-control border-start-0" placeholder="搜索知识点..." style="width:200px;">
+      <button class="btn btn-primary" type="submit">搜索</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4 fade-in">
+  {% for g in grades %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <a href="{{ url_for('graph.view_grade', grade=g.key) }}" class="text-decoration-none">
+      <div class="card border h-100 hover-lift">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="icon-badge bg-primary"><i class="bi bi-book"></i></div>
+            <span class="badge bg-primary">{{ g.name }}</span>
+          </div>
+          <h5 class="mb-1 fw-bold">{{ g.name }}</h5>
+          <p class="text-muted small mb-3">点击查看完整知识图谱</p>
+          <div class="row text-center g-2">
+            <div class="col-4">
+              <div class="fw-bold fs-5 text-gradient">{{ g.topic_count }}</div>
+              <small class="text-muted d-block">知识点</small>
+            </div>
+            <div class="col-4">
+              <div class="fw-bold fs-5 text-gradient-success">{{ g.domain_count }}</div>
+              <small class="text-muted d-block">领域</small>
+            </div>
+            <div class="col-4">
+              <div class="fw-bold fs-5 text-gradient-warning">
+                <i class="bi bi-arrow-right-circle"></i>
+              </div>
+              <small class="text-muted d-block">查看</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

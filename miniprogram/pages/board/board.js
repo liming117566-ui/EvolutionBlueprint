@@ -15,9 +15,11 @@ Page({
       if (version !== this._version || !result) return;
       const board = boards.decorate(result.boards, result.courses).find(b => b.id === this._boardId);
       if (!board) throw new Error('这个学习板块已调整或下架，请返回查看其他板块。');
+      if (!board.accessible) { require('../../utils/board-access').gate(board.id); return; }
       if (board.experience === 'english-starry-sky') { wx.redirectTo({ url: '/pages/english/english?id=' + encodeURIComponent(board.id) }); return; }
       if (board.experience === 'cn-math-taxonomy') { wx.redirectTo({ url: '/pages/math/math?id=' + encodeURIComponent(board.id) }); return; }
       if (board.experience === 'tainai-junior-math') { wx.redirectTo({ url: '/pages/junior-math/junior-math?id=' + encodeURIComponent(board.id) }); return; }
+      if (require('../../utils/integrations').find(board.experience) || /^website:/.test(board.experience || '')) { wx.redirectTo({ url: '/pages/module/module?id=' + encodeURIComponent(board.id) }); return; }
       const courses = result.courses.filter(c => board.categoryIds.includes(c.categoryId));
       const exercises = [];
       for (const c of courses.filter(c => c.accessible)) for (const ch of c.chapters || []) for (const s of ch.sections) if (s.practice) exercises.push({ id: s.id, title: s.title, courseId: c.id, courseTitle: c.title, chapterId: ch.id, chapterTitle: ch.title });

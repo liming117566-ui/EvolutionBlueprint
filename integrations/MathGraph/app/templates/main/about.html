@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}关于 · 数学图谱{% endblock %}
+{% block content %}
+<div class="row justify-content-center fade-in">
+  <div class="col-12 col-lg-9">
+    <div class="page-head">
+      <div>
+        <h1 class="page-title"><i class="bi bi-info-circle text-gradient"></i> 关于数学图谱</h1>
+        <p class="page-sub">一个基于知识图谱的初中数学自适应学习平台</p>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4 p-md-5">
+        <p class="lead mb-4">
+          数学图谱是一个基于人教版初中数学知识点体系构建的自适应学习平台。
+        </p>
+
+        <h5 class="mt-2 mb-3 fw-bold">核心特性</h5>
+        <div class="row g-4">
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-start">
+              <div class="icon-badge bg-primary me-3"><i class="bi bi-diagram-3"></i></div>
+              <div>
+                <strong>知识图谱驱动</strong>
+                <p class="text-muted small mb-0">169个知识点、237条依赖关系，完整覆盖七至九年级六册</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-start">
+              <div class="icon-badge bg-danger me-3"><i class="bi bi-link-45deg"></i></div>
+              <div>
+                <strong>依赖链诊断</strong>
+                <p class="text-muted small mb-0">沿 hard 依赖链回溯，精准定位薄弱根因</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-start">
+              <div class="icon-badge bg-success me-3"><i class="bi bi-signpost-2"></i></div>
+              <div>
+                <strong>个性化路径</strong>
+                <p class="text-muted small mb-0">DAG 拓扑排序生成学习路径，跳过已掌握知识点</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6">
+            <div class="d-flex align-items-start">
+              <div class="icon-badge bg-warning me-3"><i class="bi bi-trophy"></i></div>
+              <div>
+                <strong>四档难度练习</strong>
+                <p class="text-muted small mb-0">夯基→目标→综合→挑战，循序渐进</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <h5 class="mb-3 fw-bold">技术栈</h5>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-lightning-charge-fill text-warning"></i> Flask 3.0</span>
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-database-fill text-primary"></i> SQLAlchemy</span>
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-bootstrap text-primary"></i> Bootstrap 5</span>
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-box-seam text-success"></i> Alpine.js</span>
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-share-fill text-info"></i> vis-network</span>
+          <span class="badge bg-light text-dark px-3 py-2"><i class="bi bi-bar-chart-fill text-danger"></i> Chart.js</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

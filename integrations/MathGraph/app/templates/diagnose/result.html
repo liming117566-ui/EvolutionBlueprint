@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}诊断结果 · 数学图谱{% endblock %}
+{% block content %}
+<div class="fade-in">
+  <a href="{{ url_for('diagnose.index') }}" class="btn btn-outline-secondary btn-sm mb-3">
+    <i class="bi bi-arrow-left"></i> 返回诊断列表
+  </a>
+
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-gradient text-white">
+      <h4 class="mb-0"><i class="bi bi-clipboard2-pulse"></i> 诊断报告</h4>
+    </div>
+    <div class="card-body">
+      <!-- 错题原文 -->
+      {% if wq %}
+      <div class="card-soft p-3 rounded-lg mb-3">
+        <h6 class="mb-2 text-muted"><i class="bi bi-card-text"></i> 错题内容</h6>
+        {% if wq.image_path %}
+        <div class="mb-2 text-center">
+          <img src="{{ url_for('diagnose.uploaded_file', filename=wq.image_path) }}" alt="错题图片"
+               class="rounded" style="max-height: 200px; max-width: 100%;">
+        </div>
+        {% endif %}
+        <div class="mb-1">{{ wq.question_text }}</div>
+        <div class="row g-2 mt-2">
+          <div class="col-6">
+            <small class="text-muted">你的答案</small>
+            <div class="text-danger">{{ wq.wrong_answer or '—' }}</div>
+          </div>
+          <div class="col-6">
+            <small class="text-muted">正确答案</small>
+            <div class="text-success">{{ wq.correct_answer or '—' }}</div>
+          </div>
+        </div>
+        {% if wq.error_type %}
+        <span class="badge bg-warning text-dark mt-1"><i class="bi bi-tag"></i> {{ wq.error_type }}</span>
+        {% endif %}
+        {% if wq.error_analysis %}
+        <div class="mt-2 small text-muted"><i class="bi bi-lightbulb"></i> {{ wq.error_analysis }}</div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <div class="row g-3 mb-3">
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="mb-2 text-muted"><i class="bi bi-bullseye"></i> 出错知识点</h6>
+            <p class="mb-0 d-flex align-items-center flex-wrap gap-2">
+              <strong>{{ diag.target_topic_name }}</strong>
+              <a href="{{ url_for('graph.topic_detail', topic_id=diag.target_topic_id) }}" class="btn btn-sm btn-outline-primary">查看详情</a>
+            </p>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="mb-2 text-muted"><i class="bi bi-search"></i> 根因定位</h6>
+            {% if diag.root_cause_id != diag.target_topic_id %}
+            <p class="mb-0 d-flex align-items-center flex-wrap gap-2">
+              <span class="badge bg-danger">根因</span>
+              <strong>{{ diag.root_cause_name }}</strong>
+              <a href="{{ url_for('graph.topic_detail', topic_id=diag.root_cause_id) }}" class="btn btn-sm btn-outline-danger">查看</a>
+            </p>
+            {% else %}
+            <p class="text-muted mb-0">该知识点本身即为根因，无更深的前置薄弱点</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="mb-1 text-muted"><i class="bi bi-clock"></i> 预估补强时间</h6>
+            <p class="text-primary fw-bold fs-5 mb-0">{{ diag.estimated_time or '—' }}</p>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="mb-1 text-muted"><i class="bi bi-calendar-event"></i> 诊断时间</h6>
+            <p class="text-muted mb-0">{{ diag.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 薄弱链 -->
+  {% if chain %}
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-light">
+      <i class="bi bi-link-45deg text-warning"></i> 薄弱依赖链（根因 → 出错点）
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        {% for item in chain %}
+          {% if not loop.first %}<i class="bi bi-arrow-right text-muted"></i>{% endif %}
+          <div class="card border {% if item.is_target %}border-danger{% else %}border-warning{% endif %}" style="min-width:150px">
+            <div class="card-body p-3">
+              <small class="text-muted">{{ item.grade }}</small>
+              <br>
+              <a href="{{ url_for('graph.topic_detail', topic_id=item.topic_id) }}" class="text-decoration-none fw-bold">
+                {{ item.topic.name if item.topic else item.topic_id }}
+              </a>
+              <br>
+              <small>
+                {% if item.status == 'weak' %}<span class="badge bg-danger">薄弱</span>
+                {% elif item.status == 'learning' %}<span class="badge bg-warning text-dark">学习中</span>
+                {% elif item.status == 'mastered' %}<span class="badge bg-success">已掌握</span>
+                {% else %}<span class="badge bg-secondary">未开始</span>{% endif %}
+                {% if item.is_target %}<span class="badge bg-danger ms-1">出错点</span>{% endif %}
+              </small>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 补强建议 -->
+  {% if suggestion %}
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-light">
+      <i class="bi bi-list-check text-success"></i> 补强建议（按推荐顺序）
+    </div>
+    <div class="card-body">
+      <ol class="list-group list-group-numbered">
+        {% for s in suggestion %}
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div class="ms-2 me-auto">
+            <a href="{{ url_for('graph.topic_detail', topic_id=s.topic_id) }}" class="text-decoration-none fw-bold">{{ s.name }}</a>
+            <br>
+            <small class="text-muted">{{ s.type_label }} · {% if s.is_root %}<span class="text-danger">根因</span>{% else %}中间节点{% endif %}</small>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-primary rounded-pill">约{{ s.estimated_minutes }}分钟</span>
+            {% if not s.is_root %}
+            <a href="{{ url_for('practice.start', topic_id=s.topic_id) }}" class="btn btn-sm btn-outline-warning mt-1">去练习</a>
+            {% else %}
+            <a href="{{ url_for('learn.create', topic_id=s.topic_id) }}" class="btn btn-sm btn-outline-success mt-1">学路径</a>
+            {% endif %}
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="d-flex flex-wrap gap-2">
+    <a href="{{ url_for('diagnose.new') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> 继续诊断
+    </a>
+    {% if diag.root_cause_id %}
+    <a href="{{ url_for('learn.create', topic_id=diag.root_cause_id) }}" class="btn btn-success">
+      <i class="bi bi-signpost-2"></i> 从根因开始学习
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

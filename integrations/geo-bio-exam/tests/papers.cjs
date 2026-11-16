@@ -1,0 +1,16 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..'),ctx={};ctx.window=ctx;vm.createContext(ctx);
+for(const file of ['data.js','papers-core.js'])vm.runInContext(fs.readFileSync(path.join(root,'web',file),'utf8'),ctx);
+const C=ctx.PaperCore,T=ctx.TOPICS;
+assert.equal(C.pool(T,['7a']).length,22);assert.equal(C.pool(T,['7b'],'7b|人体的呼吸').length,2);assert.equal(C.pool(T,[]).length,0);
+assert.throws(()=>C.generate(T,{books:['7a'],count:23,minutes:30}),/22/);
+const p=C.generate(T,{title:'专题复习卷',books:['7a'],count:10,minutes:45,group:'all'});
+assert.equal(p.questions.length,10);assert.equal(new Set(p.questions.map(q=>q.id)).size,10);assert(p.questions.every(q=>q.id.startsWith('7a-')&&new Set(q.order).size===3&&q.choice===null));assert.equal(p.title,'专题复习卷');assert.equal(p.minutes,45);
+assert.equal(C.result(p,T).score,0);assert.equal(C.result(p,T).answered,0);
+for(const q of p.questions){const t=T.find(t=>t.id===q.id);q.choice=q.order.indexOf(t.answer)}assert.equal(C.result(p,T).score,100);assert.equal(C.result(p,T).correct,10);
+p.questions[0].choice=(p.questions[0].choice+1)%3;assert.equal(C.result(p,T).score,90);
+const serialized=JSON.stringify(p);assert.equal(C.normalize(JSON.parse('['+serialized+']'),T).length,1);assert.equal(JSON.stringify(C.normalize(JSON.parse('['+serialized+']'),T)[0]),serialized);
+const bad=JSON.parse(serialized);bad.questions[0].order=[0,0,1];assert.equal(C.normalize([bad],T).length,0);const incomplete=JSON.parse(serialized);incomplete.questions[0].choice=null;incomplete.submitted=true;assert.equal(C.normalize([incomplete],T).length,0);
+assert.equal(C.normalize([p,p],T).length,1);assert.equal(C.normalize(Array.from({length:12},()=>C.generate(T,{books:['7a'],count:1,minutes:5})),T).length,10);
+for(const file of ['app.js','papers-core.js','papers.js'])new vm.Script(fs.readFileSync(path.join(root,'web',file),'utf8'),{filename:file});
+console.log('PASS: paper scopes, duplicate prevention, question/option stability, score mapping, reload validation, incomplete submission guard, 10-paper retention.');

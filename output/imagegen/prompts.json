@@ -1,0 +1,86 @@
+{
+  "model": "gpt-image-2.6",
+  "provider": "https://auroraq.top",
+  "items": [
+    {
+      "id": "junior-english",
+      "title": "初中英语",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: An open textbook and a forest-green pair of headphones with two blank speech bubbles, language listening and reading"
+    },
+    {
+      "id": "junior-math",
+      "title": "初中数学",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A triangular ruler, a softly rounded cube and a pale golden sphere, arranged as an elegant geometry learning still life"
+    },
+    {
+      "id": "math-taxonomy",
+      "title": "中小学高中知识图谱",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A sculptural branching knowledge tree made of connected green and ivory spheres, a small geometric pyramid, mathematical connections"
+    },
+    {
+      "id": "module-english-chinese-words",
+      "title": "英语单词",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A small neat stack of blank vocabulary flashcards, one open forest-green index card case and a tiny golden bookmark, word memorization"
+    },
+    {
+      "id": "module-youwei-junior-science",
+      "title": "浙教版初中科学学习",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A forest-green laboratory flask, a small ivory microscope and a tiny floating atom model, clear playful science learning"
+    },
+    {
+      "id": "module-english-grammar-lab",
+      "title": "上海初高语法填空",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A cream worksheet with three empty inset slots and three forest-green puzzle pieces hovering above, grammar gap filling, no symbols or text"
+    },
+    {
+      "id": "module-mathknowledgeai",
+      "title": "人教版初中数学 AI 学习库",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A tidy open mathematics book supporting a luminous glass cube and a tiny forest-green geometric pyramid, structured mathematical knowledge library"
+    },
+    {
+      "id": "module-mathgraph",
+      "title": "初中数学图谱",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A small elegant three-dimensional node graph with green and gold nodes, a curved axis and a floating ivory prism, connected mathematical ideas"
+    },
+    {
+      "id": "module-summer-camp-grade7",
+      "title": "小升初 40 天在线作业",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: An ivory study planner with a grid of blank square cells, a forest-green pencil and a small green flag on a winding stepping-stone path, daily learning plan"
+    },
+    {
+      "id": "module-primary-english-knowledge-graph",
+      "title": "小学英语知识图谱（小升初方向）",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: Three rounded blank speech-bubble shapes connected by fine green rods, a small open picture book beneath them, connected language learning"
+    },
+    {
+      "id": "module-zx-study",
+      "title": "小学 1-6 年级各学科学习",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: Three tidy ivory and sage school textbooks, a forest-green pencil and a small geometric globe, welcoming primary-school learning"
+    },
+    {
+      "id": "module-adhd-training-platform",
+      "title": "ADHD儿童注意力训练平台",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: A rounded green target with concentric ivory rings, a tiny gold ball precisely in its center, and three orderly soft cubes, focused attention game"
+    },
+    {
+      "id": "module-nihaixia-app",
+      "title": "倪师中医经方学习",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: An ivory ceramic herbal mortar with forest-green pestle, two delicate green herb leaves, a small amber medicine jar and a closed plain manuscript, traditional herbal study"
+    },
+    {
+      "id": "module-nihaisha-nishi-tcm",
+      "title": "倪海厦中医",
+      "prompt": "Use case: stylized-concept. Asset type: learning mini program board image, also used as a small square icon. Premium restrained 3D clay and porcelain illustration, rounded smooth forms, forest green #143f32, soft sage, ivory, light gray #f8f8f9 background and tiny muted gold accents. Calm studio daylight from upper left, soft ambient occlusion, refined educational editorial style. Single centered composition with 2 to 4 large readable objects, central 70 percent, generous clean margin. Flat uniform very pale gray background, no frame. No human, no letters, no numbers, no written text, no logo, no watermark, no UI. Keep the image exceptionally readable as a mobile icon. Subject: An open ivory scroll on a forest-green base, an elegant green botanical sprig and a small round jade-colored study stone, traditional Chinese medical knowledge"
+    }
+  ],
+  "heroPrompt": "Use case: stylized-concept\nAsset type: Home banner illustration for a Chinese learning mini program named Xinbotu, no written words in the illustration.\nPrimary request: A beautiful open ivory book becoming a winding learning path, a small forest-green compass, three floating paper pages and soft translucent geometric arches. Communicate curiosity, learning and an inviting journey.\nStyle: premium restrained 3D clay illustration, rounded porcelain surfaces, soft ambient occlusion, subtle glass details. Calm warm daylight, refined editorial composition, no busy details.\nPalette: forest green #143f32, sage green, ivory, light gray #f8f8f9, tiny muted warm gold highlights.\nComposition: landscape, subject slightly right of center, balanced generous breathing room, all objects within central 70 percent, background uniform very light gray. Objects should be clear at mobile banner size.\nConstraints: no people, no letters, no text, no logo, no watermark, no UI mockup, no gradient banding.\r\n",
+  "appIconPrompt": "Use case: logo-brand. Create a fresh innovative app icon for Xinbotu, a Chinese knowledge and learning app. Exactly one bold memorable symbol, not a UI screenshot. Square 1024 canvas, full-bleed background extending to all four edges, no pre-rounded corners. Main symbol occupies 65 to 72 percent of the square with balanced margin. Strong contrast, thick simple shapes, readable at 24px. No text, letters, numbers, watermarks, badges, device mockups, graduation caps or lightbulbs. Make the symbol distinctive and beautifully proportioned, with no tiny ornaments. Concept: UPWARD ROUTE. A clever completely flat graphic emblem in near-black ink: one compact rounded square labyrinth whose generous negative-space path makes exactly three ascending steps and opens toward the upper-right. Integrate route and progress into one unique symbol. Golden amber #FFBF37 full-bleed background with pure charcoal #202025 mark. Swiss graphic design clarity, perfectly flat vector-like solid fills, no gradient or bevel, no shadow. Large negative spaces and rounded inner corners, refined high-impact logomark. No book, no circle orbit, no bird, no frame around the icon.",
+  "previousAppIconPrompt": "Use case: logo-brand\nAsset type: App icon for a Chinese educational mini program named Xinbotu, no lettering in the icon.\nPrimary request: A memorable, elegant app icon: one ivory open book whose center fold transforms into a simple gently ascending path pointing forward and upward. Integrate the book and path into a single bold recognizable symbol. Learning, knowledge and an open journey.\nStyle: contemporary minimal premium app icon, clean sculptural ivory porcelain symbol with very subtle raised depth, precise balanced silhouette, smooth edges, restrained soft lighting. Much simpler and bolder than an illustration. No small decorative objects.\nPalette: solid deep forest green #143f32 background, warm ivory symbol, a subtle sage highlight only if useful. No gold, no blue, no rainbow.\nComposition: perfectly square canvas; full-bleed green background extends to all four edges and corners, do not bake rounded corners into the image. Centered symbol occupies about 68 percent of the canvas. Strong contrast and large strokes, recognizable at 24 pixels. Balanced padding on all sides.\nConstraints: no text, no letters, no numbers, no slogan, no watermark, no mockup, no device frame, no border, no extra ornaments, no mountain scene, no abstract tangled shapes. One simple iconic mark only.\r\n",
+  "selectedAppIcon": {
+    "id": "04-amber-upward-route",
+    "name": "拾级而上",
+    "color": "琥珀黄",
+    "source": "output/imagegen/icon-explorations/04-amber-upward-route.png",
+    "selectedOn": "2026-11-16"
+  }
+}

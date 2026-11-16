@@ -2,8 +2,9 @@ const learning = require('../../utils/learning');
 const session = require('../../utils/session');
 const catalog = require('../../utils/catalog');
 const legacy = require('../../utils/legacy');
+const study = require('../../utils/study-space');
 Page({
-  data: { courses: [], info: null, settings: catalog.settings(), user: null, testSession: false, hasAccess: false, loading: false, error: '' },
+  data: { courses: [], info: null, settings: catalog.settings(), user: null, testSession: false, hasAccess: false, loading: false, error: '', chrome: study.chrome(), stats: study.summary(), recordsOpen: false },
   onLoad() { learning.authorized(); },
   onShow() { return this.retry(); },
   onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [], info: null }); },
@@ -15,7 +16,7 @@ Page({
     try {
       const result = await learning.load();
       if (version !== this._version || !result) return;
-      this.setData({ courses: result.courses, settings: result.settings, user: result.me.user, hasAccess: result.me.hasAccess, testSession: session.current().test });
+      this.setData({ courses: result.courses, settings: result.settings, user: result.me.user, hasAccess: result.me.hasAccess, testSession: session.current().test, stats: study.summary(result.courses, result.boards) });
     } catch (error) { if (version === this._version) this.setData({ error: error.message }); }
     finally { if (version === this._version) this.setData({ loading: false }); }
   },
@@ -31,6 +32,11 @@ Page({
     if (map[type]) this.setData({ info: { title: map[type][0], paragraphs: this.data.settings[map[type][1]] } });
   },
   closeInfo() { this.setData({ info: null }); },
+  toggleRecords() { this.setData({ recordsOpen: !this.data.recordsOpen }); },
+  goUnlocked() { wx.navigateTo({ url: '/pages/interactive/interactive?mode=unlocked' }); },
+  goResources() { wx.navigateTo({ url: '/pages/resources/resources' }); },
+  goNotes() { wx.navigateTo({ url: '/pages/notebook/notebook' }); },
+  goPlan() { wx.navigateTo({ url: '/pages/notebook/notebook?mode=plan' }); },
   async importLegacy() {
     try { if (await legacy.offer(this.data.courses, true)) await this.retry(); }
     catch (error) { this.setData({ error: error.message }); }

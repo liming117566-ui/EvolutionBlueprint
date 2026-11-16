@@ -18,7 +18,7 @@ Page({
   async retry() {
     if (!learning.authorized()) return;
     const version = this._version = (this._version || 0) + 1;
-    this.setData({ loading: true, error: '', course: null, sections: [], section: null });
+    this.setData({ loading: true, saving: false, error: '', course: null, sections: [], section: null });
     try {
       await Promise.all([catalog.bootstrap(), require('../../utils/session').me(), learning.refresh()]);
       const course = learning.decorate(await catalog.full(this._courseId));

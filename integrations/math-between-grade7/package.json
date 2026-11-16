@@ -1,0 +1,13 @@
+{
+  "name": "between-math-grade7",
+  "version": "1.0.0",
+  "private": true,
+  "description": "北师大七年级上册交互数学学习空间",
+  "scripts": {
+    "start": "node web/server.js",
+    "test": "node tests/verify.cjs && node tests/exam.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

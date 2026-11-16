@@ -82,6 +82,104 @@ function initCatalog(store) {
     store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', rename(current.draft), pub, next);
     store.run('INSERT INTO migrations VALUES(4,?)', now());
   });
+  if (!store.get('SELECT version FROM migrations WHERE version=5')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      tree.boards ||= [];
+      for (const board of require('../miniprogram/utils/board-defaults').moduleBoards()) {
+        if (!tree.boards.some(existing => existing.id === board.id)) tree.boards.push(board);
+      }
+      registerEntities(store, tree);
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(5,?)', now());
+  });
+  // Retire the original growth boards once, retaining courses, history and grants.
+  if (!store.get('SELECT version FROM migrations WHERE version=6')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const retired = new Set(['focus-space', 'thinking-space', 'energy-space']);
+    const rebrand = value => {
+      if (typeof value === 'string') return value.replaceAll('进化蓝图', '新博途');
+      if (Array.isArray(value)) return value.map(rebrand);
+      if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, rebrand(item)]));
+      return value;
+    };
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      tree.boards = (tree.boards || []).filter(board => !retired.has(board.id));
+      tree.settings = { ...rebrand(tree.settings), brandName: '新博途' };
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(6,?)', now());
+  });
+  // Install the generated subject artwork once, preserving subsequent admin edits.
+  if (!store.get('SELECT version FROM migrations WHERE version=7')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const artwork = new Map(require('../miniprogram/utils/board-defaults').defaults().map(board => [board.id, board]));
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      tree.settings.gateCover = '/assets/generated/home-hero.webp';
+      tree.boards = (tree.boards || []).map(board => {
+        const art = artwork.get(board.id);
+        return art ? { ...board, icon: art.icon, cover: art.cover } : board;
+      });
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(7,?)', now());
+  });
+  if (!store.get('SELECT version FROM migrations WHERE version=8')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const upgrade = raw => { const tree = JSON.parse(raw); tree.settings.logo = '/assets/generated/app-icon.webp'; return JSON.stringify(tree); };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(8,?)', now());
+  });
+  // Replace only the previous default covers; administrator artwork remains authoritative.
+  if (!store.get('SELECT version FROM migrations WHERE version=9')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const artwork = new Map(require('../miniprogram/utils/board-defaults').defaults().map(board => [board.id, board.cover]));
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      tree.boards = (tree.boards || []).map(board => {
+        const cover = artwork.get(board.id);
+        const previous = '/assets/generated/' + board.id.toLowerCase() + '-cover.webp';
+        return cover && board.cover === previous ? { ...board, cover } : board;
+      });
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(9,?)', now());
+  });
+  // Add this supplied set once without restoring older boards intentionally deleted by admins.
+  if (!store.get('SELECT version FROM migrations WHERE version=10')) store.transaction(() => {
+    const current = store.get('SELECT * FROM catalog WHERE id=1');
+    const added = new Set(['geometry-between', 'geo-bio-exam', 'math-between-grade7']);
+    const additions = require('../miniprogram/utils/board-defaults').moduleBoards().filter(board => added.has(board.experience));
+    const upgrade = raw => {
+      const tree = JSON.parse(raw);
+      tree.boards ||= [];
+      for (const board of additions) if (!tree.boards.some(existing => existing.id === board.id)) tree.boards.push(board);
+      registerEntities(store, tree);
+      return JSON.stringify(tree);
+    };
+    const pub = upgrade(current.published), next = store.get('SELECT COALESCE(MAX(id),0)+1 AS next FROM revisions').next;
+    store.run('INSERT INTO revisions VALUES(?,?,?)', next, pub, now());
+    store.run('UPDATE catalog SET version=version+1,draft=?,published=?,published_version=? WHERE id=1', upgrade(current.draft), pub, next);
+    store.run('INSERT INTO migrations VALUES(10,?)', now());
+  });
 }
 function entries(tree) {
   const result = [];
@@ -107,7 +205,7 @@ function published(store) { const row = store.get('SELECT * FROM catalog WHERE i
 function draft(store) { const row = store.get('SELECT * FROM catalog WHERE id=1'); return { ...JSON.parse(row.draft), version: row.version }; }
 function assetReference(store, value) {
   if (typeof value !== 'string') fail(400, '请选择有效图片');
-  if (/^\/assets\/(icons|covers)\/[a-z0-9_-]+\.svg$/.test(value)) {
+  if (/^\/assets\/(icons|covers)\/[a-z0-9_-]+\.svg$/.test(value) || /^\/assets\/generated\/[a-z0-9_-]+\.webp$/.test(value)) {
     if (!fs.existsSync(path.join(__dirname, '..', 'miniprogram', value))) fail(400, '默认图片不存在');
     return value;
   }
@@ -145,7 +243,7 @@ function validateTree(store, input, forPublish = false) {
     if (forPublish && course.published && (!course.chapters.length || course.chapters.some(ch => !ch.sections.length || ch.sections.some(s => !s.question && !s.body.length && !s.practice)))) fail(400, '发布课程须有章节、小章节和阅读内容');
     return course;
   });
-  const boards = require('./boards').validate(input.boards === undefined ? draft(store).boards || [] : input.boards, categories, value => assetReference(store, value), ident);
+  const boards = require('./boards').validate(input.boards === undefined ? draft(store).boards || [] : input.boards, categories, value => assetReference(store, value), ident, websiteId => !!store.get('SELECT id FROM web_packages WHERE id=?', websiteId));
   const tree = { settings, categories, courses, boards };
   for (const item of entries(tree)) {
     const old = store.get('SELECT * FROM entities WHERE id=?', item.id);

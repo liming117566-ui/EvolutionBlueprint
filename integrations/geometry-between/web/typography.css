@@ -1,0 +1,205 @@
+/* Reading-focused typography. Local Chinese fonts render immediately, even offline. */
+:root {
+  --reading-font: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  --ink: #172f27;
+  --muted: #53665b;
+  --sub: #435c4c;
+  font-family: var(--reading-font);
+}
+body { font-size: 16px; line-height: 1.8; font-weight: 500; }
+input, textarea, select, button { font-family: var(--reading-font); }
+h1, h2, h3, strong { color: #19392b; }
+.brand { font-size: 24px; font-weight: 800; }
+.brand small { font-size: 8px; color: #566a5d; letter-spacing: .65px; white-space: nowrap; }
+.workspace-label { font-size: 12px; color: #637668; font-weight: 700; }
+.main-nav a, .category-nav button { font-size: 15px; color: #435c4c; font-weight: 600; }
+.main-nav a.active { font-weight: 800; }
+.nav-count, .category-nav button span { font-size: 12px; color: #61765e; font-weight: 600; }
+.daily-card strong { font-size: 15px; font-weight: 700; }
+.daily-card p, .daily-caption { font-size: 12px; color: #5b7056; }
+.source-side { font-size: 13px; color: #52694e; }
+.profile strong { font-size: 13px; }
+.profile small { font-size: 11px; color: #62765d; }
+.breadcrumbs { font-size: 13px; color: #607365; }
+.breadcrumbs strong { color: #36543c; font-weight: 700; }
+.search-trigger { font-size: 13px; color: #5d7257; }
+.search-trigger kbd { font-size: 11px; color: #60765a; }
+.eyebrow { font-size: 11px; color: #61765b; }
+.welcome h1, .page-heading h1 { font-size: clamp(30px, 2.65vw, 40px); font-weight: 800; letter-spacing: -.8px; }
+.detail-page .welcome h1 { font-size: clamp(28px, 2.45vw, 36px); font-weight: 800; }
+.welcome > div > p, .page-heading p { font-size: 15px; color: #50664d; line-height: 1.9; }
+.stat-card .stat-number { font-size: 30px; font-weight: 800; color: #254c32; }
+.stat-card .stat-number span { font-size: 12px; color: #5f7656; }
+.stat-label { font-size: 13px; color: #4f6748; font-weight: 600; }
+.progress-stat strong { font-size: 14px; font-weight: 700; }
+.progress-stat p { font-size: 12px; color: #5e7453; }
+.progress-ring b { font-size: 12px; font-weight: 700; color: #3f6539; }
+.section-title { flex-wrap: wrap; }
+.section-title h2 { font-size: 21px; font-weight: 800; }
+.section-title small { font-size: 11px; color: #63785a; }
+.section-title .section-more { font-size: 13px; color: #4d7040; font-weight: 600; }
+.chapter-label { font-size: 12px; color: #5d7453; font-weight: 600; }
+.experiment-title h3 { font-size: 22px; font-weight: 800; }
+.badge { font-size: 12px; font-weight: 700; padding: 4px 8px; }
+.badge.green { color: #346643; }
+.badge.orange { color: #8d592a; }
+.badge.purple { color: #715498; }
+.badge.neutral { color: #586b4f; }
+.experiment-subtitle { font-size: 15px; color: #4c6544; line-height: 1.9; }
+.experiment-mode, .toggle, .conditions-button { font-size: 12px; font-weight: 600; color: #506b45; }
+.canvas-toolbar { flex-wrap: wrap; row-gap: 10px; }
+.conditions-button { padding: 4px 8px; }
+.stage-hint { font-size: 11px; color: #536c4b; }
+.stage-coordinate { font-size: 10px; color: #6b7e60; }
+.math-stage text { font-family: var(--reading-font); font-size: 17px; font-weight: 600; fill: #35573c; }
+.math-stage .point-label { font-size: 20px; font-weight: 800; fill: #145737; }
+.math-stage .small-label { font-size: 13px; fill: #556c49; font-weight: 600; }
+.math-stage .aux-label { fill: #93652b; }
+.measure-label, .measure.highlight .measure-label { font-size: 13px; color: #526b46; font-weight: 600; }
+.measure-value { font-size: 26px; font-weight: 800; color: #284c31; }
+.measure-value span { font-size: 12px; color: #5d7451; }
+.measure-extra { font-size: 12px; color: #526e43; line-height: 1.7; }
+.range-head { font-size: 14px; color: #445f37; font-weight: 600; }
+.range-head output { font-size: 13px; font-weight: 700; color: #3b602e; }
+.experiment-bottom { flex-wrap: wrap; }
+.experiment-bottom > span { font-size: 12px; color: #61774f; }
+.button, .button.small { font-size: 13px; font-weight: 700; padding: 9px 12px; }
+.button.large { font-size: 15px; }
+.insight-heading h3 { font-size: 17px; font-weight: 800; }
+.insight-heading small { font-size: 10px; color: #657b54; }
+.formula-box { font-size: 24px; font-weight: 700; color: #315d27; padding: 17px 8px; line-height: 1.7; overflow-wrap: anywhere; }
+.insight-card > p { font-size: 15px; color: #435e36; line-height: 2; }
+.insight-note { font-size: 13px; color: #5b744a; line-height: 1.9; }
+.step-item { font-size: 14px; line-height: 2; color: #607552; }
+.step-item.revealed { color: #3a592c; font-weight: 600; }
+.step-number { width: 25px; height: 25px; font-size: 12px; font-weight: 700; }
+.note-card strong { font-size: 14px; color: #7a5d2d; font-weight: 700; }
+.note-card p { font-size: 13px; color: #78613a; }
+.model-card h3 { font-size: 17px; font-weight: 800; white-space: normal; overflow: visible; }
+.model-card p { font-size: 14px; line-height: 1.9; color: #526d45; min-height: 53px; }
+.model-card-top .card-num { font-size: 11px; color: #61794f; font-weight: 600; }
+.model-card-bottom { flex-wrap: wrap; font-size: 12px; color: #536f43; }
+.filter-tab { font-size: 14px; font-weight: 700; color: #5a714b; }
+.filter-tab span { font-size: 12px; }
+.library-search input { font-size: 14px; color: #3b5a2b; }
+.library-flags, .library-flags .toggle { font-size: 13px; color: #5a714a; }
+.back-link { font-size: 14px; color: #4e713b; font-weight: 600; }
+.reading-panel h2 { font-size: 22px; font-weight: 800; }
+.reading-panel p { font-size: 17px; color: #425e30; line-height: 2.1; }
+.reading-notice { font-size: 14px; color: #536c41; }
+.mastery-action p { font-size: 13px; color: #5d7448; }
+.learning-notes label, .quiz-header { font-size: 18px; font-weight: 800; }
+.learning-notes textarea { font-size: 15px; line-height: 2; color: #3e5e2a; }
+.learning-notes textarea::placeholder { color: #6a7c5b; }
+.notes-bottom { flex-wrap: wrap; gap: 10px; font-size: 12px; color: #5a7343; }
+.quiz-header { flex-wrap: wrap; }
+.quiz-header small { font-size: 12px; color: #617a4d; }
+.quiz-question { font-size: 17px; font-weight: 600; color: #35562b; }
+.quiz-option { font-size: 15px; color: #4c683b; line-height: 1.9; }
+.quiz-option > .option-letter { width: 27px; height: 27px; font-size: 13px; font-weight: 700; color: #4f7139; }
+.quiz-feedback { font-size: 15px; }
+.retry-quiz { font-size: 13px; }
+.source-reader > summary { font-size: 18px; font-weight: 800; }
+.source-reader > summary small { font-size: 13px; color: #5d754a; }
+.reader-counter, .reader-select-label { font-size: 13px; color: #526e3d; font-weight: 600; }
+.reader-select-label select { font-size: 14px; color: #42652d; }
+.reader-footnote { font-size: 12px; color: #627951; flex-wrap: wrap; }
+.reader-footnote > a { color: #4c7234; font-weight: 700; }
+.progress-box > span { font-size: 14px; color: #526f3f; }
+.progress-box > strong { font-size: 40px; font-weight: 800; }
+.progress-box small { font-size: 12px; color: #607950; }
+.category-progress { font-size: 14px; color: #466638; grid-template-columns: 90px 1fr 65px; }
+.category-progress > span:last-child { font-size: 13px; color: #5c784a; }
+.activity-row strong { font-size: 15px; font-weight: 700; }
+.activity-row small { font-size: 12px; color: #627b50; }
+.search-modal-head input { font-size: 16px; color: #36582a; }
+.search-modal-head input::placeholder { color: #657d55; }
+.search-meta { font-size: 13px; color: #617c4e; }
+.search-result strong { font-size: 16px; font-weight: 700; }
+.search-result p { font-size: 13px; color: #5d784b; }
+.search-result > span { font-size: 12px; color: #5b7a44; }
+.info-dialog h2 { font-size: 27px; font-weight: 800; }
+.info-dialog h3 { font-size: 18px; font-weight: 800; }
+.info-dialog p, .info-dialog li { font-size: 16px; color: #4c663b; }
+.info-tag { font-size: 11px; color: #607e48; }
+.empty-state h2 { font-size: 22px; font-weight: 700; }
+.empty-state p { font-size: 15px; color: #5b7946; }
+.site-footer { font-size: 12px; color: #627a54; gap: 18px; flex-wrap: wrap; }
+.toast { font-size: 15px; font-weight: 600; }
+@media (min-width: 1201px) {
+  .workspace-grid { grid-template-columns: minmax(0,1fr) 330px; }
+}
+@media (max-width: 1200px) and (min-width: 761px) {
+  .brand { font-size: 21px; }
+  .main-nav a, .category-nav button { padding-left: 10px; padding-right: 10px; font-size: 14px; }
+  .category-dot { margin-right: 10px; }
+  .workspace-grid { grid-template-columns: minmax(0,1fr); }
+  .insight-panel { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .note-card { grid-column: 1 / -1; }
+  .stats-row { grid-template-columns: repeat(3,1fr); }
+  .progress-stat { display: none; }
+}
+@media (max-width: 760px) {
+  body { font-size: 16px; }
+  .sidebar { width: 240px; }
+  .welcome h1 { font-size: 30px; line-height: 1.6; }
+  .page-heading h1, .detail-page .welcome h1 { font-size: 28px; }
+  .welcome-visual { display: none; }
+  .welcome > div > p { max-width: none; font-size: 15px; }
+  .breadcrumbs { font-size: 14px; }
+  .stat-card { padding: 14px 10px; }
+  .stat-icon { display: none; }
+  .stat-card .stat-number { font-size: 28px; }
+  .stat-label { font-size: 12px; }
+  .section-title h2 { font-size: 19px; }
+  .section-title small { display: none; }
+  .section-title .section-more { font-size: 12px; }
+  .experiment-title h3 { font-size: 21px; }
+  .experiment-subtitle { font-size: 14px; }
+  .canvas-toolbar { padding: 12px; gap: 8px; }
+  .experiment-mode, .conditions-button, .toggle { font-size: 12px; }
+  .canvas-toolbar .toolbar-spacer { display: none; }
+  .math-stage text { font-size: 24px; }
+  .math-stage .point-label { font-size: 27px; }
+  .math-stage .small-label { font-size: 19px; }
+  .stage-hint { font-size: 10px; }
+  .measure-row { gap: 8px; padding: 15px 12px; }
+  .measure-value { font-size: 23px; }
+  .measure-label { font-size: 12px; line-height: 1.7; }
+  .measure-extra { font-size: 11px; }
+  .measure-value span { display: block; font-size: 11px; margin-left: 0; }
+  .experiment-bottom { padding: 13px; }
+  .experiment-bottom > span { max-width: none; width: 100%; font-size: 12px; }
+  .experiment-bottom .button, .button, .button.small { font-size: 13px; }
+  .insight-panel { grid-template-columns: 1fr; }
+  .insight-heading h3 { font-size: 18px; }
+  .insight-card > p { font-size: 16px; }
+  .step-item { font-size: 15px; }
+  .formula-box { font-size: 25px; }
+  .model-grid, .catalog-grid { grid-template-columns: 1fr; }
+  .recommendations .model-grid .model-card:last-child { display: block; }
+  .model-card h3 { font-size: 18px; }
+  .model-card p { font-size: 15px; min-height: 0; }
+  .model-card-bottom { font-size: 12px; }
+  .badge, .model-card-top .badge { font-size: 12px; }
+  .model-card-top .card-num { font-size: 11px; }
+  .filter-tab { padding: 8px 9px; font-size: 13px; }
+  .filter-tab span { font-size: 11px; }
+  .library-search input { font-size: 15px; }
+  .library-flags, .library-flags .toggle { font-size: 12px; }
+  .reading-panel p { font-size: 16px; }
+  .mastery-action { flex-wrap: wrap; }
+  .mastery-action p, .mastery-action .button { font-size: 13px; }
+  .reader-toolbar { padding: 12px; }
+  .reader-actions { flex-wrap: wrap; }
+  .reader-actions > .button { font-size: 12px; }
+  .progress-summary { grid-template-columns: 1fr; }
+  .progress-box { display: flex; align-items: center; justify-content: space-between; }
+  .progress-box > strong { margin-top: 0; font-size: 32px; }
+  .category-progress { grid-template-columns: 78px 1fr 55px; font-size: 13px; }
+  .activity-row { flex-wrap: wrap; }
+  .activity-row strong { font-size: 14px; }
+  .activity-row .button { font-size: 12px; }
+  .info-dialog p, .info-dialog li { font-size: 15px; }
+  .site-footer { font-size: 11px; }
+}

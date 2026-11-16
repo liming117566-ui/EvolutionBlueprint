@@ -1,0 +1,50 @@
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const assert=require('node:assert/strict');
+const ctx=vm.createContext({});
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/materials.js'),'utf8'),ctx);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/data.js'),'utf8'),ctx);
+vm.runInContext(fs.readFileSync(path.join(__dirname,'../web/materials-catalog.js'),'utf8'),ctx);
+const materials=vm.runInContext('Materials',ctx);
+const pages=(input,total)=>Array.from(materials.parsePages(input,total));
+assert.deepEqual(pages('',4),[1,2,3,4]);
+assert.deepEqual(pages('1-3,5,3,8',8),[1,2,3,5,8]);
+assert.deepEqual(pages(' 2 — 4 ， 6 ',6),[2,3,4,6]);
+assert.deepEqual(pages('3,1,2',3),[1,2,3]);
+for(const input of ['0','-1','5','3-2','1,','1-999999999999','1.5','1-2-3','<script>'])assert.throws(()=>materials.parsePages(input,4),undefined,input);
+assert.throws(()=>materials.parsePages('',0));
+for(const [name,kind] of [['试卷.PDF','pdf'],['x.jpeg','image'],['x.WEBP','image'],['x.md','text'],['x.txt','text'],['x.docx',null],['x.html',null],['x.svg',null],['x.pdf.exe',null]])assert.equal(materials.kindFor(name),kind);
+const css=materials.printCSS('A4','portrait');assert.ok(css.includes('@media print'));assert.ok(css.includes('size:A4 portrait'));assert.ok(css.includes('page-break-after:always'));
+assert.ok(materials.printCSS('Letter','landscape').includes('size:Letter landscape'));
+assert.ok(fs.existsSync(path.join(__dirname,'../web/vendor/pdf.min.js')));
+assert.ok(fs.existsSync(path.join(__dirname,'../web/vendor/pdf.worker.min.js')));
+const library=vm.runInContext('Materials.buildLibrary(MODELS,PUBLISHED_MATERIALS)',ctx);
+assert.equal(library.filter(f=>f.kind==='pages').length,110);
+assert.equal(new Set(library.map(f=>f.id)).size,library.length);
+for(const item of library.filter(f=>f.kind==='pages'))for(const page of item.pages)assert.ok(fs.existsSync(path.join(__dirname,'../web/pages',String(page).padStart(3,'0')+'.jpg')));
+const handout={kind:'pages',pages:[26,27,28,29]};
+assert.deepEqual(Array.from(materials.pagesFor(handout,'',4)),[26,27,28,29]);
+assert.deepEqual(Array.from(materials.pagesFor(handout,'26,28-29',4)),[26,28,29]);
+assert.throws(()=>materials.pagesFor(handout,'25',4));
+assert.throws(()=>materials.pagesFor(handout,'30',4));
+assert.throws(()=>materials.pagesFor({kind:'pdf'},'',101));
+const source=fs.readFileSync(path.join(__dirname,'../web/materials.js'),'utf8');
+for(const forbidden of ['indexedDB','type="file"','importFiles','confirmRemove','material-download','material-upload'])assert.ok(!source.includes(forbidden),'Public material module must not expose '+forbidden);
+// Exercise the developer publishing workflow in an isolated temporary project.
+const os=require('node:os');
+const {publish,readCatalog}=require('../tools/publish-material.cjs');
+const temp=fs.mkdtempSync(path.join(os.tmpdir(),'geometry-publisher-'));
+try{
+ fs.mkdirSync(path.join(temp,'web'));fs.writeFileSync(path.join(temp,'web/materials-catalog.js'),'const PUBLISHED_MATERIALS=[];');
+ const fixture=path.join(temp,'notes.txt');fs.writeFileSync(fixture,'开发者提供的学习笔记 <script>原样显示</script>');
+ const record=publish(fixture,'专题笔记',temp);assert.equal(record.kind,'text');assert.equal(record.name,'专题笔记');
+ assert.equal(readCatalog(temp).length,1);assert.equal(fs.readFileSync(path.join(temp,'web',record.url),'utf8'),fs.readFileSync(fixture,'utf8'));
+ assert.throws(()=>publish(fixture,'重复',temp),/已发布/);
+ const invalid=path.join(temp,'invalid.pdf');fs.writeFileSync(invalid,'not a pdf');assert.throws(()=>publish(invalid,'',temp),/有效的 PDF/);
+ assert.throws(()=>publish(path.join(temp,'x.html'),'',temp),/仅支持/);
+}finally{
+ if(path.dirname(path.resolve(temp))!==path.resolve(os.tmpdir()))throw new Error('Unexpected temporary folder');
+ fs.rmSync(temp,{recursive:true,force:true});
+}
+console.log('PASS: 110 published topic handouts, page-range boundaries, no public material writes, developer publishing and duplicate/format rejection, print settings and PDF runtime.');

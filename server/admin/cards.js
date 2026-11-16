@@ -2,11 +2,11 @@ import { api, endpoint, query } from './api.js';
 import { el, button, field, head, table, pager, searchForm, modal, busy, errorBox, showError, notify, confirmDanger, badge, date, jsonDetails, courseChecks, isoFromInput } from './ui.js';
 import { recordsView } from './logs.js';
 export async function renderCards(host, context) {
-  const catalog = await context.getCatalog(), courseNames = new Map(catalog.courses.map(c => [c.id, c.title]));
+  const catalog = await context.getCatalog(), courseNames = new Map(catalog.courses.map(c => [c.id, c.title])), boardNames = new Map((catalog.boards || []).map(b => [b.id, b.title]));
   let q = '', request = 0;
   const results = el('div'), errors = errorBox(), body = el('section', { class: 'panel' });
   const batchesTab = button('卡密批次', () => showBatches()); const recordsTab = button('核销记录', () => showRecords());
-  host.replaceChildren(head('卡密与核销', '按批次生成课程访问卡密。明文只在生成成功后显示一次，后续仅可查看掩码。', button('生成新批次', () => generate(), 'primary')), el('div', { class: 'tabs', role: 'tablist', 'aria-label': '卡密与核销记录' }, batchesTab, recordsTab), body);
+  host.replaceChildren(head('卡密与核销', '为指定板块、指定课程或全部板块与课程生成兑换码。明文只在生成成功后显示一次，后续仅可查看掩码。', button('生成新批次', () => generate(), 'primary')), el('div', { class: 'tabs', role: 'tablist', 'aria-label': '卡密与核销记录' }, batchesTab, recordsTab), body);
   function showBatches() {
     batchesTab.setAttribute('aria-selected', 'true'); recordsTab.setAttribute('aria-selected', 'false');
     const search = searchForm('搜索批次名称', value => { q = value; load(1); }); search.input.value = q;
@@ -22,7 +22,7 @@ export async function renderCards(host, context) {
       const data = await api(`/api/admin/card-batches?${query({ page, q })}`); if (stamp !== request) return;
       results.replaceChildren(table([
         { label: '批次', render: b => el('div', {}, b.title, el('div', { class: 'id-text' }, b.id)) },
-        { label: '授权范围', render: b => b.scope === 'all' ? '全部课程' : (b.courseIds || []).map(id => courseNames.get(id) || id).join('、') },
+        { label: '授权范围', render: b => b.scope === 'all' ? '全部板块与课程' : b.scope === 'boards' ? (b.boardIds || []).map(id => boardNames.get(id) || id).join('、') : (b.courseIds || []).map(id => courseNames.get(id) || id).join('、') },
         { label: '数量 / 已核销', render: b => `${b.count} / ${b.usedCount}` },
         { label: '卡密兑换截止', render: b => b.redeemExpiresAt ? date(b.redeemExpiresAt) : '不限' },
         { label: '权益时长', render: b => b.accessDays ? `${b.accessDays} 天` : '永久' },
@@ -39,23 +39,30 @@ export async function renderCards(host, context) {
     const m = modal('生成卡密批次', { beforeClose: () => !dirty || confirmDanger('批次表单尚未提交，确定关闭？') });
     const title = field('批次名称', { required: true, maxlength: 200 });
     const count = field('生成数量', { type: 'number', value: 1, min: 1, max: 500, step: 1, required: true, hint: '每次 1–500 张。不要在网络不确定时重复提交。' });
-    const scope = field('授权范围', { type: 'select', value: 'all', options: [{ value: 'all', label: '全部课程' }, { value: 'courses', label: '指定课程' }] });
+    const scope = field('授权范围', { type: 'select', value: 'boards', options: [{ value: 'boards', label: '指定板块' }, { value: 'all', label: '全部板块与课程' }, { value: 'courses', label: '指定课程' }] });
+    const boards = boardChecks(catalog.boards || []);
     const checks = courseChecks(catalog.courses); checks.node.hidden = true;
-    scope.input.addEventListener('change', () => { checks.node.hidden = scope.input.value !== 'courses'; });
+    scope.input.addEventListener('change', () => { checks.node.hidden = scope.input.value !== 'courses'; boards.node.hidden = scope.input.value !== 'boards'; });
     const redeemExpires = field('卡密兑换截止时间', { type: 'datetime-local', hint: '留空为不限。此日期限制卡密兑换，不是已兑换权益的到期时间。按本地时间输入。' });
     const accessDays = field('兑换后的权益天数', { type: 'number', min: 1, step: 1, hint: '留空为永久；填写正整数，按每个用户实际兑换时间起算。' });
     const errors = errorBox(), submit = el('button', { type: 'submit', class: 'primary' }, '确认生成卡密');
     m.content.append(el('p', { class: 'status' }, '生成成功后，请立即复制或下载卡密。关闭明文窗口后无法找回。'), el('form', { oninput: () => { dirty = true; }, onchange: () => { dirty = true; }, onsubmit: e => { e.preventDefault(); busy(submit, async () => {
       const courseIds = scope.input.value === 'courses' ? checks.values() : [];
+      const boardIds = scope.input.value === 'boards' ? boards.values() : [];
       if (scope.input.value === 'courses' && !courseIds.length) throw new Error('至少选择一门课程');
+      if (scope.input.value === 'boards' && !boardIds.length) throw new Error('至少选择一个学习板块');
       const redeemExpiresAt = isoFromInput(redeemExpires.input);
       if (redeemExpiresAt && Date.parse(redeemExpiresAt) <= Date.now()) throw new Error('兑换截止时间须晚于当前时间');
       if (!confirmDanger(`确定生成 ${count.input.value} 张卡密？请准备好立即保存明文。`)) return;
-      const result = await api('/api/admin/card-batches', { method: 'POST', body: { title: title.input.value.trim(), count: Number(count.input.value), scope: scope.input.value, courseIds, redeemExpiresAt, accessDays: accessDays.input.value === '' ? null : Number(accessDays.input.value) } });
+      const result = await api('/api/admin/card-batches', { method: 'POST', body: { title: title.input.value.trim(), count: Number(count.input.value), scope: scope.input.value, boardIds, courseIds, redeemExpiresAt, accessDays: accessDays.input.value === '' ? null : Number(accessDays.input.value) } });
       dirty = false; m.close(); showCodes(result, context); showBatches();
-    }, errors); } }, title.node, count.node, scope.node, checks.node, redeemExpires.node, accessDays.node, errors, submit));
+    }, errors); } }, title.node, count.node, scope.node, boards.node, checks.node, redeemExpires.node, accessDays.node, errors, submit));
   }
   showBatches();
+}
+function boardChecks(boards) {
+  const inputs = boards.map(board => ({ id: board.id, input: el('input', { type: 'checkbox' }), title: board.title + (board.enabled ? '' : '（已隐藏）') }));
+  return { node: el('div', { class: 'check-list', 'aria-label': '选择学习板块' }, inputs.length ? inputs.map(x => el('label', {}, x.input, x.title)) : el('p', { class: 'muted' }, '暂无板块，请先在内容中创建并保存板块。')), values: () => inputs.filter(x => x.input.checked).map(x => x.id) };
 }
 function showCodes(result, context) {
   let codes = result.codes, saved = false;

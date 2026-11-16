@@ -15,12 +15,20 @@ function createApp(overrides = {}) {
   app.disable('x-powered-by');
   app.set('trust proxy', false);
   app.locals.store = store; app.locals.config = config; app.locals.close = () => store.close();
-  require('./english-web').mount(app);
-  require('./math-web').mount(app);
-  require('./junior-math-web').mount(app);
   function audit(actor, action, target, detail = {}) { store.run('INSERT INTO audit(actor,action,target,detail,created_at) VALUES(?,?,?,?,?)', actor, action, String(target), JSON.stringify(detail), now()); }
   const auth = createAuth(store, config, audit), business = createBusiness(store, audit);
   const media = createMedia(store, config, auth, business, audit);
+  const webAccess = require('./web-access').createWebAccess(store, config, business);
+  const websites = require('./web-packages').createWebPackages(store, config, audit);
+  require('./english-web').mount(app, webAccess.guard('english-starry-sky'));
+  require('./math-web').mount(app, webAccess.guard('cn-math-taxonomy'));
+  require('./junior-math-web').mount(app, webAccess.guard('tainai-junior-math'));
+  require('./modules-web').mount(app, webAccess.guard);
+  websites.mount(app, webAccess.guard(req => 'website:' + req.params.id));
+  app.get('/web-access/:ticket', webAccess.landing);
+  app.post('/web-access/:ticket/resume', webAccess.resume);
+  app.post('/web-session', express.json({ limit: '1kb' }), webAccess.exchange);
+  app.get('/web-access-client.js', (_req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'web-access-client.js')); });
   app.use((req, res, next) => {
     res.set('X-Content-Type-Options', 'nosniff'); res.set('Referrer-Policy', 'same-origin'); res.set('X-Frame-Options', 'DENY');
     res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
@@ -35,6 +43,12 @@ function createApp(overrides = {}) {
   app.get('/api/integrations/english', (_req, res) => res.json(require('./english-web').status()));
   app.get('/api/integrations/math', (_req, res) => res.json(require('./math-web').status()));
   app.get('/api/integrations/junior-math', (_req, res) => res.json(require('./junior-math-web').status()));
+  app.get('/api/integrations/modules', (_req, res) => res.json({ modules: require('./modules-web').list() }));
+  app.get('/api/integrations/modules/:slug', (req, res) => {
+    const status = require('./modules-web').status(req.params.slug);
+    if (!status) fail(404, '学习板块不存在');
+    res.json(status);
+  });
   app.use('/admin', express.static(path.join(__dirname, 'admin'), { index: 'index.html', dotfiles: 'deny', etag: true }));
   app.use('/assets', express.static(path.join(__dirname, '..', 'miniprogram', 'assets'), { dotfiles: 'deny', fallthrough: false }));
   const admin = express.Router();
@@ -49,6 +63,8 @@ function createApp(overrides = {}) {
   admin.get('/published', (_req, res) => res.json(catalog.published(store)));
   admin.post('/publish', (req, res) => { const result = catalog.publish(store, req.body.version); audit(req.admin.id, 'catalog.publish', result.version); res.json(result); });
   media.adminRoutes(admin);
+  websites.adminRoutes(admin);
+  admin.get('/integrations/modules', (_req, res) => res.json({ modules: require('./modules-web').list() }));
   function usersQuery(req, res) {
     const p = paging(req.query), q = '%' + text(req.query.q || '', 100, false) + '%';
     const where = ' WHERE id LIKE ? OR nickname LIKE ? OR note LIKE ?';
@@ -113,7 +129,23 @@ function createApp(overrides = {}) {
   });
   app.use('/api/admin', admin);
   auth.registerUserRoutes(app);
-  app.get('/api/bootstrap', (_req, res) => { const tree = catalog.published(store); res.json({ version: tree.version, settings: tree.settings, categories: tree.categories, boards: (tree.boards || []).filter(b => b.enabled) }); });
+  app.get('/api/bootstrap', (req, res, next) => {
+    const render = () => { const tree = catalog.published(store); res.json({ version: tree.version, settings: tree.settings, categories: tree.categories, testLoginEnabled: Boolean(require('./security').testLoginAllowed(req, config)), boards: (tree.boards || []).filter(b => b.enabled).map(b => ({ ...b, accessible: !!req.user && business.canBoardAccess(req.user.id, b.id) })) }); };
+    if (req.get('Authorization')) auth.user(req, res, error => error ? next(error) : render()); else render();
+  });
+  app.post('/api/boards/:id/open', auth.user, (req, res) => {
+    const board = (catalog.published(store).boards || []).find(b => b.id === req.params.id && b.enabled);
+    if (!board) fail(404, '板块不存在或已下架');
+    business.boardAccess(req.user.id, board.id);
+    let status;
+    if (board.experience === 'english-starry-sky') status = require('./english-web').status();
+    else if (board.experience === 'cn-math-taxonomy') status = require('./math-web').status();
+    else if (board.experience === 'tainai-junior-math') status = require('./junior-math-web').status();
+    else if ((board.experience || '').startsWith('website:')) status = websites.status(board.experience.slice(8));
+    else if (board.experience && board.experience !== 'courses') status = require('./modules-web').status(board.experience);
+    if (status && !status.ready) fail(503, '学习网页尚未准备好，请联系管理员');
+    res.json(require('./web-access').webPath(board.experience) ? webAccess.issue(req, board) : { ok: true });
+  });
   app.get('/api/assets/:id', media.assetRoute);
   app.get('/api/courses', (req, res, next) => {
     const render = () => {

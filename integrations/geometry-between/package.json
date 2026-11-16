@@ -1,0 +1,14 @@
+{
+  "name": "between-points-math-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "初中数学专题学习网站与开发者资料打印模块",
+  "scripts": {
+    "start": "node web/server.js",
+    "test": "node tests/verify.cjs && node tests/materials.cjs",
+    "publish:material": "node tools/publish-material.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

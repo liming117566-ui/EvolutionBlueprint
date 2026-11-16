@@ -1,0 +1,557 @@
+{% extends "base.html" %}
+{% block title %}{{ grade_name }} 知识图谱 · 数学图谱{% endblock %}
+{% block head_extra %}
+<link href="{{ url_for('static', filename='css/vis-network.min.css') }}" rel="stylesheet">
+<style>
+  .graph-wrapper { position: relative; }
+  #network { background: #fafbfe; border-radius: 0 0 0.5rem 0.5rem; }
+  /* 缩放控件 */
+  .zoom-controls { position: absolute; bottom: 16px; right: 16px; z-index: 10; display: flex; flex-direction: column; gap: 4px; }
+  .zoom-controls .btn { width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; font-size: 1.15rem; color: #475569; }
+  .zoom-controls .btn:hover { background: #eef2ff; border-color: #6366f1; color: #6366f1; }
+  /* 侧边栏 */
+  .graph-sidebar { max-height: 620px; display: flex; flex-direction: column; }
+  .graph-sidebar .card-body { overflow-y: auto; flex: 1; }
+  /* 搜索 + 快捷键 */
+  .search-box { position: relative; }
+  .search-box .form-control { padding-right: 2.5rem; border-radius: 8px; }
+  .search-box .clear-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; background: none; color: #94a3b8; cursor: pointer; font-size: 0.85rem; }
+  .search-box .clear-btn:hover { color: #ef4444; }
+  .search-box .hint { position: absolute; right: 32px; top: 50%; transform: translateY(-50%); font-size: 0.7rem; color: #94a3b8; pointer-events: none; }
+  /* 节点信息面板 */
+  #nodeInfoPanel { display: none; }
+  #nodeInfoPanel.active { display: block; }
+  #nodeInfoPanel .info-row { padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; }
+  #nodeInfoPanel .info-row:last-child { border-bottom: none; }
+  #nodeInfoPanel .info-label { font-size: 0.75rem; color: #94a3b8; margin-bottom: 2px; }
+  #nodeInfoPanel .info-value { font-size: 0.85rem; color: #334155; }
+  #nodeInfoPanel .rel-list { display: flex; flex-wrap: wrap; gap: 4px; }
+  #nodeInfoPanel .rel-badge { font-size: 0.72rem; padding: 2px 8px; border-radius: 10px; cursor: pointer; transition: all 0.15s; }
+  #nodeInfoPanel .rel-badge.prereq { background: #fee2e2; color: #991b1b; }
+  #nodeInfoPanel .rel-badge.dep { background: #dbeafe; color: #1e40af; }
+  #nodeInfoPanel .rel-badge:hover { filter: brightness(0.95); transform: scale(1.03); }
+  /* 领域筛选标签 */
+  .domain-tag { cursor: pointer; transition: all 0.15s; user-select: none; font-size: 0.75rem; }
+  .domain-tag.dimmed { opacity: 0.35; }
+  .domain-tag:hover { opacity: 0.85; }
+  /* 图例横排 */
+  .legend-inline { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
+  .legend-inline .legend-item { display: flex; align-items: center; gap: 0.35rem; font-size: 0.78rem; color: #475569; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .legend-dot.hard { background: #ef4444; }
+  .legend-dot.soft { background: #9ca3af; border: 1px dashed #9ca3af; }
+  .legend-dot.core { border: 2.5px solid #ef4444; background: transparent; width: 8px; height: 8px; }
+  /* 高亮提示 */
+  .highlight-count { font-size: 0.8rem; }
+  /* 使用提示 */
+  .guide-tip { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 0.6rem 1rem; font-size: 0.8rem; color: #0369a1; }
+  .guide-tip .guide-icon { color: #0ea5e9; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-diagram-3 text-gradient"></i> {{ grade_name }} 知识图谱</h1>
+    <p class="page-sub">
+      <span class="badge bg-light text-dark me-1">{{ topics|length }} 知识点</span>
+      <span class="badge bg-light text-dark">{{ deps|length }} 依赖关系</span>
+    </p>
+  </div>
+  <a href="{{ url_for('graph.index') }}" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-arrow-left"></i> 返回
+  </a>
+</div>
+
+<!-- 使用提示 -->
+<div class="guide-tip fade-in mb-3">
+  <i class="bi bi-info-circle guide-icon me-1"></i>
+  <strong>操作提示：</strong>点击节点查看详情 | 滚轮缩放 | 拖拽平移 | 双击节点进入学习
+</div>
+
+<!-- 图谱 + 侧边栏 -->
+<div class="row g-3 fade-in">
+  <div class="col-12 col-lg-8">
+    <div class="card border-0 shadow-sm overflow-hidden">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold"><i class="bi bi-diagram-3 text-primary"></i> 知识点关系图</span>
+        <span class="highlight-count" id="highlightCount" style="display:none"></span>
+      </div>
+      <div class="card-body p-0 graph-wrapper">
+        <div id="network" style="height: 620px;"></div>
+        <div class="zoom-controls">
+          <button class="btn" onclick="graphZoomIn()" title="放大"><i class="bi bi-plus-lg"></i></button>
+          <button class="btn" onclick="graphZoomOut()" title="缩小"><i class="bi bi-dash-lg"></i></button>
+          <button class="btn" onclick="graphFit()" title="适应画面"><i class="bi bi-arrows-fullscreen"></i></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card border-0 shadow-sm graph-sidebar">
+      <div class="card-header py-2">
+        <span class="fw-semibold"><i class="bi bi-info-circle text-primary"></i> 知识点详情</span>
+      </div>
+      <div class="card-body p-3">
+        <!-- 搜索 -->
+        <div class="search-box mb-3">
+          <input type="text" class="form-control form-control-sm" id="nodeSearch" placeholder="搜索知识点..."
+                 oninput="searchNodes()" autocomplete="off">
+          <span class="hint" id="searchHint">输入关键词</span>
+          <button class="clear-btn" id="clearSearch" style="display:none" onclick="clearSearch()"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <!-- 节点信息 -->
+        <div id="nodeInfoPanel">
+          <div class="info-row">
+            <div class="info-label">知识点名称</div>
+            <div class="info-value fw-semibold" id="infoName">—</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">所属领域</div>
+            <div class="info-value" id="infoDomain">—</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">核心度</div>
+            <div class="info-value" id="infoCentrality">—</div>
+          </div>
+          <div class="info-row" id="infoDescRow" style="display:none">
+            <div class="info-label">简介</div>
+            <div class="info-value" id="infoDesc">—</div>
+          </div>
+          <div class="info-row" id="infoPrereqsRow" style="display:none">
+            <div class="info-label">前置知识</div>
+            <div class="rel-list" id="infoPrereqs"></div>
+          </div>
+          <div class="info-row" id="infoDepsRow" style="display:none">
+            <div class="info-label">后续知识</div>
+            <div class="rel-list" id="infoDeps"></div>
+          </div>
+          <div class="pt-2">
+            <a href="#" class="btn btn-primary btn-sm w-100" id="infoDetailBtn" target="_blank">
+              <i class="bi bi-box-arrow-up-right"></i> 查看完整详情
+            </a>
+          </div>
+        </div>
+
+        <!-- 未选中时的引导 -->
+        <div id="nodePlaceholder" class="text-center py-4" style="color: #94a3b8;">
+          <i class="bi bi-hand-index" style="font-size: 2rem; opacity: 0.4;"></i>
+          <p class="mt-2 mb-0" style="font-size: 0.85rem;">点击图中任意知识点<br>查看详细信息</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 底部：图例 + 领域筛选 -->
+<div class="row g-3 mt-3 fade-in">
+  <div class="col-12">
+    <div class="card border-0 shadow-sm">
+      <div class="card-body py-2 px-3">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <!-- 图例 -->
+          <div class="legend-inline">
+            <span class="fw-semibold" style="font-size:0.78rem;color:#475569;">图例：</span>
+            <div class="legend-item"><span class="legend-dot hard"></span> 必修基础</div>
+            <div class="legend-item"><span class="legend-dot soft"></span> 拓展知识</div>
+            <div class="legend-item"><span class="legend-dot core"></span> 核心考点</div>
+          </div>
+          <!-- 领域筛选 -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="fw-semibold" style="font-size:0.78rem;color:#475569;">领域：</span>
+            <div class="d-flex flex-wrap gap-1" id="domainFilters"></div>
+            <a href="javascript:void(0)" class="text-decoration-none small" onclick="toggleAllDomains()">全部切换</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 领域分组列表 -->
+<div class="row g-3 mt-3">
+  {% set domains = {} %}
+  {% for t in topics %}
+    {% set _ = domains.setdefault(t.domain, []).append(t) %}
+  {% endfor %}
+  {% for domain, domain_topics in domains.items() %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card border h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-collection text-primary"></i> {{ domain }}</span>
+        <span class="badge bg-secondary">{{ domain_topics|length }}</span>
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for t in domain_topics %}
+        <li class="list-group-item">
+          <a href="{{ url_for('graph.topic_detail', topic_id=t.id) }}" class="text-decoration-none d-flex justify-content-between align-items-center">
+            <span>{{ t.name }}</span>
+            {% if t.centrality >= 0.9 %}
+            <span class="badge bg-danger" title="核心考点">★★★</span>
+            {% elif t.centrality >= 0.8 %}
+            <span class="badge bg-warning text-dark">★★</span>
+            {% endif %}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/vis-network.min.js') }}"></script>
+<script>
+const TOPICS = {{ topics|tojson }};
+const DEPS = {{ deps|tojson }};
+const TOPIC_DETAIL_URL = '{{ url_for("graph.index") }}'.replace('/graph', '/graph/topic/');
+
+// —— 领域颜色 ——
+const DOMAIN_COLORS = {};
+const DOMAIN_NAMES = [];
+const palette = ['#dbeafe','#fce7f3','#d1fae5','#fef3c7','#ede9fe','#cffafe','#fef9c3','#fee2e2','#e5e7eb','#a7f3d0','#fbcfe8','#ddd6fe'];
+let colorIdx = 0;
+TOPICS.forEach(t => {
+  if (!(t.domain in DOMAIN_COLORS)) {
+    DOMAIN_COLORS[t.domain] = palette[colorIdx % palette.length];
+    DOMAIN_NAMES.push(t.domain);
+    colorIdx++;
+  }
+});
+
+// —— 构建节点 ——
+const topicMap = {};
+TOPICS.forEach(t => { topicMap[t.id] = t; });
+
+const nodes = new vis.DataSet(TOPICS.map(t => {
+  const isCore = t.centrality >= 0.9;
+  const isImportant = t.centrality >= 0.8;
+  const bgColor = DOMAIN_COLORS[t.domain] || '#e5e7eb';
+  return {
+    id: t.id,
+    label: t.name,
+    group: t.domain,
+    domain: t.domain,
+    centrality: t.centrality,
+    description: t.description || '',
+    color: {
+      background: bgColor,
+      border: isCore ? '#ef4444' : (isImportant ? '#f59e0b' : '#cbd5e1'),
+      highlight: { background: '#6366f1', border: '#4f46e5' },
+    },
+    font: { size: 13, color: '#1e293b', strokeWidth: 0 },
+    shape: 'box',
+    widthConstraint: { minimum: 52, maximum: 140 },
+    heightConstraint: { minimum: 24 },
+    borderWidth: isCore ? 3 : (isImportant ? 2.5 : 1.5),
+    borderWidthSelected: 4,
+    title: `<div style="padding:6px 10px;max-width:220px"><b style="font-size:14px">${t.name}</b><br><span style="color:#64748b;font-size:12px">${t.domain}</span><br><span style="font-size:11px;color:#94a3b8">核心度 ${t.centrality.toFixed(2)}</span><br><span style="color:#6366f1;font-size:11px">点击查看详情 · 双击进入学习</span></div>`,
+  };
+}));
+
+// —— 构建边 ——
+const hardEdges = [];
+const softEdges = [];
+DEPS.forEach(d => {
+  const edge = {
+    id: d.prerequisiteId + '_' + d.topicId,
+    from: d.prerequisiteId,
+    to: d.topicId,
+    arrows: 'to',
+    smooth: { type: 'curvedCW', roundness: 0.15 },
+  };
+  if (d.strength === 'hard') {
+    edge.color = { color: '#ef4444', opacity: 0.7 };
+    edge.width = 2.5;
+    hardEdges.push(edge);
+  } else {
+    edge.color = { color: '#9ca3af', opacity: 0.5 };
+    edge.width = 1;
+    edge.dashes = [6, 4];
+    softEdges.push(edge);
+  }
+});
+const edges = new vis.DataSet([...hardEdges, ...softEdges]);
+
+// —— 初始化网络 ——
+const container = document.getElementById('network');
+const data = { nodes, edges };
+const options = {
+  nodes: { borderWidth: 1.5, shadow: { enabled: true, size: 4, x: 1, y: 2 } },
+  edges: { smooth: { type: 'curvedCW', roundness: 0.15 }, font: { size: 10, align: 'middle' } },
+  physics: {
+    stabilization: { iterations: 150, fit: true },
+    barnesHut: { gravitationalConstant: -3500, springLength: 140, springConstant: 0.04, damping: 0.3 },
+    minVelocity: 0.5,
+  },
+  interaction: {
+    hover: true,
+    tooltipDelay: 200,
+    zoomView: true,
+    dragView: true,
+    navigationButtons: false,
+    keyboard: { enabled: true, bindToWindow: false },
+  },
+  layout: { improvedLayout: true, hierarchical: { enabled: false } },
+  groups: { useDefaultGroups: false },
+};
+
+const network = new vis.Network(container, data, options);
+
+// —— 缩放控制 ——
+function graphZoomIn() { network.moveTo({ scale: network.getScale() * 1.3 }); }
+function graphZoomOut() { network.moveTo({ scale: network.getScale() / 1.3 }); }
+function graphFit() { network.fit({ animation: { duration: 500, easingFunction: 'easeInOutQuad' } }); }
+
+// —— 键盘快捷键 ——
+container.addEventListener('keydown', function(e) {
+  if (e.key === '+' || e.key === '=') { e.preventDefault(); graphZoomIn(); }
+  if (e.key === '-') { e.preventDefault(); graphZoomOut(); }
+  if (e.key === 'f' || e.key === 'F') { e.preventDefault(); graphFit(); }
+  if (e.key === 'Escape') { network.unselectAll(); clearNodeInfo(); }
+});
+
+// —— 节点点击：高亮邻居 + 显示信息面板 ——
+let selectedNodeId = null;
+network.on('selectNode', function(params) {
+  if (params.nodes.length === 0) return;
+  const nodeId = params.nodes[0];
+  selectedNodeId = nodeId;
+  highlightNeighbors(nodeId);
+  showNodeInfo(nodeId);
+});
+
+network.on('deselectNode', function() {
+  selectedNodeId = null;
+  resetHighlight();
+  clearNodeInfo();
+});
+
+// —— 显示节点信息面板 ——
+function showNodeInfo(nodeId) {
+  const node = nodes.get(nodeId);
+  const topic = topicMap[nodeId];
+  if (!topic) return;
+
+  document.getElementById('nodePlaceholder').style.display = 'none';
+  const panel = document.getElementById('nodeInfoPanel');
+  panel.classList.add('active');
+
+  document.getElementById('infoName').textContent = topic.name;
+  document.getElementById('infoDomain').textContent = topic.domain;
+  document.getElementById('infoCentrality').textContent = (topic.centrality * 100).toFixed(0) + '%';
+
+  // 简介
+  const descRow = document.getElementById('infoDescRow');
+  if (topic.description) {
+    descRow.style.display = '';
+    document.getElementById('infoDesc').textContent = topic.description.length > 80 ? topic.description.substring(0, 80) + '...' : topic.description;
+  } else {
+    descRow.style.display = 'none';
+  }
+
+  // 前置知识
+  const prereqs = DEPS.filter(d => d.topicId === nodeId);
+  const prereqsRow = document.getElementById('infoPrereqsRow');
+  const prereqsEl = document.getElementById('infoPrereqs');
+  if (prereqs.length > 0) {
+    prereqsRow.style.display = '';
+    prereqsEl.innerHTML = prereqs.map(d => {
+      const name = topicMap[d.prerequisiteId]?.name || d.prerequisiteId;
+      return `<span class="rel-badge prereq" onclick="focusNode('${d.prerequisiteId}')" title="点击定位">${name}</span>`;
+    }).join('');
+  } else {
+    prereqsRow.style.display = 'none';
+  }
+
+  // 后续知识
+  const deps = DEPS.filter(d => d.prerequisiteId === nodeId);
+  const depsRow = document.getElementById('infoDepsRow');
+  const depsEl = document.getElementById('infoDeps');
+  if (deps.length > 0) {
+    depsRow.style.display = '';
+    depsEl.innerHTML = deps.map(d => {
+      const name = topicMap[d.topicId]?.name || d.topicId;
+      return `<span class="rel-badge dep" onclick="focusNode('${d.topicId}')" title="点击定位">${name}</span>`;
+    }).join('');
+  } else {
+    depsRow.style.display = 'none';
+  }
+
+  // 详情链接
+  document.getElementById('infoDetailBtn').href = TOPIC_DETAIL_URL + nodeId;
+}
+
+function clearNodeInfo() {
+  document.getElementById('nodeInfoPanel').classList.remove('active');
+  document.getElementById('nodePlaceholder').style.display = '';
+}
+
+// —— 聚焦到指定节点 ——
+function focusNode(nodeId) {
+  network.selectNodes([nodeId]);
+  network.focus(nodeId, { scale: 1.5, animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+}
+
+// —— 高亮选中节点的邻居 ——
+function highlightNeighbors(nodeId) {
+  const connected = network.getConnectedNodes(nodeId);
+  const allNodes = nodes.getIds();
+  const updates = allNodes.map(id => {
+    const isSelected = id === nodeId;
+    const isNeighbor = connected.includes(id);
+    const node = nodes.get(id);
+    const bgColor = DOMAIN_COLORS[node.domain] || '#e5e7eb';
+    return {
+      id,
+      opacity: (isSelected || isNeighbor) ? 1.0 : 0.15,
+      color: isSelected
+        ? { background: '#6366f1', border: '#4f46e5', highlight: { background: '#6366f1', border: '#4f46e5' } }
+        : { background: bgColor, border: node.centrality >= 0.9 ? '#ef4444' : (node.centrality >= 0.8 ? '#f59e0b' : '#cbd5e1') },
+    };
+  });
+  nodes.update(updates);
+}
+
+function resetHighlight() {
+  const allNodes = nodes.getIds();
+  const updates = allNodes.map(id => {
+    const node = nodes.get(id);
+    const bgColor = DOMAIN_COLORS[node.domain] || '#e5e7eb';
+    return {
+      id,
+      opacity: 1.0,
+      color: { background: bgColor, border: node.centrality >= 0.9 ? '#ef4444' : (node.centrality >= 0.8 ? '#f59e0b' : '#cbd5e1') },
+    };
+  });
+  nodes.update(updates);
+}
+
+// —— 双击跳转详情 ——
+network.on('doubleClick', function(params) {
+  if (params.nodes.length > 0) {
+    window.location.href = TOPIC_DETAIL_URL + params.nodes[0];
+  }
+});
+
+// —— 搜索高亮 ——
+function searchNodes() {
+  const query = document.getElementById('nodeSearch').value.trim().toLowerCase();
+  const clearBtn = document.getElementById('clearSearch');
+  const countEl = document.getElementById('highlightCount');
+  const hint = document.getElementById('searchHint');
+
+  if (!query) {
+    clearBtn.style.display = 'none';
+    countEl.style.display = 'none';
+    hint.style.display = '';
+    resetHighlight();
+    clearNodeInfo();
+    network.unselectAll();
+    selectedNodeId = null;
+    return;
+  }
+
+  clearBtn.style.display = 'block';
+  hint.style.display = 'none';
+  const allNodes = nodes.getIds();
+  let matchCount = 0;
+  let firstMatch = null;
+  const updates = allNodes.map(id => {
+    const node = nodes.get(id);
+    const name = (node.label || '').toLowerCase();
+    const domain = (node.domain || '').toLowerCase();
+    const matches = name.includes(query) || domain.includes(query);
+    if (matches) {
+      matchCount++;
+      if (!firstMatch) firstMatch = id;
+    }
+    return { id, opacity: matches ? 1.0 : 0.08, hidden: false };
+  });
+  nodes.update(updates);
+  countEl.style.display = 'block';
+  countEl.textContent = `找到 ${matchCount} 个${matchCount > 0 ? '，已定位第一个' : ''}`;
+
+  // 自动聚焦到第一个匹配节点
+  if (firstMatch && matchCount > 0 && selectedNodeId !== firstMatch) {
+    network.selectNodes([firstMatch]);
+    network.focus(firstMatch, { scale: 1.5, animation: { duration: 400, easingFunction: 'easeInOutQuad' } });
+  }
+}
+
+function clearSearch() {
+  document.getElementById('nodeSearch').value = '';
+  document.getElementById('clearSearch').style.display = 'none';
+  document.getElementById('highlightCount').style.display = 'none';
+  document.getElementById('searchHint').style.display = '';
+  resetHighlight();
+  clearNodeInfo();
+  network.unselectAll();
+  selectedNodeId = null;
+}
+
+// —— 领域筛选 ——
+const domainFilterState = {};
+DOMAIN_NAMES.forEach(d => { domainFilterState[d] = true; });
+
+function buildDomainFilters() {
+  const container = document.getElementById('domainFilters');
+  container.innerHTML = DOMAIN_NAMES.map(domain => {
+    const color = DOMAIN_COLORS[domain];
+    const count = TOPICS.filter(t => t.domain === domain).length;
+    return `<span class="badge domain-tag" style="background:${color};color:#334155;border:1px solid rgba(0,0,0,0.1)"
+          data-domain="${domain}" onclick="toggleDomain('${domain}')">
+          ${domain} ${count}
+        </span>`;
+  }).join('');
+}
+
+function toggleDomain(domain) {
+  domainFilterState[domain] = !domainFilterState[domain];
+  updateDomainFilter();
+  applyDomainFilter();
+}
+
+function toggleAllDomains() {
+  const allVisible = Object.values(domainFilterState).every(v => v);
+  DOMAIN_NAMES.forEach(d => { domainFilterState[d] = !allVisible; });
+  updateDomainFilter();
+  applyDomainFilter();
+}
+
+function updateDomainFilter() {
+  const tags = document.querySelectorAll('.domain-tag');
+  tags.forEach(tag => {
+    const domain = tag.dataset.domain;
+    if (domainFilterState[domain]) {
+      tag.classList.remove('dimmed');
+    } else {
+      tag.classList.add('dimmed');
+    }
+  });
+}
+
+function applyDomainFilter() {
+  const allNodes = nodes.getIds();
+  const updates = allNodes.map(id => {
+    const node = nodes.get(id);
+    const visible = domainFilterState[node.domain] !== false;
+    return { id, hidden: !visible, physics: visible };
+  });
+  nodes.update(updates);
+}
+
+// —— 初始化 ——
+buildDomainFilters();
+updateDomainFilter();
+
+// 物理稳定后自适应
+network.once('stabilizationIterationsDone', function() {
+  network.setOptions({ physics: { stabilization: false } });
+  graphFit();
+});
+</script>
+{% endblock %}

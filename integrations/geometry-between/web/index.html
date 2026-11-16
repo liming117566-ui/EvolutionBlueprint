@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#167768"><meta name="description" content="110 个初中数学专题的图解学习空间。观察图形，展开推导，理解每一步解题思路。">
+  <title>几何之间 · 交互数学实验室</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./typography.css">
+  <link rel="stylesheet" href="./materials.css">
+  <script src="./data.js" defer></script><script src="./scenes.js" defer></script><script src="./materials-catalog.js" defer></script><script src="./materials.js" defer></script><script src="./app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="#explore" aria-label="几何之间首页"><span class="brand-mark"><svg viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M16 4 29 27H3L16 4Z" stroke="currentColor" stroke-width="1.6"/><path d="m16 4 0 23M3 27l20-12M29 27 9 15" stroke="currentColor" stroke-width="1.2"/><circle cx="16" cy="19" r="3" fill="currentColor"/></svg></span><span>几何之间<small>BETWEEN THE POINTS</small></span></a>
+    <div class="workspace-label">我的学习空间</div>
+    <nav class="main-nav" aria-label="主导航">
+      <a href="#explore" data-nav="explore"><span data-icon="compass"></span>探索实验室<span class="nav-dot"></span></a>
+      <a href="#library" data-nav="library"><span data-icon="grid"></span>模型图鉴<span class="nav-count">110</span></a>
+      <a href="#favorites" data-nav="favorites"><span data-icon="bookmark"></span>我的收藏<span class="nav-count" id="favorite-count">0</span></a>
+      <a href="#progress" data-nav="progress"><span data-icon="chart"></span>学习足迹</a>
+      <a href="#materials" data-nav="materials"><span data-icon="file"></span>资料与打印</a>
+    </nav>
+    <div class="sidebar-divider"></div><div class="workspace-label">专题导航</div>
+    <nav class="category-nav" aria-label="专题导航">
+      <button data-category="geometry"><i class="category-dot teal"></i>几何模型<span>60</span></button>
+      <button data-category="optimum"><i class="category-dot orange"></i>动点最值<span>18</span></button>
+      <button data-category="functions"><i class="category-dot purple"></i>函数专题<span>32</span></button>
+    </nav>
+    <div class="sidebar-bottom"><div class="daily-card"><span data-icon="sparkles"></span><strong>让思路，清晰起来。</strong><p>每天读懂一个模型，进步一点。</p><div class="daily-progress"><span id="side-progress"></span></div><div class="daily-caption"><span>已掌握 <b id="side-completed">0</b> 个专题</span><span>110</span></div></div><button class="source-side" id="about-button"><span data-icon="book"></span>关于这本书<span data-icon="arrow-up-right"></span></button><div class="profile"><span class="avatar">学</span><div><strong>好奇的探索者</strong><small>保持好奇，慢慢进步</small></div><span class="online-dot"></span></div></div>
+  </aside>
+  <div class="app-shell">
+    <header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" id="menu-toggle" aria-label="展开导航"><span data-icon="menu"></span></button><span>学习空间</span><span class="slash">/</span><strong id="breadcrumb">探索实验室</strong></div><button id="global-search" class="search-trigger" aria-label="搜索所有模型"><span data-icon="search"></span><span>搜索模型、知识点…</span><kbd>Ctrl K</kbd></button><button class="icon-button help-button" id="help-button" aria-label="使用帮助"><span data-icon="help"></span></button></header>
+    <main id="main-content"></main>
+    <footer class="site-footer"><span>几何之间 <i>·</i> 把结论变成发现</span><span>110 个专题，一步一步理解 <span class="tiny-triangle">△</span></span></footer>
+  </div>
+  <dialog id="search-dialog" class="search-dialog"><div class="search-modal-head"><span data-icon="search"></span><input id="search-input" type="search" autocomplete="off" placeholder="试试“中点”“相似”或“最值”" aria-label="搜索所有专题"><button class="key-button" data-close>ESC</button></div><div class="search-meta" id="search-meta"></div><div id="search-results" class="search-results"></div></dialog>
+  <dialog id="info-dialog" class="info-dialog"><button class="icon-button modal-close" data-close aria-label="关闭"><span data-icon="x"></span></button><div id="info-content"></div></dialog>
+  <div class="toast" id="toast" role="status"></div>
+</body>
+</html>

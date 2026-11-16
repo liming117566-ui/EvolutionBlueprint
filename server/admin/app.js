@@ -5,6 +5,7 @@ import { renderAssets, renderMaterials } from './assets.js';
 import { renderUsers } from './users.js';
 import { renderCards } from './cards.js';
 import { renderLogs } from './logs.js';
+import { renderWebsites } from './websites.js';
 const root = document.querySelector('#app');
 const context = {
   catalog: null, catalogDirty: false, pending: new Map(), view: 'catalog',
@@ -39,7 +40,7 @@ async function login(preserve = false) {
     const result = await api('/api/admin/session', { method: 'POST', body: { username: username.input.value.trim(), password: password.input.value } });
     password.input.value = ''; currentAdmin = result.admin; sessionExpired = false; shell();
   }, errors); } }, username.node, password.node, errors, submit);
-  root.replaceChildren(el('main', { class: 'login-wrap' }, el('section', { class: 'panel login' }, el('h1', {}, '进化蓝图'), el('p', { class: 'muted' }, preserve ? '会话已失效，请重新登录。当前内容草稿保留在此标签页。' : '管理课程内容、学员与学习权益'), form)));
+  root.replaceChildren(el('main', { class: 'login-wrap' }, el('section', { class: 'panel login' }, el('h1', {}, el('img', { class: 'brand-icon', src: '/assets/generated/app-icon.webp', alt: '' }), '新博途'), el('p', { class: 'muted' }, preserve ? '会话已失效，请重新登录。当前内容草稿保留在此标签页。' : '管理课程内容、学员与学习权益'), form)));
   username.input.focus();
 }
 function shell() {
@@ -47,7 +48,7 @@ function shell() {
   const nav = el('nav', { class: 'nav', 'aria-label': '管理导航' });
   const routes = [
     ['boards', '学习板块', renderCatalog],
-    ['catalog', '内容与发布', renderCatalog], ['materials', '课程资料', renderMaterials], ['assets', '资源库', renderAssets],
+    ['catalog', '内容与发布', renderCatalog], ['materials', '课程资料', renderMaterials], ['websites', '学习网页', renderWebsites], ['assets', '资源库', renderAssets],
     ['users', '用户与权益', renderUsers], ['cards', '卡密与核销', renderCards], ['audit', '操作审计', (host, ctx) => renderLogs(host, ctx, 'audit')]
   ];
   async function navigate(id, renderer) {
@@ -69,7 +70,7 @@ function shell() {
     if (context.hasPending() && !confirmDanger('有未保存的内容，退出将丢弃这些更改。确定退出？')) return;
     await api('/api/admin/session', { method: 'DELETE' }); reset(); await login();
   }), 'ghost');
-  root.replaceChildren(el('div', { class: 'shell' }, el('aside', { class: 'sidebar' }, el('div', { class: 'brand' }, '进化蓝图', el('small', {}, '内容管理工作台')), nav, el('div', { class: 'account' }, el('span', { class: 'account-name muted' }, currentAdmin?.username || '管理员'), button('修改密码', changePassword, 'ghost'), logout)), workspace));
+  root.replaceChildren(el('div', { class: 'shell' }, el('aside', { class: 'sidebar' }, el('div', { class: 'brand' }, el('img', { class: 'brand-icon', src: '/assets/generated/app-icon.webp', alt: '' }), '新博途', el('small', {}, '内容管理工作台')), nav, el('div', { class: 'account' }, el('span', { class: 'account-name muted' }, currentAdmin?.username || '管理员'), button('修改密码', changePassword, 'ghost'), logout)), workspace));
   const route = routes.find(([id]) => id === context.view) || routes[0]; navigate(route[0], route[2]);
 }
 function changePassword() {

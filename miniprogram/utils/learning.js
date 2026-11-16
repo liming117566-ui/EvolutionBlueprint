@@ -12,6 +12,7 @@ function state() {
   return { sections: saved.sections || [], positions: saved.positions || [], legacyChapters: saved.legacyChapters || [] };
 }
 function same(token) { if (!session.current() || session.current().token !== token) throw new Error('账号已切换，请重新加载'); }
+function retryable(error) { return error.network || error.status === 429 || error.status >= 500; }
 async function flush() {
   const user = session.current();
   if (!user) throw new Error('请先登录');
@@ -21,7 +22,7 @@ async function flush() {
     same(user.token);
     try { await api.request('/api/me/learning', { method: 'PUT', data: entry.data }); }
     catch (error) {
-      if (error.network || error.status >= 500) throw error;
+      if (retryable(error)) throw error;
       if (error.status === 401) throw error;
       // Revoked/deleted content must not permanently block other valid records.
     }
@@ -80,7 +81,8 @@ async function record(courseId, chapterId, sectionId, complete) {
     await api.request('/api/me/learning', { method: 'PUT', data });
   } catch (error) {
     if (error.network) error.message = '网络中断，学习记录已暂存到当前账号，联网后重试同步。';
-    if (!error.network && !(error.status >= 500)) wx.setStorageSync(key, (wx.getStorageSync(key) || []).filter(item => item.id !== entry.id));
+    if (error.status === 429) error.message = '同步请求较多，学习记录已暂存到当前账号，请稍后重试。';
+    if (!retryable(error)) wx.setStorageSync(key, (wx.getStorageSync(key) || []).filter(item => item.id !== entry.id));
     throw error;
   }
   same(saved.token);

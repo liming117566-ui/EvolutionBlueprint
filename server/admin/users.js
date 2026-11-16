@@ -28,6 +28,7 @@ export async function renderUsers(host, context) {
       current = await api(endpoint('users', id)); if (!m.dialog.isConnected) return;
       const { user, grants = [], learning = {} } = current;
       const courses = new Map(catalog.courses.map(c => [c.id, c.title]));
+      const boards = new Map((catalog.boards || []).map(b => [b.id, b.title]));
       const chapters = new Map(catalog.courses.flatMap(c => c.chapters.map(ch => [ch.id, `${c.title} / ${ch.title}`])));
       const sections = new Map(catalog.courses.flatMap(c => c.chapters.flatMap(ch => ch.sections.map(s => [s.id, `${ch.title} / ${s.title}`]))));
       const nickname = field('用户昵称', { value: user.nickname, required: true, maxlength: 100 });
@@ -42,8 +43,8 @@ export async function renderUsers(host, context) {
         if (!confirmDanger(enable ? `确定启用用户“${user.nickname}”？` : `确定禁用用户“${user.nickname}”？该用户将不能继续访问学习服务。`)) return;
         await api(endpoint('users', id), { method: 'PATCH', body: { status: enable ? 'active' : 'disabled' } }); notify(enable ? '用户已启用' : '用户已禁用'); await refresh(); await afterChange();
       }, errors), user.status === 'disabled' ? '' : 'danger');
-      m.content.replaceChildren(el('dl', { class: 'detail-list' }, el('dt', {}, '用户 ID'), el('dd', {}, user.id), el('dt', {}, '账号状态'), el('dd', {}, badge(user.status === 'active' ? '正常' : '已禁用', user.status === 'active')), el('dt', {}, '注册时间'), el('dd', {}, date(user.createdAt)), el('dt', {}, '最近登录'), el('dd', {}, date(user.lastLoginAt))), errors, form, el('div', { class: 'actions' }, status), el('h3', { class: 'section-label' }, '访问权益'), el('p', { class: 'muted' }, '到期、撤销状态由服务端最终判定。授予或撤销权益会记录审计。'), button('授予访问权益', () => grantUser(user, catalog.courses, async () => { await refresh(); await afterChange(); }), 'primary'), el('div', { class: 'toolbar' }), table([
-        { label: '范围', render: g => g.scope === 'all' ? '全部课程' : (g.courseIds || []).map(courseId => courses.get(courseId) || courseId).join('、') },
+      m.content.replaceChildren(el('dl', { class: 'detail-list' }, el('dt', {}, '用户 ID'), el('dd', {}, user.id), el('dt', {}, '账号状态'), el('dd', {}, badge(user.status === 'active' ? '正常' : '已禁用', user.status === 'active')), el('dt', {}, '注册时间'), el('dd', {}, date(user.createdAt)), el('dt', {}, '最近登录'), el('dd', {}, date(user.lastLoginAt))), errors, form, el('div', { class: 'actions' }, status), el('h3', { class: 'section-label' }, '访问权益'), el('p', { class: 'muted' }, '到期、撤销状态由服务端最终判定。授予或撤销权益会记录审计。'), button('授予访问权益', () => grantUser(user, catalog, async () => { await refresh(); await afterChange(); }), 'primary'), el('div', { class: 'toolbar' }), table([
+        { label: '范围', render: g => g.scope === 'all' ? '全部板块与课程' : g.scope === 'boards' ? (g.boardIds || []).map(boardId => boards.get(boardId) || boardId).join('、') : (g.courseIds || []).map(courseId => courses.get(courseId) || courseId).join('、') },
         { label: '到期', render: g => g.expiresAt ? date(g.expiresAt) : '永久' },
         { label: '状态', render: g => badge(g.revokedAt ? '已撤销' : g.expiresAt && Date.parse(g.expiresAt) <= Date.now() ? '已到期' : '有效', !g.revokedAt && (!g.expiresAt || Date.parse(g.expiresAt) > Date.now())) },
         { label: '原因 / 来源', render: g => el('div', {}, g.reason || '—', el('div', { class: 'muted' }, g.source || '—')) },
@@ -59,23 +60,31 @@ export async function renderUsers(host, context) {
   }
   await load(1);
 }
-function grantUser(user, courses, onSaved) {
+function grantUser(user, catalog, onSaved) {
   let dirty = false;
   const m = modal(`授予权益：${user.nickname}`, { beforeClose: () => !dirty || confirmDanger('权益表单尚未提交，确定关闭？') });
-  const scope = field('授权范围', { type: 'select', value: 'all', options: [{ value: 'all', label: '全部课程' }, { value: 'courses', label: '指定课程' }] });
-  const checks = courseChecks(courses); checks.node.hidden = true;
-  scope.input.addEventListener('change', () => { checks.node.hidden = scope.input.value !== 'courses'; });
+  const scope = field('授权范围', { type: 'select', value: 'boards', options: [{ value: 'boards', label: '指定板块' }, { value: 'all', label: '全部板块与课程' }, { value: 'courses', label: '指定课程' }] });
+  const boards = boardChecks(catalog.boards || []);
+  const checks = courseChecks(catalog.courses); checks.node.hidden = true;
+  scope.input.addEventListener('change', () => { checks.node.hidden = scope.input.value !== 'courses'; boards.node.hidden = scope.input.value !== 'boards'; });
   const expires = field('权益到期时间', { type: 'datetime-local', hint: '留空为永久。按当前电脑本地时间输入，提交时转换为 ISO 时间。' });
   const reason = field('授予原因', { type: 'textarea', required: true, maxlength: 1000 });
   const errors = errorBox(), submit = el('button', { type: 'submit', class: 'primary' }, '确认授予权益');
   m.content.append(el('form', { oninput: () => { dirty = true; }, onchange: () => { dirty = true; }, onsubmit: e => { e.preventDefault(); busy(submit, async () => {
     const courseIds = scope.input.value === 'courses' ? checks.values() : [];
+    const boardIds = scope.input.value === 'boards' ? boards.values() : [];
     if (scope.input.value === 'courses' && !courseIds.length) throw new Error('指定课程授权至少选择一门课程');
+    if (scope.input.value === 'boards' && !boardIds.length) throw new Error('指定板块授权至少选择一个学习板块');
     const expiresAt = isoFromInput(expires.input); if (expiresAt && Date.parse(expiresAt) <= Date.now()) throw new Error('到期时间须晚于当前时间');
-    if (!confirmDanger(`确定为“${user.nickname}”授予${scope.input.value === 'all' ? '全部' : '指定'}课程访问权益？`)) return;
-    await api(endpoint('users', user.id, '/grants'), { method: 'POST', body: { scope: scope.input.value, courseIds, expiresAt, reason: reason.input.value.trim() } });
+    const scopeLabel = scope.input.value === 'all' ? '全部板块与课程' : scope.input.value === 'boards' ? '指定板块' : '指定课程';
+    if (!confirmDanger(`确定为“${user.nickname}”授予${scopeLabel}访问权益？`)) return;
+    await api(endpoint('users', user.id, '/grants'), { method: 'POST', body: { scope: scope.input.value, boardIds, courseIds, expiresAt, reason: reason.input.value.trim() } });
     dirty = false; m.close(); notify('访问权益已授予'); await onSaved();
-  }, errors); } }, scope.node, checks.node, expires.node, reason.node, errors, submit));
+  }, errors); } }, scope.node, boards.node, checks.node, expires.node, reason.node, errors, submit));
+}
+function boardChecks(boards) {
+  const inputs = boards.map(board => ({ id: board.id, input: el('input', { type: 'checkbox' }), title: board.title + (board.enabled ? '' : '（已隐藏）') }));
+  return { node: el('div', { class: 'check-list', 'aria-label': '选择学习板块' }, inputs.length ? inputs.map(x => el('label', {}, x.input, x.title)) : el('p', { class: 'muted' }, '暂无板块，请先在内容中创建并保存板块。')), values: () => inputs.filter(x => x.input.checked).map(x => x.id) };
 }
 function revokeGrant(grant, onSaved) {
   const m = modal('撤销访问权益');

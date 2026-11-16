@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+ <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#167768">
+ <meta name="description" content="北师大版七年级上册数学交互学习空间：六章学习提要、动态数学实验、即时自测与三套讲义阅读打印。">
+ <title>数学之间 · 七年级上册交互学习空间</title><link rel="icon" href="favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><link rel="stylesheet" href="exam.css">
+ <script src="data.js" defer></script><script src="materials-data.js" defer></script><script src="scenes.js" defer></script><script src="exam-engine.js" defer></script><script src="exam.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+ <button class="nav-shade" aria-label="收起导航" id="nav-shade" hidden></button>
+ <aside class="sidebar" id="sidebar">
+  <a class="brand" href="#home"><span class="brand-mark">∑</span><span>数学之间<small>THINK · TRY · UNDERSTAND</small></span></a>
+  <div class="semester"><span>北师大版</span>七年级 · 上册 <span class="semester-dot"></span></div>
+  <div class="nav-label">我的学习空间</div>
+  <nav class="main-nav" aria-label="主导航"><a href="#home" data-nav="home"><span class="nav-icon">⌂</span>探索实验室</a><a href="#library" data-nav="library"><span class="nav-icon">▦</span>章节与专题<span class="nav-count" id="topic-count"></span></a><a href="#favorites" data-nav="favorites"><span class="nav-icon">♡</span>我的收藏<span class="nav-count" id="fav-count">0</span></a><a href="#progress" data-nav="progress"><span class="nav-icon">◷</span>学习足迹</a><a href="#exam" data-nav="exam"><span class="nav-icon">✎</span>自动组卷</a><a href="#materials" data-nav="materials"><span class="nav-icon">▤</span>资料与打印</a></nav>
+  <div class="nav-label chapter-label">按章节探索</div><nav class="chapter-nav" id="chapter-nav" aria-label="章节导航"></nav>
+  <div class="sidebar-bottom"><div class="daily-card"><span class="eyebrow">一点一滴，慢慢读懂</span><strong>把结论，变成发现。</strong><p>先试一试，再想一想为什么。</p><div class="progress-track"><span id="side-progress"></span></div><div class="daily-caption">已掌握 <b id="side-completed">0</b> / <span id="side-total"></span> 个专题</div></div><div class="profile"><span class="avatar">学</span><div><strong>好奇的探索者</strong><small>学习记录保存在此浏览器</small></div><span class="online-dot"></span></div></div>
+ </aside>
+ <div class="app-shell"><header class="topbar"><div class="breadcrumbs"><button class="icon-button mobile-menu" id="menu-toggle" aria-label="展开导航" aria-expanded="false">☰</button><span>学习空间</span><i>/</i><strong id="breadcrumb">探索实验室</strong></div><button class="search-trigger" id="search-open"><span>⌕</span><span>搜索专题、知识点、讲义…</span><kbd>Ctrl K</kbd></button><button class="help-button" id="help-open" aria-label="使用帮助">?</button></header><main id="main-content" tabindex="-1"></main><footer class="footer"><span>数学之间 <i>·</i> 把结论变成发现</span><span>从图形到数字，一步一步理解 <b>↗</b></span></footer></div>
+ <dialog class="search-dialog" id="search-dialog"><div class="search-dialog-head"><span>⌕</span><input type="search" id="search-input" placeholder="试试“数轴”“角”或“方程”" aria-label="搜索所有专题和讲义"><button class="key-button" data-close>ESC</button></div><div id="search-results" class="search-results"></div></dialog>
+ <dialog class="info-dialog" id="info-dialog"><button class="icon-button close-info" data-close aria-label="关闭帮助">×</button><span class="eyebrow">使用帮助</span><h2>每次读懂一点。</h2><p>在「章节与专题」里选择学习内容，调整滑块观察变化，展开例题步骤，再完成两道即时自测。点击「已掌握」记录进度，也可以收藏以后复习。</p><p>「资料与打印」收录三套原始 Word 讲义的网页阅读版，按章节、套别、版本和类型筛选。选中资料后可阅读、切换配对版本或打印。网站使用者仅查看与打印开发者预置的资料。</p><p>学习提要、交互模型和自测为配套学习内容；原始讲义中的公式、题图保留为图片。网页重新排版，分页可能与 Word 不同，打印前请检查预览。资料库的文字搜索侧重标题和知识点标题，图片公式不参与检索。</p><p>「自动组卷」可选章节、难度、题型、题量与分值，生成原创练习卷。试卷和答案分别打印，也可在打印窗口另存为 PDF。最近一份试卷会保存在当前浏览器。</p><p>收藏、进度和自测记录仅保存在当前浏览器。站点可离线使用，无需注册。</p></dialog>
+ <dialog class="print-dialog" id="print-dialog"><div class="print-toolbar"><div><strong>打印预览</strong><small id="print-title"></small></div><button class="button primary" id="print-confirm">确认打印 / 另存为 PDF</button><button class="button" data-close>关闭预览</button></div><iframe title="资料打印预览" id="print-frame"></iframe></dialog>
+ <div class="toast" id="toast" role="status"></div>
+</body>
+</html>

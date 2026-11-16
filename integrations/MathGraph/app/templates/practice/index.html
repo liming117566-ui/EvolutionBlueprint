@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}练习 · 数学图谱{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-pencil-square text-gradient"></i> 练习系统</h1>
+    <p class="page-sub">选择知识点开始练习，四档难度循序渐进</p>
+  </div>
+  <div class="btn-group">
+    <a href="{{ url_for('practice.history') }}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-clock-history"></i> 历史
+    </a>
+    <a href="{{ url_for('practice.wrong_questions') }}" class="btn btn-outline-danger btn-sm">
+      <i class="bi bi-journal-x"></i> 错题本
+    </a>
+  </div>
+</div>
+
+<!-- 年级选择 -->
+<ul class="nav nav-pills mb-4 fade-in">
+  {% for key, info in {'7-up':'7上','7-down':'7下','8-up':'8上','8-down':'8下','9-up':'9上','9-down':'9下'}.items() %}
+  <li class="nav-item">
+    <a class="nav-link {% if key == grade %}active{% endif %}" href="?grade={{ key }}">{{ info }}</a>
+  </li>
+  {% endfor %}
+</ul>
+
+<!-- 按领域分组 -->
+{% for domain, domain_topics in domains.items() %}
+<div class="card shadow-sm mb-4 border-0 fade-in">
+  <div class="card-header bg-light">
+    <i class="bi bi-collection text-primary"></i> <strong>{{ domain }}</strong>
+    <span class="badge bg-secondary ms-1">{{ domain_topics|length }}</span>
+  </div>
+  <div class="card-body p-3">
+    <div class="row g-2">
+      {% for t in domain_topics %}
+      {% set m = mastery_map.get(t.id) %}
+      <div class="col-12 col-md-4 col-lg-3">
+        <a href="{{ url_for('practice.start', topic_id=t.id) }}" class="text-decoration-none">
+          <div class="card border h-100 hover-lift {% if m and m.status == 'mastered' %}border-success{% elif m and m.status == 'weak' %}border-danger{% elif m and m.status == 'learning' %}border-warning{% endif %}">
+            <div class="card-body p-3">
+              <div class="d-flex align-items-center">
+                <small class="me-2">
+                  {% if m and m.status == 'mastered' %}<span class="status-dot mastered"></span>
+                  {% elif m and m.status == 'weak' %}<span class="status-dot weak"></span>
+                  {% elif m and m.status == 'learning' %}<span class="status-dot learning"></span>
+                  {% else %}<span class="status-dot unseen"></span>{% endif %}
+                </small>
+                <span class="small fw-medium">{{ t.name }}</span>
+                {% if t.centrality >= 0.9 %}<span class="badge bg-danger ms-auto">★</span>{% endif %}
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

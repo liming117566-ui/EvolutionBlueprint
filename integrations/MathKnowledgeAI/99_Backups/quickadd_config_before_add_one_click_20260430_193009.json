@@ -1,0 +1,354 @@
+{
+  "choices": [
+    {
+      "id": "math_ai_library_menu_v1",
+      "name": "📚 初中数学 AI 学习库",
+      "type": "Multi",
+      "command": true,
+      "choices": [
+        {
+          "id": "math_error_new_v1",
+          "name": "➕ 新建数学错题",
+          "type": "Template",
+          "command": true,
+          "templatePath": "人教版初中数学AI学习库/04_Dashboard/Templates/QuickAdd/错题录入.md",
+          "folder": {
+            "enabled": true,
+            "folders": [
+              "人教版初中数学AI学习库/02_ErrorBank/代数错题",
+              "人教版初中数学AI学习库/02_ErrorBank/几何错题"
+            ],
+            "chooseWhenCreatingNote": true,
+            "createInSameFolderAsActiveFile": false,
+            "chooseFromSubfolders": false
+          },
+          "fileNameFormat": {
+            "enabled": true,
+            "format": "{{DATE:YYYY-MM-DD}}_{{VALUE:knowledge_name|label:知识点名}}_{{VALUE:title|label:简短题型}}"
+          },
+          "appendLink": {
+            "enabled": false,
+            "placement": {
+              "useHeading": false,
+              "heading": "",
+              "createHeading": false
+            }
+          },
+          "openFile": true,
+          "fileOpening": {
+            "location": "tab",
+            "direction": "vertical",
+            "mode": "source",
+            "focus": true
+          },
+          "fileExistsMode": "Increment the file name",
+          "setFileExistsBehavior": true,
+          "onePageInput": "always"
+        },
+        {
+          "id": "math_qa_capture_v1",
+          "name": "💬 记录学习问答",
+          "type": "Capture",
+          "command": true,
+          "captureTo": "人教版初中数学AI学习库/04_Dashboard/学习问答记录.md",
+          "captureToActiveFile": false,
+          "createFileIfItDoesntExist": {
+            "enabled": true,
+            "createWithTemplate": false,
+            "template": ""
+          },
+          "format": {
+            "enabled": true,
+            "format": "\n## {{DATE:YYYY-MM-DD}} {{VALUE:title|label:问题标题}}\n\n- 关联知识点：{{VALUE:knowledge_link|label:知识点链接，可空}}\n- 问题：{{VALUE:question|label:问题}}\n- 解答摘要：{{VALUE:answer|label:解答摘要}}\n- 是否需要生成练习：{{VALUE:need_practice|label:是/否}}\n"
+          },
+          "prepend": false,
+          "appendLink": false,
+          "task": false,
+          "insertAfter": {
+            "enabled": false,
+            "after": "",
+            "insertAtEnd": true,
+            "considerSubsections": false,
+            "createIfNotFound": false,
+            "createIfNotFoundLocation": "bottom"
+          },
+          "newLineCapture": {
+            "enabled": true,
+            "direction": "below"
+          },
+          "openFile": true,
+          "fileOpening": {
+            "location": "tab",
+            "direction": "vertical",
+            "mode": "source",
+            "focus": true
+          }
+        },
+        {
+          "id": "math_practice_new_v1",
+          "name": "🧪 新建变式题练习",
+          "type": "Template",
+          "command": true,
+          "templatePath": "人教版初中数学AI学习库/04_Dashboard/Templates/QuickAdd/变式题练习.md",
+          "folder": {
+            "enabled": true,
+            "folders": [
+              "人教版初中数学AI学习库/03_Practice/代数练习",
+              "人教版初中数学AI学习库/03_Practice/几何练习"
+            ],
+            "chooseWhenCreatingNote": true,
+            "createInSameFolderAsActiveFile": false,
+            "chooseFromSubfolders": false
+          },
+          "fileNameFormat": {
+            "enabled": true,
+            "format": "{{DATE:YYYY-MM-DD}}_{{VALUE:knowledge_name|label:知识点名}}_变式练习"
+          },
+          "appendLink": {
+            "enabled": false,
+            "placement": {
+              "useHeading": false,
+              "heading": "",
+              "createHeading": false
+            }
+          },
+          "openFile": true,
+          "fileOpening": {
+            "location": "tab",
+            "direction": "vertical",
+            "mode": "source",
+            "focus": true
+          },
+          "fileExistsMode": "Increment the file name",
+          "setFileExistsBehavior": true,
+          "onePageInput": "always"
+        },
+        {
+          "id": "math_weekly_review_v1",
+          "name": "📆 新建每周复盘",
+          "type": "Template",
+          "command": true,
+          "templatePath": "人教版初中数学AI学习库/04_Dashboard/Templates/QuickAdd/每周复盘.md",
+          "folder": {
+            "enabled": true,
+            "folders": [
+              "人教版初中数学AI学习库/04_Dashboard"
+            ],
+            "chooseWhenCreatingNote": false,
+            "createInSameFolderAsActiveFile": false,
+            "chooseFromSubfolders": false
+          },
+          "fileNameFormat": {
+            "enabled": true,
+            "format": "每周复盘_{{DATE:YYYY-[W]WW}}"
+          },
+          "appendLink": {
+            "enabled": false,
+            "placement": {
+              "useHeading": false,
+              "heading": "",
+              "createHeading": false
+            }
+          },
+          "openFile": true,
+          "fileOpening": {
+            "location": "tab",
+            "direction": "vertical",
+            "mode": "source",
+            "focus": true
+          },
+          "fileExistsMode": "Increment the file name",
+          "setFileExistsBehavior": true,
+          "onePageInput": "always"
+        },
+        {
+          "id": "math_open_home_v1",
+          "name": "🏠 打开学习仪表盘",
+          "type": "Macro",
+          "command": true,
+          "runOnStartup": false,
+          "macro": {
+            "id": "math_open_home_v1_macro",
+            "name": "🏠 打开学习仪表盘",
+            "commands": [
+              {
+                "id": "math_open_home_v1_open",
+                "name": "Open file",
+                "type": "OpenFile",
+                "filePath": "人教版初中数学AI学习库/04_Dashboard/Home.md",
+                "openingOptions": {
+                  "location": "tab",
+                  "direction": "vertical",
+                  "mode": "source",
+                  "focus": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "math_open_review_v1",
+          "name": "🔁 打开复习队列",
+          "type": "Macro",
+          "command": true,
+          "runOnStartup": false,
+          "macro": {
+            "id": "math_open_review_v1_macro",
+            "name": "🔁 打开复习队列",
+            "commands": [
+              {
+                "id": "math_open_review_v1_open",
+                "name": "Open file",
+                "type": "OpenFile",
+                "filePath": "人教版初中数学AI学习库/04_Dashboard/ReviewQueue.md",
+                "openingOptions": {
+                  "location": "tab",
+                  "direction": "vertical",
+                  "mode": "source",
+                  "focus": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "math_open_health_v1",
+          "name": "🩺 打开数据健康检查",
+          "type": "Macro",
+          "command": true,
+          "runOnStartup": false,
+          "macro": {
+            "id": "math_open_health_v1_macro",
+            "name": "🩺 打开数据健康检查",
+            "commands": [
+              {
+                "id": "math_open_health_v1_open",
+                "name": "Open file",
+                "type": "OpenFile",
+                "filePath": "人教版初中数学AI学习库/04_Dashboard/DataHealth.md",
+                "openingOptions": {
+                  "location": "tab",
+                  "direction": "vertical",
+                  "mode": "source",
+                  "focus": true
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "inputPrompt": "single-line",
+  "persistInputPromptDrafts": true,
+  "useSelectionAsCaptureValue": true,
+  "devMode": false,
+  "templateFolderPath": "人教版初中数学AI学习库/04_Dashboard/Templates/QuickAdd",
+  "announceUpdates": "major",
+  "version": "2.12.0",
+  "globalVariables": {},
+  "onePageInputEnabled": false,
+  "disableOnlineFeatures": true,
+  "enableRibbonIcon": true,
+  "showCaptureNotification": true,
+  "showInputCancellationNotification": false,
+  "enableTemplatePropertyTypes": false,
+  "dateAliases": {
+    "t": "today",
+    "tm": "tomorrow",
+    "yd": "yesterday",
+    "nw": "next week",
+    "nm": "next month",
+    "ny": "next year",
+    "lw": "last week",
+    "lm": "last month",
+    "ly": "last year"
+  },
+  "ai": {
+    "defaultModel": "Ask me",
+    "defaultSystemPrompt": "As an AI assistant within Obsidian, your primary goal is to help users manage their ideas and knowledge more effectively. Format your responses using Markdown syntax. Please use the [[Obsidian]] link format. You can write aliases for the links by writing [[Obsidian|the alias after the pipe symbol]]. To use mathematical notation, use LaTeX syntax. LaTeX syntax for larger equations should be on separate lines, surrounded with double dollar signs ($$). You can also inline math expressions by wrapping it in $ symbols. For example, use $$w_{ij}^{\text{new}}:=w_{ij}^{\text{current}}+etacdotdelta_jcdot x_{ij}$$ on a separate line, but you can write \"($eta$ = learning rate, $delta_j$ = error term, $x_{ij}$ = input)\" inline.",
+    "promptTemplatesFolderPath": "",
+    "showAssistant": true,
+    "providers": [
+      {
+        "name": "OpenAI",
+        "endpoint": "https://api.openai.com/v1",
+        "apiKey": "",
+        "models": [
+          {
+            "name": "gpt-3.5-turbo",
+            "maxTokens": 4096
+          },
+          {
+            "name": "gpt-3.5-turbo-16k",
+            "maxTokens": 16384
+          },
+          {
+            "name": "gpt-3.5-turbo-1106",
+            "maxTokens": 16385
+          },
+          {
+            "name": "gpt-4",
+            "maxTokens": 8192
+          },
+          {
+            "name": "gpt-4-32k",
+            "maxTokens": 32768
+          },
+          {
+            "name": "gpt-4-1106-preview",
+            "maxTokens": 128000
+          },
+          {
+            "name": "gpt-4-turbo",
+            "maxTokens": 128000
+          },
+          {
+            "name": "gpt-4o",
+            "maxTokens": 128000
+          },
+          {
+            "name": "gpt-4o-mini",
+            "maxTokens": 128000
+          }
+        ],
+        "autoSyncModels": false,
+        "modelSource": "modelsDev"
+      },
+      {
+        "name": "Gemini",
+        "endpoint": "https://generativelanguage.googleapis.com",
+        "apiKey": "",
+        "models": [
+          {
+            "name": "gemini-1.5-pro",
+            "maxTokens": 1000000
+          },
+          {
+            "name": "gemini-1.5-flash",
+            "maxTokens": 1000000
+          },
+          {
+            "name": "gemini-1.5-flash-8b",
+            "maxTokens": 1000000
+          }
+        ],
+        "autoSyncModels": false,
+        "modelSource": "modelsDev"
+      }
+    ]
+  },
+  "migrations": {
+    "migrateToMacroIDFromEmbeddedMacro": true,
+    "useQuickAddTemplateFolder": true,
+    "incrementFileNameSettingMoveToDefaultBehavior": true,
+    "mutualExclusionInsertAfterAndWriteToBottomOfFile": true,
+    "setVersionAfterUpdateModalRelease": true,
+    "addDefaultAIProviders": true,
+    "removeMacroIndirection": true,
+    "migrateFileOpeningSettings": true,
+    "backfillFileOpeningDefaults": true,
+    "setProviderModelDiscoveryMode": true,
+    "migrateProviderApiKeysToSecretStorage": true
+  }
+}

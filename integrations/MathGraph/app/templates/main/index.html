@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}数学图谱 · 初中数学自适应学习平台{% endblock %}
+{% block content %}
+<!-- Hero Section -->
+<section class="fade-in mb-5">
+  <div class="position-relative overflow-hidden rounded-2xl" style="background: var(--gradient-hero);">
+    <!-- 装饰光斑 -->
+    <div style="position:absolute; top:-80px; right:-60px; width:320px; height:320px; background:rgba(255,255,255,0.12); border-radius:50%; filter:blur(8px);"></div>
+    <div style="position:absolute; bottom:-100px; left:-40px; width:240px; height:240px; background:rgba(255,255,255,0.08); border-radius:50%; filter:blur(6px);"></div>
+    <div style="position:absolute; top:40%; left:55%; width:140px; height:140px; background:rgba(255,255,255,0.06); border-radius:50%; filter:blur(4px);"></div>
+
+    <div class="row align-items-center g-4 position-relative p-4 p-md-5">
+      <div class="col-12 col-lg-7 text-white">
+        <span class="badge bg-white bg-opacity-25 text-white mb-3 px-3 py-2">
+          <i class="bi bi-stars"></i> 智能学习 · 精准诊断 · 个性路径
+        </span>
+        <h1 class="text-white mb-3" style="font-size: 2.85rem; font-weight: 800; letter-spacing: -0.035em; line-height: 1.1;">
+          初中数学<br>自适应学习平台
+        </h1>
+        <p class="lead text-white mb-4" style="opacity: 0.94; font-size: 1.05rem; max-width: 540px;">
+          基于人教版 <strong>{{ stats.total.topics }}</strong> 个知识点、
+          <strong>{{ stats.total.deps }}</strong> 条依赖关系构建的知识图谱，
+          覆盖七至九年级全册。精准诊断薄弱根因，智能生成学习路径，逐级闯关巩固掌握。
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          {% if current_user.is_authenticated %}
+          <a href="{{ url_for('graph.index') }}" class="btn btn-light btn-lg fw-semibold">
+            <i class="bi bi-diagram-3 text-primary"></i> 浏览知识图谱
+          </a>
+          <a href="{{ url_for('diagnose.new') }}" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-search"></i> 错题诊断
+          </a>
+          {% else %}
+          <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg fw-semibold">
+            <i class="bi bi-person-plus text-primary"></i> 立即注册
+          </a>
+          <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg">
+            <i class="bi bi-box-arrow-in-right"></i> 登录
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="col-12 col-lg-5">
+        <div class="card border-0 shadow-lg" style="background: rgba(255,255,255,0.97); backdrop-filter: blur(12px);">
+          <div class="card-body p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h5 class="mb-0 fw-bold">
+                <i class="bi bi-bar-chart-fill text-gradient"></i> 知识图谱总览
+              </h5>
+              <span class="badge bg-primary">实时</span>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-sm align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th>年级</th>
+                    <th class="text-center">知识点</th>
+                    <th class="text-center">依赖</th>
+                    <th class="text-center">领域</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for g in grades %}
+                  <tr>
+                    <td><span class="badge bg-light text-dark">{{ g.name }}</span></td>
+                    <td class="text-center fw-bold text-primary">{{ g.stat.topic_count }}</td>
+                    <td class="text-center">{{ g.stat.dep_count }}</td>
+                    <td class="text-center">{{ g.stat.cluster_count }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr class="border-top fw-bold">
+                    <td>合计</td>
+                    <td class="text-center text-primary">{{ stats.total.topics }}</td>
+                    <td class="text-center text-primary">{{ stats.total.deps }}</td>
+                    <td class="text-center text-muted">—</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 功能卡片 -->
+<section class="mb-5">
+  <div class="d-flex align-items-end justify-content-between mb-4">
+    <div>
+      <h3 class="mb-1 fw-bold">核心功能</h3>
+      <p class="text-muted mb-0">四大模块，闭环式自适应学习</p>
+    </div>
+  </div>
+  <div class="row g-4">
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="feature-card">
+        <div class="feature-icon bg-primary">
+          <i class="bi bi-diagram-3"></i>
+        </div>
+        <h5>知识图谱</h5>
+        <p>可视化浏览169个知识点及依赖关系，按年级、领域聚类展开</p>
+        <a href="{{ url_for('graph.index') }}" class="btn btn-outline-primary btn-sm">
+          进入浏览 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="feature-card">
+        <div class="feature-icon bg-danger">
+          <i class="bi bi-search"></i>
+        </div>
+        <h5>错题诊断</h5>
+        <p>录入错题，自动映射知识点并沿依赖链回溯定位根因</p>
+        <a href="{{ url_for('diagnose.index') }}" class="btn btn-outline-primary btn-sm">
+          开始诊断 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="feature-card">
+        <div class="feature-icon bg-success">
+          <i class="bi bi-signpost-2"></i>
+        </div>
+        <h5>学习路径</h5>
+        <p>基于拓扑排序生成个性化学习路径，跳过已掌握，逐级推进</p>
+        <a href="{{ url_for('learn.index') }}" class="btn btn-outline-primary btn-sm">
+          生成路径 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    <div class="col-12 col-md-6 col-lg-3">
+      <div class="feature-card">
+        <div class="feature-icon bg-warning">
+          <i class="bi bi-pencil-square"></i>
+        </div>
+        <h5>练习闯关</h5>
+        <p>四档难度（夯基→目标→综合→挑战），半自动判题+错题收录</p>
+        <a href="{{ url_for('practice.index') }}" class="btn btn-outline-primary btn-sm">
+          开始练习 <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 特性横幅 -->
+<section class="mb-5">
+  <div class="card border-0 overflow-hidden" style="background: var(--slate-900);">
+    <div class="card-body p-4 p-md-5 text-white position-relative">
+      <div style="position:absolute; top:0; right:0; bottom:0; width:55%; background: var(--gradient-mesh); opacity:0.4;"></div>
+      <div class="row align-items-center g-4 position-relative">
+        <div class="col-12 col-lg-5">
+          <h4 class="text-white mb-3 fw-bold">为什么选择数学图谱？</h4>
+          <p class="mb-0 text-white-50">
+            基于人教版初中数学知识点体系，构建完整的知识图谱与自适应学习路径。
+            精准诊断、智能推荐、循序渐进，让每一次学习都有效。
+          </p>
+        </div>
+        <div class="col-12 col-lg-7">
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <div class="text-center">
+                <div class="display-5 text-gradient mb-1">
+                  <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="fw-bold">图谱驱动</div>
+                <div class="small text-white-50">169知识点</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-center">
+                <div class="display-5 text-gradient-success mb-1">
+                  <i class="bi bi-signpost-2"></i>
+                </div>
+                <div class="fw-bold">智能路径</div>
+                <div class="small text-white-50">拓扑排序</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-center">
+                <div class="display-5 text-gradient-accent mb-1">
+                  <i class="bi bi-search-heart"></i>
+                </div>
+                <div class="fw-bold">根因诊断</div>
+                <div class="small text-white-50">依赖链回溯</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="text-center">
+                <div class="display-5 text-gradient-warning mb-1">
+                  <i class="bi bi-trophy"></i>
+                </div>
+                <div class="fw-bold">闯关进阶</div>
+                <div class="small text-white-50">四档难度</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

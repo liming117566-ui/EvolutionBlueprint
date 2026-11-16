@@ -1,0 +1,500 @@
+import 'package:flutter/material.dart';
+
+import '../data/settings_repository.dart';
+import '../services/llm_service.dart';
+import '../services/update_service.dart';
+import '../widgets/text_scale_slider.dart';
+import 'app_dialogs.dart';
+
+/// 独立设置页：集中所有「模块级可自定义」设置，并与各排盘页内的开关双向同步。
+/// 紫微 / 八字 的「晚子时」「长生十二神口径」读取同一份共享设置，保证全局一致。
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _settings = SettingsRepository.instance;
+  bool _mirrorEnabled = false; // 默认关闭；真实值由 initState 从设置读入
+
+  @override
+  void initState() {
+    super.initState();
+    UpdateService.isMirrorEnabled().then((v) {
+      if (mounted) setState(() => _mirrorEnabled = v);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(title: const Text('设置')),
+      // 监听共享设置变化，开关即时刷新（无需退出重进）。
+      body: ListenableBuilder(
+        listenable: _settings,
+        builder: (context, _) => ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _sectionTitle('外观'),
+            _themeModeTile(),
+            _fontScaleTile(),
+            _solarTermTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('诊断'),
+            _genderTile(cs),
+            _diagnosticLevelTile(cs),
+            _autoCopyTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('紫微斗数排盘'),
+            _trueSolarTile(cs),
+            _lateZiTile(cs, isBazi: false),
+            _twelveStageTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('八字排盘'),
+            _lateZiTile(cs, isBazi: true),
+            _twelveStageTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('数据管理'),
+            _clearHistoryTile(cs),
+            _clearLlmChatTile(cs),
+            _exportTile(cs),
+            _clearCacheTile(cs),
+            const Divider(height: 24),
+            _aboutTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('更新'),
+            _mirrorToggleTile(cs),
+            _updateTile(cs),
+            const Divider(height: 24),
+            _sectionTitle('AI 讲义问答（可选）'),
+            const LlmSettingsSection(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String t) => Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Text(t,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      );
+
+  Widget _themeModeTile() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('暗黑模式', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          SegmentedButton<ThemeMode>(
+            segments: const [
+              ButtonSegment(value: ThemeMode.system, label: Text('跟随系统')),
+              ButtonSegment(value: ThemeMode.light, label: Text('浅色')),
+              ButtonSegment(value: ThemeMode.dark, label: Text('深色')),
+            ],
+            selected: {_settings.themeMode},
+            onSelectionChanged: (s) => _settings.setThemeMode(s.first),
+          ),
+        ],
+      );
+
+  Widget _fontScaleTile() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('字体大小', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextScaleSlider(
+            value: _settings.textScaleFactor,
+            onChanged: _settings.setTextScaleFactor,
+          ),
+        ],
+      );
+
+  Widget _solarTermTile(ColorScheme cs) => SwitchListTile(
+        secondary: const Icon(Icons.spa_outlined),
+        title: const Text('知识库顶部节气卡片'),
+        subtitle: const Text('关闭后知识库首屏更清爽；节气养生仍可在「工具」里进入'),
+        value: !_settings.hideSolarTermCard,
+        onChanged: (v) => _settings.setHideSolarTermCard(!v),
+        contentPadding: EdgeInsets.zero,
+      );
+
+  Widget _genderTile(ColorScheme cs) => ListTile(
+        leading: const Icon(Icons.person),
+        title: const Text('默认性别'),
+        subtitle: Text(_settings.defaultGender.isEmpty
+            ? '未设置（每次询问）'
+            : _settings.defaultGender == 'male'
+                ? '男'
+                : '女'),
+        contentPadding: EdgeInsets.zero,
+        trailing: SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(value: '', label: Text('不设置')),
+            ButtonSegment(value: 'male', label: Text('男')),
+            ButtonSegment(value: 'female', label: Text('女')),
+          ],
+          selected: {_settings.defaultGender},
+          onSelectionChanged: (s) => _settings.setDefaultGender(s.first),
+        ),
+      );
+
+  Widget _diagnosticLevelTile(ColorScheme cs) => ListTile(
+        leading: const Icon(Icons.format_list_numbered),
+        title: const Text('诊断详细度'),
+        subtitle:
+            Text(_settings.diagnosticLevel == 'simple' ? '简单模式' : '详细模式'),
+        contentPadding: EdgeInsets.zero,
+        trailing: SegmentedButton<String>(
+          segments: const [
+            ButtonSegment(value: 'simple', label: Text('简单')),
+            ButtonSegment(value: 'detailed', label: Text('详细')),
+          ],
+          selected: {_settings.diagnosticLevel},
+          onSelectionChanged: (s) => _settings.setDiagnosticLevel(s.first),
+        ),
+      );
+
+  Widget _autoCopyTile(ColorScheme cs) => SwitchListTile(
+        secondary: const Icon(Icons.copy),
+        title: const Text('诊断后自动复制处方'),
+        subtitle: const Text('诊断完成后自动将处方复制到剪贴板'),
+        value: _settings.autoCopyPrescription,
+        onChanged: (v) => _settings.setAutoCopyPrescription(v),
+        contentPadding: EdgeInsets.zero,
+      );
+
+  Widget _trueSolarTile(ColorScheme cs) => SwitchListTile(
+        secondary: const Icon(Icons.wb_sunny_outlined),
+        title: const Text('真太阳时校准'),
+        subtitle: const Text('按出生地经度校正平太阳时时差'),
+        value: _settings.useTrueSolarTime,
+        onChanged: (v) => _settings.setUseTrueSolarTime(v),
+        contentPadding: EdgeInsets.zero,
+      );
+
+  // 区分早晚子时的共享开关：八字 / 紫微共用，单一开关、默认关闭。
+  Widget _lateZiTile(ColorScheme cs, {required bool isBazi}) => SwitchListTile(
+        secondary: const Icon(Icons.nights_stay_outlined),
+        title: const Text('区分早晚子时'),
+        subtitle: const Text(
+            '默认关闭：子时归自然日（日柱当天）。开启后由出生时刻自动判定'
+            '晚子时（23:00–24:00，日柱当天、时柱次日）或早子时（00:00–01:00，属当日子时、日柱当天）'),
+        value: _settings.distinguishZiShiEnabled,
+        onChanged: (v) => _settings.setDistinguishZiShiEnabled(v),
+        contentPadding: EdgeInsets.zero,
+      );
+
+  Widget _twelveStageTile(ColorScheme cs) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('长生十二神 · 起长生口径',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          SegmentedButton<bool>(
+            segments: const [
+              ButtonSegment(value: true, label: Text('火土同宫')),
+              ButtonSegment(value: false, label: Text('水土同宫')),
+            ],
+            selected: {_settings.fireEarthSame},
+            onSelectionChanged: (s) => _settings.setFireEarthSame(s.first),
+          ),
+        ],
+      );
+
+  Widget _clearHistoryTile(ColorScheme cs) => ListTile(
+        leading: Icon(Icons.history, color: cs.error),
+        title: const Text('清除诊断历史'),
+        subtitle: const Text('删除所有诊断记录'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => confirmClearHistory(context),
+      );
+
+  Widget _clearLlmChatTile(ColorScheme cs) => ListTile(
+        leading: Icon(Icons.forum_outlined, color: cs.error),
+        title: const Text('清除问倪师AI 对话记录'),
+        subtitle: const Text('删除全部会话及对话内容'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => confirmClearLlmChat(context),
+      );
+
+  Widget _exportTile(ColorScheme cs) => ListTile(
+        leading: Icon(Icons.bookmark, color: cs.tertiary),
+        title: const Text('导出收藏'),
+        subtitle: const Text('将收藏导出为文本'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => exportBookmarks(context),
+      );
+
+  Widget _clearCacheTile(ColorScheme cs) => ListTile(
+        leading: Icon(Icons.cleaning_services, color: cs.secondary),
+        title: const Text('清理缓存'),
+        subtitle: const Text('清理临时文件释放空间'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => clearAppCache(context),
+      );
+
+  Widget _aboutTile(ColorScheme cs) => ListTile(
+        leading: const Icon(Icons.info_outline),
+        title: const Text('关于'),
+        subtitle: const Text('版本信息与致谢'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => showAboutPage(context),
+      );
+
+  Widget _updateTile(ColorScheme cs) => ListTile(
+        leading: const Icon(Icons.system_update),
+        title: const Text('检测更新'),
+        subtitle: const Text('检查是否有新版本'),
+        contentPadding: EdgeInsets.zero,
+        onTap: () => checkForUpdate(context),
+      );
+
+  Widget _mirrorToggleTile(ColorScheme cs) => SwitchListTile(
+        secondary: const Icon(Icons.cloud_download_outlined),
+        title: const Text('更新镜像加速（第三方代理）'),
+        subtitle: const Text('GitHub 慢时经 ghproxy.net 中继下载更新包；默认关闭'),
+        value: _mirrorEnabled,
+        onChanged: (v) async {
+          // 打开是「接受第三方中继」这一风险的显式动作，必须先确认风险告知。
+          if (v && !await _confirmMirrorRisk()) return;
+          if (!mounted) return;
+          setState(() => _mirrorEnabled = v);
+          await UpdateService.setMirrorEnabled(v);
+        },
+        contentPadding: EdgeInsets.zero,
+      );
+
+  /// 开启第三方镜像前的风险告知；用户点「我已知晓并开启」才返回 true。
+  Future<bool> _confirmMirrorRisk() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (c) => AlertDialog(
+        title: const Text('开启第三方镜像加速？'),
+        content: const Text(
+          '开启后，更新包会经第三方中继站点 ghproxy.net 下载。\n\n'
+          '风险告知：\n'
+          '1. 该中继不是本应用的官方服务器，可以看到你的下载请求；\n'
+          '2. 理论上存在被篡改的可能；\n'
+          '3. 建议仅在 GitHub 与 Gitee 都下载缓慢 / 失败时临时开启。\n\n'
+          '下载完成后，本应用会核对安装包体积；若该版本的发布说明里带有 '
+          'SHA-256，也会一并校验哈希。校验不通过会直接丢弃，不会安装。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: const Text('取消'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(c, true),
+            child: const Text('我已知晓并开启'),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
+}
+
+/// AI 讲义问答设置：地址 + API Key + 模型。
+/// 填完 API Key（或点按钮）即自动拉取 OpenAI 兼容端点的 /models 列表。
+class LlmSettingsSection extends StatefulWidget {
+  const LlmSettingsSection({super.key});
+
+  @override
+  State<LlmSettingsSection> createState() => _LlmSettingsSectionState();
+}
+
+class _LlmSettingsSectionState extends State<LlmSettingsSection> {
+  final _s = SettingsRepository.instance;
+  late final TextEditingController _url;
+  late final TextEditingController _key;
+  late final TextEditingController _model;
+  List<String> _models = const [];
+  bool _fetching = false;
+  bool _testing = false;
+  String? _hint;
+
+  @override
+  void initState() {
+    super.initState();
+    _url = TextEditingController(text: _s.llmBaseUrl);
+    _key = TextEditingController(text: _s.llmApiKey);
+    _model = TextEditingController(text: _s.llmModel);
+    _models = _s.llmModels; // 上次拉取的多模型列表，重进设置页不用再获取
+  }
+
+  @override
+  void dispose() {
+    _url.dispose();
+    _key.dispose();
+    _model.dispose();
+    super.dispose();
+  }
+
+  Future<void> _saveBasics() async {
+    final changed = _url.text.trim() != _s.llmBaseUrl ||
+        _key.text.trim() != _s.llmApiKey;
+    await _s.setLlmBaseUrl(_url.text);
+    await _s.setLlmApiKey(_key.text);
+    // 换端点后旧模型列表作废，UI 同步清掉，避免下拉显示上一家服务商的模型
+    if (changed && mounted) setState(() => _models = []);
+  }
+
+  Future<void> _fetch() async {
+    if (_fetching) return;
+    setState(() {
+      _fetching = true;
+      _hint = null;
+    });
+    try {
+      await _saveBasics();
+      final list = await LlmService.fetchModels(_url.text, _key.text);
+      if (!mounted) return;
+      await _s.setLlmModels(list);
+      setState(() {
+        _models = list;
+        _hint = '获取到 ${list.length} 个模型，可在下方选择';
+      });
+      if (!list.contains(_s.llmModel) && list.isNotEmpty) {
+        await _s.setLlmModel(list.first);
+        if (mounted) _model.text = list.first;
+      }
+    } on LlmException catch (e) {
+      if (mounted) setState(() => _hint = e.message);
+    } finally {
+      if (mounted) setState(() => _fetching = false);
+    }
+  }
+
+  /// 用当前选中的模型真发一条极短消息，验证地址 / 密钥 / 模型 / chat 路径。
+  Future<void> _test() async {
+    if (_fetching || _testing) return;
+    setState(() {
+      _testing = true;
+      _hint = null;
+    });
+    try {
+      await _saveBasics();
+      await _s.setLlmModel(_model.text);
+      final elapsed = await LlmService.testConnection(LlmConfig.fromSettings());
+      if (!mounted) return;
+      setState(() => _hint = '连接正常 · ${_s.llmModel} · '
+          '${(elapsed.inMilliseconds / 1000).toStringAsFixed(1)}s');
+    } on LlmException catch (e) {
+      if (mounted) setState(() => _hint = '测试失败：${e.message}');
+    } finally {
+      if (mounted) setState(() => _testing = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ⚠️ 必须自己监听设置：本组件在父级 ListView 里是 const 实例，父级
+    // ListenableBuilder 重建时新旧 widget identical，Flutter 的 updateChild
+    // 会直接跳过子树 → 开关停在旧值（表现为「点了不动，须退出重进才刷新」）。
+    return ListenableBuilder(
+      listenable: _s,
+      builder: (context, _) => _content(context),
+    );
+  }
+
+  Widget _content(BuildContext context) {
+    final enabled = _s.llmEnabled;
+    final busy = _fetching || _testing;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.smart_toy_outlined),
+          title: const Text('启用「问倪师AI」'),
+          subtitle: const Text(
+              '默认关闭。开启后仅在主动提问时联网，发送提问与本地讲义片段到你自己配置的端点；'
+              '不发送诊断历史、收藏或命盘数据。'),
+          value: enabled,
+          onChanged: (v) => _s.setLlmEnabled(v),
+          contentPadding: EdgeInsets.zero,
+        ),
+        if (enabled) ...[
+          const SizedBox(height: 8),
+          TextField(
+            controller: _url,
+            keyboardType: TextInputType.url,
+            decoration: const InputDecoration(
+              labelText: '接口地址（OpenAI 兼容）',
+              hintText: 'https://api.openai.com/v1',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            onEditingComplete: _saveBasics,
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _key,
+            obscureText: true,
+            decoration: const InputDecoration(
+              labelText: 'API Key',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            onEditingComplete: _fetch,
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              FilledButton.tonal(
+                onPressed: busy ? null : _fetch,
+                child: Text(_fetching ? '获取中…' : '获取模型列表'),
+              ),
+              OutlinedButton(
+                onPressed: busy ? null : _test,
+                child: Text(_testing ? '测试中…' : '测试连接'),
+              ),
+              if (_hint != null)
+                Text(_hint!, style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _model,
+            decoration: const InputDecoration(
+              labelText: '模型名称（可手动填写）',
+              hintText: 'gpt-4o-mini',
+              border: OutlineInputBorder(),
+              isDense: true,
+            ),
+            onEditingComplete: () => _s.setLlmModel(_model.text),
+          ),
+          if (_models.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text('从已获取的模型中选择（共 ${_models.length} 个）',
+                style: const TextStyle(fontSize: 12)),
+            DropdownButton<String>(
+              isExpanded: true,
+              value: _models.contains(_s.llmModel) ? _s.llmModel : null,
+              items: _models
+                  .map((m) => DropdownMenuItem(value: m, child: Text(m)))
+                  .toList(),
+              onChanged: (v) async {
+                if (v == null) return;
+                _model.text = v;
+                await _s.setLlmModel(v);
+              },
+            ),
+          ],
+          const SizedBox(height: 8),
+          const Text(
+            '密钥仅保存在本机数据库，不会上传、不写入日志。关闭开关即可完全停止联网。',
+            style: TextStyle(fontSize: 12),
+          ),
+        ],
+      ],
+    );
+  }
+}

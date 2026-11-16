@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+{% block title %}学习仪表盘 · 数学图谱{% endblock %}
+{% block head_extra %}
+<script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="fade-in">
+  <div class="page-head">
+    <div>
+      <h1 class="page-title"><i class="bi bi-speedometer2 text-gradient"></i> 学习仪表盘</h1>
+      <p class="page-sub">
+        {% for g in all_grades %}
+        <a href="{{ url_for('dashboard.index', grade=g.key) }}"
+           class="badge text-decoration-none me-1 {% if g.key == grade %}bg-primary{% else %}bg-light text-dark{% endif %}">
+          {{ g.short }}
+        </a>
+        {% endfor %}
+      </p>
+    </div>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-value">{{ total_topics_count }}</div>
+        <div class="stat-label">知识点总数</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-gradient-success">{{ status_counts.mastered }}</div>
+        <div class="stat-label">已掌握</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-gradient-accent">{{ wrong_pending }}</div>
+        <div class="stat-label">待攻克错题</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="stat-value text-gradient-warning">{{ avg_score }}%</div>
+        <div class="stat-label">练习正确率</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header">
+          <i class="bi bi-pie-chart text-primary"></i> 掌握状态分布
+        </div>
+        <div class="card-body">
+          <canvas id="masteryPie" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header">
+          <i class="bi bi-bar-chart text-primary"></i> 各领域掌握情况
+        </div>
+        <div class="card-body">
+          <canvas id="domainBar" height="250"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header">
+          <i class="bi bi-clipboard-data text-primary"></i> 学习统计
+        </div>
+        <div class="card-body">
+          <table class="table table-sm mb-0 align-middle">
+            <tr>
+              <td class="text-muted"><i class="bi bi-pencil-square"></i> 练习次数</td>
+              <td class="text-end fw-bold">{{ total_practice }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-list-ol"></i> 总答题数</td>
+              <td class="text-end fw-bold">{{ total_questions }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-check2-circle"></i> 答对题数</td>
+              <td class="text-end fw-bold text-success">{{ total_correct }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-percent"></i> 平均正确率</td>
+              <td class="text-end fw-bold">{{ avg_score }}%</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-journal-x"></i> 错题总数</td>
+              <td class="text-end fw-bold text-danger">{{ wrong_total }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-check-all"></i> 已攻克错题</td>
+              <td class="text-end fw-bold text-success">{{ wrong_conquered }}</td>
+            </tr>
+            <tr>
+              <td class="text-muted"><i class="bi bi-search"></i> 诊断次数</td>
+              <td class="text-end fw-bold">{{ diag_total }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-md-6">
+      <div class="card border-0 shadow-sm">
+        <div class="card-header">
+          <i class="bi bi-clock-history text-primary"></i> 最近学习活动
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush" style="max-height:340px; overflow:auto;">
+            {% if recent_logs %}
+              {% for log in recent_logs %}
+              <li class="list-group-item d-flex align-items-center gap-2">
+                <small class="text-muted text-nowrap">{{ log.created_at.strftime('%m-%d %H:%M') }}</small>
+                {% if log.activity_type == 'practice' %}<span class="badge bg-warning text-dark">练习</span>
+                {% elif log.activity_type == 'learn' %}<span class="badge bg-success">学习</span>
+                {% elif log.activity_type == 'diagnose' %}<span class="badge bg-danger">诊断</span>
+                {% elif log.activity_type == 'review' %}<span class="badge bg-primary">复习</span>{% endif %}
+                <span class="text-truncate">{{ log.topic_name or '—' }}</span>
+              </li>
+              {% endfor %}
+            {% else %}
+              <li class="list-group-item text-muted text-center py-5">
+                <i class="bi bi-inbox d-block mb-2" style="font-size:2rem;"></i>
+                暂无学习记录
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('{{ url_for("dashboard.api_mastery_pie") }}')
+  .then(r => r.json())
+  .then(data => {
+    new Chart(document.getElementById('masteryPie'), {
+      type: 'doughnut',
+      data: {
+        labels: data.labels,
+        datasets: [{ data: data.data, backgroundColor: data.colors, borderWidth: 3, borderColor: '#fff' }]
+      },
+      options: {
+        responsive: true,
+        cutout: '62%',
+        plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' } } }
+      }
+    });
+  });
+
+fetch('{{ url_for("dashboard.api_domain_bar") }}')
+  .then(r => r.json())
+  .then(data => {
+    new Chart(document.getElementById('domainBar'), {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [
+          { label: '已掌握', data: data.mastered, backgroundColor: '#10b981', borderRadius: 6 },
+          { label: '学习中', data: data.learning, backgroundColor: '#f59e0b', borderRadius: 6 },
+          { label: '薄弱', data: data.weak, backgroundColor: '#ef4444', borderRadius: 6 },
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: '#f1f5f9' } } },
+        plugins: { legend: { position: 'bottom', labels: { padding: 14, font: { size: 12 }, usePointStyle: true, pointStyle: 'circle' } } }
+      }
+    });
+  });
+</script>
+{% endblock %}

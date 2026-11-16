@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}登录 · 数学图谱{% endblock %}
+{% block content %}
+<div class="row justify-content-center min-vh-75 align-items-center fade-in" style="padding: 3rem 0;">
+  <div class="col-12 col-md-6 col-lg-5">
+    <div class="card border-0 shadow-lg">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+               style="width:72px;height:72px;background:var(--gradient-primary);box-shadow:var(--shadow-primary);">
+            <i class="bi bi-box-arrow-in-right text-white" style="font-size:2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">欢迎回来</h3>
+          <p class="text-muted small mb-0">登录继续你的学习之旅</p>
+        </div>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" class="form-control" required autofocus placeholder="输入用户名">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">密码</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" class="form-control" required placeholder="输入密码">
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 btn-lg">
+            <i class="bi bi-check-circle"></i> 登录
+          </button>
+        </form>
+        <div class="text-center text-muted small mt-4">
+          还没有账号？<a href="{{ url_for('auth.register') }}" class="fw-semibold">立即注册</a>
+        </div>
+        <div class="text-center mt-3">
+          <span class="badge bg-light text-dark px-3 py-2">
+            <i class="bi bi-info-circle text-primary"></i>
+            演示账号：teacher / student1-3，密码：123456
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}注册 · 数学图谱{% endblock %}
+{% block content %}
+<div class="row justify-content-center fade-in" style="padding: 2.5rem 0;">
+  <div class="col-12 col-md-7 col-lg-6">
+    <div class="card border-0 shadow-lg">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+               style="width:72px;height:72px;background:var(--gradient-primary);box-shadow:var(--shadow-primary);">
+            <i class="bi bi-person-plus text-white" style="font-size:2rem;"></i>
+          </div>
+          <h3 class="mb-1 fw-bold">创建账号</h3>
+          <p class="text-muted small mb-0">开始你的自适应学习之旅</p>
+        </div>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-3">
+            <label class="form-label">用户名 <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" name="username" class="form-control" required minlength="3" placeholder="3个字符以上">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">昵称</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+              <input type="text" name="nickname" class="form-control" placeholder="选填">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="form-label">密码 <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" class="form-control" required minlength="6" placeholder="6个字符以上">
+            </div>
+          </div>
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">身份</label>
+              <select name="role" class="form-select">
+                <option value="student">学生</option>
+              </select>
+              <small class="text-muted">教师账号由管理员创建</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">年级</label>
+              <select name="grade" class="form-select">
+                {% for key, info in grades.items() %}
+                <option value="{{ key }}">{{ info.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 btn-lg">
+            <i class="bi bi-check-circle"></i> 注册账号
+          </button>
+        </form>
+        <hr class="my-4">
+        <div class="text-center text-muted small">已有账号？<a href="{{ url_for('auth.login') }}" class="fw-semibold">去登录</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

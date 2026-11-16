@@ -90,7 +90,7 @@ function targets(
   const en = Math.max(18, zh * 0.24);
   g.font = `700 ${en}px "Fraunces Variable", Georgia, serif`;
   g.letterSpacing = `${en * 0.34}px`;
-  g.fillText("ENGLISH GALAXY", cx, cy + R + zh * 1.52);
+  g.fillText("", cx, cy + R + zh * 1.52);
   const data = g.getImageData(0, 0, w, h).data;
   // Take every lit pixel, then a random subset: no visible sampling grid.
   const all: [number, number][] = [];
@@ -306,7 +306,7 @@ export function Splash({ onDone }: { onDone: () => void }) {
       className={`splash is-${phase} ${reduce ? "is-reduced" : ""}`}
       onClick={() => open()}
       role="dialog"
-      aria-label="欢迎来到英语星空，点击进入"
+      aria-label="欢迎来到初中英语，点击进入"
     >
       <div className="door door-l" />
       <div className="door door-r" />
@@ -321,19 +321,15 @@ export function Splash({ onDone }: { onDone: () => void }) {
             style={{ top: name.logoY, width: name.R * 2, height: name.R * 2 }}
           />
           <b style={{ top: name.y, fontSize: name.size }}>{APP_NAME}</b>
-          <small style={{ top: name.enY, fontSize: name.en }}>
-            ENGLISH GALAXY
-          </small>
         </div>
       )}
       {reduce && (
         <div className="splash-static">
           <b>{APP_NAME}</b>
-          <small>ENGLISH GALAXY</small>
         </div>
       )}
       <div className="splash-copy">
-        <p className="splash-tag">欢迎来到英语星空</p>
+        <p className="splash-tag">欢迎来到初中英语</p>
         <p className="splash-hint">
           <span className="splash-key" />
           点击开启 · 按任意键

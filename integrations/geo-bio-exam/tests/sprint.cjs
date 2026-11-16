@@ -1,0 +1,25 @@
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const root=path.resolve(__dirname,'..'),ctx={Intl,Date};ctx.window=ctx;vm.createContext(ctx);
+for(const file of ['data.js','sprint-core.js'])vm.runInContext(fs.readFileSync(path.join(root,'web',file),'utf8'),ctx);
+const C=ctx.SprintCore,topics=ctx.TOPICS,plain=value=>JSON.parse(JSON.stringify(value));
+assert.equal(C.today(new Date('2026-11-16T15:59:59Z')),'2026-11-16');
+assert.equal(C.today(new Date('2026-11-16T16:00:00Z')),'2026-11-17');
+assert.equal(C.shiftDate('2028-03-01',-1),'2028-02-29');
+assert.equal(C.shiftDate('2027-01-01',-1),'2026-12-31');
+assert.equal(C.validDate('2026-02-30'),false);assert.equal(C.validDate('2028-02-29'),true);
+const ids=C.plans.flatMap(p=>p.ids);assert.equal(ids.length,66);assert.equal(new Set(ids).size,66);assert(ids.every(id=>topics.some(t=>t.id===id)));
+for(const plan of C.plans){const q=C.questions(plan,topics,()=>.4);assert.equal(q.length,C.questionCount(plan));assert.equal(new Set(q).size,q.length);if(plan.mixed){assert.equal(q.filter(id=>plan.ids.includes(id)).length,6);assert.equal(q.filter(id=>!plan.ids.includes(id)).length,4)}else assert(q.every(id=>plan.ids.includes(id)))}
+assert.equal(C.streak({'2026-11-15':{},'2026-11-14':{}},'2026-11-16'),2);
+assert.equal(C.streak({'2026-11-16':{},'2026-11-15':{},'2026-11-13':{}},'2026-11-16'),2);
+assert.equal(C.streak({'2026-11-14':{}},'2026-11-16'),0);
+assert.equal(C.streak({},'2026-11-16'),0);
+assert.equal(C.canCheckin({reviewedOn:'2026-11-16',lastResult:{date:'2026-11-16'}},'2026-11-16'),true);
+assert.equal(C.canCheckin({reviewedOn:'2026-11-15',lastResult:{date:'2026-11-16'}},'2026-11-16'),false);
+assert.equal(C.canCheckin({reviewedOn:'2026-11-16',lastResult:{date:'2026-11-15'}},'2026-11-16'),false);
+const first=C.plans[0],round={ids:C.questions(first,topics),answers:Array(10).fill(null),index:1};round.answers[0]=1;
+const loaded=C.normalize({days:{1:{reviewedOn:'2026-11-16',attempt:round}},checkins:{'2026-11-16':{days:[1,1,9]},bad:{days:[1]}},activity:{'2026-11-16':{answered:1,correct:0}}},topics);
+assert.equal(loaded.days[1].attempt.index,1);assert.equal(loaded.days[1].attempt.answers[0],1);assert.deepEqual(plain(loaded.checkins),{'2026-11-16':{days:[1]}});
+round.answers[3]=2;assert.equal(C.normalize({days:{1:{attempt:round}}},topics).days[1].attempt,undefined,'Reject skipped answers');
+assert.deepEqual(plain(C.normalize(null,topics)),{days:{},checkins:{},activity:{}});
+for(const file of ['app.js','sprint.js','sprint-core.js'])new vm.Script(fs.readFileSync(path.join(root,'web',file),'utf8'),{filename:file});
+console.log('PASS: sprint coverage, daily question scopes, timezone boundary, leap/year rollover, streak rules, check-in requirements, saved progress validation.');

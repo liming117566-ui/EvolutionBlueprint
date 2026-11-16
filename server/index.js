@@ -7,11 +7,11 @@ if (require.main === module) {
 const { createApp } = require('./app');
 if (require.main === module) {
   const app = createApp();
-  const { host, port, devAuth, appSecret } = app.locals.config;
+  const { host, port, devAuth, lanTestAuth, appSecret } = app.locals.config;
   const server = app.listen(port, host, () => {
     console.log(`课程管理服务：http://${host}:${port}/admin/`);
     if (!appSecret) console.log('微信正式登录尚未配置；不会伪造正式登录。');
-    if (devAuth) console.log('本地测试身份已显式开启，仅回环地址可用。');
+    if (devAuth) console.log(lanTestAuth ? '测试身份已显式开启，可用于本机和局域网真机开发调试。' : '本地测试身份已显式开启，仅回环地址可用。');
   });
   server.requestTimeout = 60000;
   function shutdown() { server.close(() => { app.locals.close(); process.exit(0); }); }

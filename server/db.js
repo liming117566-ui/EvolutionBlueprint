@@ -1,6 +1,7 @@
 const { DatabaseSync } = require('node:sqlite');
 const fs = require('node:fs');
 const path = require('node:path');
+const { isDefaultNickname, randomNickname } = require('./usernames');
 function openDatabase(dataDir) {
   fs.mkdirSync(dataDir, { recursive: true });
   const db = new DatabaseSync(path.join(dataDir, 'blueprint.sqlite'));
@@ -12,7 +13,7 @@ function openDatabase(dataDir) {
     CREATE TABLE IF NOT EXISTS entities(id TEXT PRIMARY KEY,type TEXT NOT NULL,parent TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS admins(id TEXT PRIMARY KEY,username TEXT NOT NULL UNIQUE,password TEXT NOT NULL,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS admin_sessions(hash TEXT PRIMARY KEY,admin_id TEXT NOT NULL REFERENCES admins(id),csrf TEXT NOT NULL,expires_at TEXT NOT NULL);
-    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,openid TEXT NOT NULL UNIQUE,nickname TEXT NOT NULL DEFAULT '蓝图学员',note TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active',created_at TEXT NOT NULL,last_login_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,openid TEXT NOT NULL UNIQUE,nickname TEXT NOT NULL DEFAULT '',note TEXT NOT NULL DEFAULT '',status TEXT NOT NULL DEFAULT 'active',created_at TEXT NOT NULL,last_login_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS user_sessions(hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS grants(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),scope TEXT NOT NULL,course_ids TEXT NOT NULL,expires_at TEXT,revoked_at TEXT,reason TEXT NOT NULL,source TEXT NOT NULL,created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS batches(id TEXT PRIMARY KEY,title TEXT NOT NULL,count INTEGER NOT NULL,scope TEXT NOT NULL,course_ids TEXT NOT NULL,redeem_expires_at TEXT,access_days INTEGER,disabled INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL);
@@ -38,6 +39,12 @@ function openDatabase(dataDir) {
     try { const result = fn(); db.exec('COMMIT'); return result; }
     catch (e) { db.exec('ROLLBACK'); throw e; }
   }
+  // Existing accounts receive a name once; custom names are never replaced.
+  transaction(() => {
+    for (const row of all('SELECT id,nickname FROM users')) {
+      if (isDefaultNickname(row.nickname)) run('UPDATE users SET nickname=? WHERE id=?', randomNickname({ get }), row.id);
+    }
+  });
   return { db, get, all, run, transaction, close: () => db.close() };
 }
 module.exports = { openDatabase };

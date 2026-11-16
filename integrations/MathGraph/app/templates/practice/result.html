@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}练习结果 · 数学图谱{% endblock %}
+{% block content %}
+<div class="fade-in">
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-header {% if correct_count >= total * 0.6 %}bg-gradient{% else %}bg-gradient-warning{% endif %} text-white text-center">
+      <h3 class="mb-0">
+        {% if correct_count == total %}<i class="bi bi-trophy"></i> 全部正确！
+        {% elif correct_count >= total * 0.6 %}<i class="bi bi-emoji-smile"></i> 不错！
+        {% else %}<i class="bi bi-emoji-frown"></i> 继续努力！{% endif %}
+      </h3>
+      <div class="fs-1 fw-bold my-2">{{ correct_count }} / {{ total }}</div>
+      <small>正确率 {{ (correct_count / total * 100) | round }}%</small>
+    </div>
+    <div class="card-body text-center">
+      <a href="{{ url_for('practice.start', topic_id=quiz.topic_id) }}" class="btn btn-primary">
+        <i class="bi bi-arrow-repeat"></i> 再练一次
+      </a>
+      <a href="{{ url_for('practice.index') }}" class="btn btn-outline-secondary">
+        <i class="bi bi-list"></i> 选择其他知识点
+      </a>
+      <a href="{{ url_for('graph.topic_detail', topic_id=quiz.topic_id) }}" class="btn btn-outline-primary">
+        <i class="bi bi-book"></i> 知识点详情
+      </a>
+    </div>
+  </div>
+
+  {% for r in results %}
+  <div class="card shadow-sm mb-3 border-0 {% if r.correct %}border-success{% else %}border-danger{% endif %}">
+    <div class="card-header d-flex justify-content-between align-items-center bg-light">
+      <span>
+        <span class="badge
+          {% if r.difficulty == '夯基' %}bg-secondary
+          {% elif r.difficulty == '目标' %}bg-primary
+          {% elif r.difficulty == '综合' %}bg-warning text-dark
+          {% elif r.difficulty == '挑战' %}bg-danger{% endif %}">{{ r.difficulty }}</span>
+        <span class="ms-2">第 {{ r.index }} 题</span>
+      </span>
+      {% if r.correct %}
+      <span class="badge bg-success"><i class="bi bi-check-circle"></i> 正确</span>
+      {% else %}
+      <span class="badge bg-danger"><i class="bi bi-x-circle"></i> 待改进</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <div class="fw-medium mb-3">{{ r.question_text }}</div>
+
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="text-muted mb-2">你的答案</h6>
+            <div>{% if r.user_answer %}{{ r.user_answer }}{% else %}<span class="text-muted fst-italic">未作答</span>{% endif %}</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6">
+          <div class="card-soft p-3 rounded-lg">
+            <h6 class="text-success mb-2">参考答案</h6>
+            <div>{{ r.reference_answer }}</div>
+          </div>
+        </div>
+      </div>
+
+      {% if r.feedback %}
+      <div class="alert {% if r.correct %}alert-success{% else %}alert-warning{% endif %} mt-3 mb-0 border-0">
+        <i class="bi bi-info-circle"></i> {{ r.feedback }}
+        {% if r.need_manual_check %}<span class="text-muted">（请对照参考答案确认）</span>{% endif %}
+      </div>
+      {% endif %}
+
+      {% if r.common_mistake and not r.correct %}
+      <div class="alert alert-danger mt-3 mb-0 border-0">
+        <i class="bi bi-exclamation-triangle"></i> <strong>易错点：</strong>{{ r.common_mistake }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

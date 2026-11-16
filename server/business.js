@@ -2,15 +2,32 @@ const crypto = require('node:crypto');
 const { id, hash, now, text, identifier, date, fail, paging } = require('./security');
 const catalog = require('./catalog');
 function createBusiness(store, audit) {
-  const grantView = row => ({ id: row.id, userId: row.user_id, scope: row.scope, courseIds: JSON.parse(row.course_ids), expiresAt: row.expires_at, revokedAt: row.revoked_at, reason: row.reason, source: row.source, createdAt: row.created_at });
+  const targetIds = row => ({ courseIds: row.scope === 'courses' ? JSON.parse(row.course_ids) : [], boardIds: row.scope === 'boards' ? JSON.parse(row.course_ids) : [] });
+  const grantView = row => ({ id: row.id, userId: row.user_id, scope: row.scope, ...targetIds(row), expiresAt: row.expires_at, revokedAt: row.revoked_at, reason: row.reason, source: row.source, createdAt: row.created_at });
   function grants(userId) { return store.all('SELECT * FROM grants WHERE user_id=? ORDER BY created_at DESC', userId).map(grantView); }
+  const active = g => !g.revokedAt && (!g.expiresAt || g.expiresAt > now());
   function canAccess(userId, courseId) {
-    return grants(userId).some(g => !g.revokedAt && (!g.expiresAt || g.expiresAt > now()) && (g.scope === 'all' || g.courseIds.includes(courseId)));
+    const tree = catalog.published(store), course = tree.courses.find(c => c.id === courseId && c.published);
+    return !!course && grants(userId).some(g => active(g) && (g.scope === 'all' || (g.scope === 'courses' && g.courseIds.includes(courseId)) ||
+      (g.scope === 'boards' && (tree.boards || []).some(b => b.enabled && g.boardIds.includes(b.id) && b.categoryIds.includes(course.categoryId)))));
   }
+  function canBoardAccess(userId, boardId) {
+    const tree = catalog.published(store), board = (tree.boards || []).find(b => b.id === boardId && b.enabled);
+    if (!board || !userId) return false;
+    return grants(userId).some(g => active(g) && (g.scope === 'all' || (g.scope === 'boards' && g.boardIds.includes(boardId)) ||
+      (g.scope === 'courses' && tree.courses.some(c => c.published && board.categoryIds.includes(c.categoryId) && g.courseIds.includes(c.id)))));
+  }
+  function boardAccess(userId, boardId) { if (!canBoardAccess(userId, boardId)) fail(403, '请先兑换此板块的兑换码，或兑换全部板块兑换码', 'BOARD_LOCKED'); }
   function access(userId, courseId) { if (!canAccess(userId, courseId)) fail(403, '尚未获得本课程权限，或课程权限已到期', 'COURSE_LOCKED'); }
   function scopeInput(input) {
-    if (!['all', 'courses'].includes(input.scope)) fail(400, '请选择全部课程或指定课程');
+    if (!['all', 'courses', 'boards'].includes(input.scope)) fail(400, '请选择全部板块与课程、指定板块或指定课程');
     if (input.scope === 'all') return { scope: 'all', courseIds: [] };
+    if (input.scope === 'boards') {
+      if (!Array.isArray(input.boardIds) || !input.boardIds.length || input.boardIds.length > 100) fail(400, '请选择指定板块');
+      const ids = [...new Set(input.boardIds.map(identifier))];
+      if (ids.some(boardId => !(catalog.draft(store).boards || []).some(b => b.id === boardId))) fail(400, '所选板块不存在');
+      return { scope: 'boards', courseIds: ids };
+    }
     if (!Array.isArray(input.courseIds) || !input.courseIds.length || input.courseIds.length > 200) fail(400, '请选择指定课程');
     const ids = [...new Set(input.courseIds.map(identifier))];
     const tree = catalog.draft(store);
@@ -18,15 +35,18 @@ function createBusiness(store, audit) {
     return { scope: 'courses', courseIds: ids };
   }
   function addGrant(userId, input, source, actor) {
+    return issueGrant(userId, input, scopeInput(input), source, actor);
+  }
+  function issueGrant(userId, input, scope, source, actor) {
     if (!store.get('SELECT id FROM users WHERE id=?', userId)) fail(404, '用户不存在');
-    const scope = scopeInput(input), expiresAt = date(input.expiresAt), reason = text(input.reason, 1000);
+    const expiresAt = date(input.expiresAt), reason = text(input.reason, 1000);
     if (expiresAt && expiresAt <= now()) fail(400, '权益到期时间须晚于当前时间');
     const grantId = id();
     store.run('INSERT INTO grants VALUES(?,?,?,?,?,NULL,?,?,?)', grantId, userId, scope.scope, JSON.stringify(scope.courseIds), expiresAt, reason, source, now());
     audit(actor, 'grant.create', grantId, { userId, scope: scope.scope });
     return grantView(store.get('SELECT * FROM grants WHERE id=?', grantId));
   }
-  const batchView = row => ({ id: row.id, title: row.title, count: row.count, scope: row.scope, courseIds: JSON.parse(row.course_ids), redeemExpiresAt: row.redeem_expires_at, accessDays: row.access_days, disabled: !!row.disabled, usedCount: row.used_count || 0, createdAt: row.created_at });
+  const batchView = row => ({ id: row.id, title: row.title, count: row.count, scope: row.scope, ...targetIds(row), redeemExpiresAt: row.redeem_expires_at, accessDays: row.access_days, disabled: !!row.disabled, usedCount: row.used_count || 0, createdAt: row.created_at });
   function createBatch(input, actor) {
     const title = text(input.title, 200), count = input.count;
     if (!Number.isInteger(count) || count < 1 || count > 500) fail(400, '每批可生成 1–500 张卡密');
@@ -56,7 +76,9 @@ function createBusiness(store, audit) {
       if (card.used_by) { if (card.used_by === userId) return { ok: true, message: '本卡密已由当前账号兑换', grants: grants(userId) }; fail(409, '该卡密已被使用'); }
       if (card.disabled || (card.redeem_expires_at && card.redeem_expires_at <= now())) fail(400, '卡密已停用或已过兑换截止时间');
       const expiresAt = card.access_days ? new Date(Date.now() + card.access_days * 86400000).toISOString() : null;
-      const grant = addGrant(userId, { scope: card.scope, courseIds: JSON.parse(card.course_ids), expiresAt, reason: '卡密兑换' }, 'card:' + card.id, userId);
+      // Issued cards keep their stored scope; unpublished catalog edits cannot invalidate them.
+      const scope = { scope: card.scope, courseIds: JSON.parse(card.course_ids) };
+      const grant = issueGrant(userId, { expiresAt, reason: '卡密兑换' }, scope, 'card:' + card.id, userId);
       const update = store.run('UPDATE cards SET used_by=?,used_at=? WHERE id=? AND used_by IS NULL', userId, now(), card.id);
       if (Number(update.changes) !== 1) fail(409, '该卡密已被使用');
       store.run('INSERT INTO redemptions VALUES(?,?,?,?,?)', id(), card.id, userId, grant.id, now());
@@ -106,6 +128,6 @@ function createBusiness(store, audit) {
     const p = paging(query);
     return { items: store.all(sql + ' LIMIT ? OFFSET ?', ...params, p.pageSize, p.offset).map(map), total: store.get(countSql, ...params).total, page: p.page, pageSize: p.pageSize };
   }
-  return { grants, canAccess, access, addGrant, createBatch, redeem, learning, writeLearning, importLearning, paginated, batchView };
+  return { grants, canAccess, access, canBoardAccess, boardAccess, addGrant, createBatch, redeem, learning, writeLearning, importLearning, paginated, batchView };
 }
 module.exports = { createBusiness };

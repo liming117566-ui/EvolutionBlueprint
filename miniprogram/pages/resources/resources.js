@@ -1,0 +1,10 @@
+const api=require('../../utils/api');const learning=require('../../utils/learning');const config=require('../../utils/config');const {validateMaterial,openDocument}=require('../../utils/documents');
+Page({
+ data:{loading:true,error:'',openError:'',materials:[],openingId:''},
+ onShow(){this._alive=true;if(this._operation)this._operation.notifyVisible();return this.retry();},
+ onHide(){this._version=(this._version||0)+1;},
+ onUnload(){this._alive=false;this._version=(this._version||0)+1;if(this._operation)this._operation.cancel();},
+ async retry(){if(!learning.authorized())return;const version=this._version=(this._version||0)+1;this.setData({loading:true,error:'',materials:[]});try{const result=await api.request('/api/materials/library');if(version!==this._version)return;if(!Array.isArray(result.materials)||!result.materials.every(validateMaterial))throw Error('资料目录返回的数据有误');this.setData({materials:result.materials.map(m=>({...m,typeLabel:m.fileType==='pdf'?'PDF':'Word',sizeLabel:m.sizeBytes<1048576?Math.max(1,Math.ceil(m.sizeBytes/1024))+' KB':(m.sizeBytes/1048576).toFixed(1)+' MB'}))});}catch(error){if(version===this._version)this.setData({error:error.message});}finally{if(version===this._version)this.setData({loading:false});}},
+ async openMaterial(event){if(this._opening||!learning.authorized())return;const material=this.data.materials.find(m=>m.id===event.currentTarget.dataset.id);if(!validateMaterial(material))return;const version=this._version;this._opening=true;this.setData({openingId:material.id,openError:''});if(this._operation)this._operation.cancel();const operation=openDocument(wx,{url:config.getApiBaseUrl()+material.url,fileType:material.fileType});this._operation=operation;try{await operation;}catch(error){if(this._alive&&version===this._version)this.setData({openError:error.message});}finally{if(this._operation===operation){this._opening=false;if(this._alive)this.setData({openingId:''});}}},
+ goCourses(){wx.navigateTo({url:'/pages/interactive/interactive'});}
+});

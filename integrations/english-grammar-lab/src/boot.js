@@ -1,0 +1,197 @@
+/* ============================================================
+ * boot.js — 入口：hash 路由 / 顶栏 / 全局事件
+ * 路由：#/home  #/topics  #/topic/tense01  #/wrong  #/weak
+ *        #/records  #/challenge  #/about
+ * ============================================================ */
+(function () {
+  'use strict';
+  var E = window.EGL, U = E.u;
+  var $ = U.$, $$ = U.$$;
+
+  var viewEl = null;
+
+  function render() {
+    var hash = (location.hash || '#/home').replace(/^#\//, '');
+    var parts = hash.split('/');
+    var route = parts[0] || 'home';
+    if (!E.ui.app) return;
+    E.ui.quizActive = false;
+    highlightNav(route);
+    switch (route) {
+      case 'topics': E.ui.topics(); break;
+      case 'topic': E.ui.topicPage(parts[1] || ''); break;
+      case 'papers': E.ui.papersPage(); break;
+      case 'paper': E.ui.paperPage(parts[1] || ''); break;
+      case 'review': (E.ui && E.ui.reviewPage) ? E.ui.reviewPage() : E.ui.wrongBook(); break;
+      case 'custom': (E.ui && E.ui.customPage) ? E.ui.customPage() : E.ui.home(); break;
+      case 'wrong': E.ui.wrongBook(); break;
+      case 'weak': E.ui.weak(); break;
+      case 'records': E.ui.records(); break;
+      case 'about': E.ui.home(); break;
+      case 'challenge': E.quiz.mixedGate(); break;
+      case 'ai': E.ui.home(); U.toast('当前板块使用内置题库，在线 AI 服务尚未配置。'); break;
+      case 'settings': (E.ui && E.ui.settingsPage) ? E.ui.settingsPage() : E.ui.home(); break;
+      case 'method': (E.ui && E.ui.methodPage) ? E.ui.methodPage() : E.ui.home(); break;
+      default: E.ui.home(); break;
+    }
+    if (E.quiz && E.quiz.showResumeBanner) E.quiz.showResumeBanner();
+    window.scrollTo(0, 0);
+  }
+
+  function highlightNav(route) {
+    // 二级页面（topic/paper/review/custom）高亮到对应一级导航
+    var parent = route === 'topic' ? 'topics' : route === 'paper' ? 'papers'
+      : (route === 'review' || route === 'custom') ? 'home' : route;
+    $$('.nav-btn').forEach(function (b) {
+      var on = b.dataset.nav === parent;
+      b.classList.toggle('on', on);
+      if (b.setAttribute) b.setAttribute('aria-current', on ? 'page' : 'false');
+    });
+  }
+
+  // 品牌 / 版权层缺失时的拦截页（提示由作者渠道重新获取完整版本）
+  function blocked() {
+    var app = document.getElementById('app');
+    if (!app) return;
+    app.innerHTML = '<div class="wrap"><div class="glass" style="padding:34px 26px;text-align:center">'
+      + '<h2>版本校验未通过</h2>'
+      + '<p style="margin-top:10px;color:var(--ink-dim)">本文件缺少作者署名与版权（水印）模块，无法启动。</p>'
+      + '<p class="small faint" style="margin-top:10px">若本文件来自他人转发，可能已被二次修改（去署名 / 去水印 / 去版权说明）。'
+      + '请回到作者发布渠道获取完整版本，并保留署名与授权说明。</p></div></div>';
+  }
+
+  // 已在该路由时不再整页重绘（首页点左上角图标原来会重建整个视图 + 跳回顶部，
+  // 手机上看起来就是“抽搐”）。练习页 / 成绩页退出等确实需要同路由重绘的场景，
+  // 调用处显式传 force = true。
+  function go(route, force) {
+    var want = '#/' + route;
+    if (location.hash === want) {
+      if (force) render();
+      return;
+    }
+    location.hash = want;
+  }
+
+  function onHashChange() {
+    if (E.ui.quizActive) return; // 练习中：由练习页自行退出
+    render();
+  }
+
+  function bindTopbar() {
+    $$('.nav-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (E.ui.quizActive) { E.quiz.askExit(); return; }
+        var nav = b.dataset.nav;
+        if (nav === 'challenge') {
+          if (!(E.ui.allCoreFinished && E.ui.allCoreFinished())) {
+            U.toast('需先完成全部 ' + E.availableTopicIds().length + ' 个专题（每个一整轮）', 'bad');
+            return;
+          }
+        }
+        go(nav);
+      });
+    });
+    var brand = document.getElementById('brandHome');
+    if (brand) brand.addEventListener('click', function () { go('home'); });
+  }
+
+  /* 顶栏空间检测：竖屏 / 窄窗口 / 导航挤不下时，品牌文字收成 0 宽只留图标，
+     把右侧导航（首页 / 专题 / AI出题…）的空间让出来；恢复宽度时反向展开。 */
+  function fitTopbar() {
+    var bar = document.querySelector('.topbar');
+    if (!bar || !window.getComputedStyle || !document.documentElement) return;
+    var brand = bar.querySelector('.brand');
+    var text = bar.querySelector('.brand-text');
+    var nav = bar.querySelector('.nav');
+    if (!brand || !text || !nav) return;
+    var logo = bar.querySelector('.brand .logo');
+
+    function crowded() {
+      var cs = window.getComputedStyle(bar), bcs = window.getComputedStyle(brand), ncs = window.getComputedStyle(nav);
+      var pad = (parseFloat(cs.paddingLeft) || 0) + (parseFloat(cs.paddingRight) || 0);
+      var logoW = logo ? logo.offsetWidth : 0;
+      var textW = text.scrollWidth; // nowrap + overflow:hidden：收起后仍能读到自然宽度
+      var navW = 0, btns = nav.children;
+      for (var i = 0; i < btns.length; i++) navW += btns[i].offsetWidth;
+      if (btns.length > 1) navW += (parseFloat(ncs.columnGap || ncs.gap) || 0) * (btns.length - 1);
+      var need = pad + logoW + (parseFloat(bcs.columnGap || bcs.gap) || 0) + textW
+        + (parseFloat(cs.columnGap || cs.gap) || 0) + navW;
+      var room = document.documentElement.clientWidth || window.innerWidth || 0;
+      return need > room - 6;
+    }
+
+    function apply() { bar.classList.toggle('mini', crowded()); }
+    apply();
+
+    var raf = 0;
+    var nextFrame = window.requestAnimationFrame
+      ? function (cb) { return window.requestAnimationFrame(cb); }
+      : function (cb) { return window.setTimeout(cb, 60); };
+    function later() {
+      if (raf) return;
+      raf = nextFrame(function () { raf = 0; apply(); });
+    }
+    window.addEventListener('resize', later);
+    window.addEventListener('orientationchange', later);
+    if (window.matchMedia) {
+      var mq = window.matchMedia('(orientation: portrait)');
+      if (mq.addEventListener) mq.addEventListener('change', later);
+      else if (mq.addListener) mq.addListener(later);
+    }
+  }
+
+  function init() {
+    // 署名 / 水印 / 版权层校验：品牌模块被摘除或篡改 → 拒绝启动（详见 src/brand.js）
+    if (!(E.brand && E.brand.ok && E.brand.ok())) { blocked(); return; }
+    E.brand.install();
+    var bankKeys = window.__GRAMMAR_LAB__ ? Object.keys(window.__GRAMMAR_LAB__) : [];
+    if (!bankKeys.length) {
+      var body = document.getElementById('app');
+      body.innerHTML = '<div class="wrap"><div class="glass" style="padding:40px;text-align:center;color:var(--ink-dim)">'
+        + '<h2>题库数据未加载</h2><p style="margin-top:10px">请使用完整版本，或运行 build.js 生成单文件 English-Grammar-Lab.html。</p></div></div>';
+      return;
+    }
+    // 题库文本打隐形指纹：被复制、被搬运的题干会带着作者信息走
+    if (E.brand.markBank) E.brand.markBank(window.__GRAMMAR_LAB__);
+    if (E.brand.markPapers) E.brand.markPapers(window.__EGL_PAPERS__);
+    var app = document.getElementById('app');
+    viewEl = document.createElement('div');
+    viewEl.className = 'wrap';
+    viewEl.id = 'view';
+    app.appendChild(viewEl);
+    E.ui.app = { view: viewEl };
+    if (E.ui.setApp) E.ui.setApp(E.ui.app);
+    E.ui.quizActive = false;
+    // 背景主题：<head> 里的首屏脚本已应用过一次，这里兜底再同步一遍
+    if (E.ui.applySavedBg) E.ui.applySavedBg();
+    if (E.ui.applySavedFont) E.ui.applySavedFont();
+    // 屏幕阅读器播报区：判题反馈 / 提示只播报，不抢焦点
+    if (document.body && document.body.appendChild && document.getElementById && !document.getElementById('eglLive')) {
+      var live = document.createElement('div');
+      live.id = 'eglLive';
+      live.className = 'sr-only';
+      live.setAttribute('aria-live', 'polite');
+      live.setAttribute('aria-atomic', 'true');
+      document.body.appendChild(live);
+    }
+    // 任意自动保存 → 右上角“已自动保存”提示（节流，1.4s 后消失）
+    if (E.setSaveListener && U.savedNotice) E.setSaveListener(U.savedNotice);
+    bindTopbar();
+    fitTopbar();
+    window.addEventListener('hashchange', onHashChange);
+    render();
+  }
+
+  E.ui = E.ui || {};
+  E.ui.go = go;
+  E.ui.app = null;
+  E.ui.quizActive = false;
+  E.ui.init = init;
+  E.ui.render = render;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

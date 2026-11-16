@@ -7,10 +7,24 @@ const mini = path.resolve(__dirname, '../miniprogram');
 const seed = require('../server/seed.json');
 const clone = value => JSON.parse(JSON.stringify(value));
 const tap = dataset => ({ currentTarget: { dataset } });
+const launchPath = id => '/web-access/test-ticket-for-' + id;
+const webHosts = [
+  { page: 'english', id: 'junior-english', experience: 'english-starry-sky' },
+  { page: 'math', id: 'math-taxonomy', experience: 'cn-math-taxonomy' },
+  { page: 'junior-math', id: 'junior-math', experience: 'tainai-junior-math' },
+  { page: 'module', id: 'module-english-chinese-words', experience: 'english-chinese-words' }
+];
+// Native course boards remain supported for published admin configurations, even
+// though the three retired example boards are no longer part of the product defaults.
+function nativeBoard(id, categoryId) {
+  return { id, experience: 'courses', title: '原生课程测试板块', subtitle: '回归课程与练习入口', description: '', group: 'growth', badge: '测试', tone: 'lilac', icon: '/assets/icons/book.svg', cover: '/assets/covers/thinking.svg', categoryIds: [categoryId], home: true, learn: true, enabled: true, featured: false, features: require('../miniprogram/utils/board-defaults').features() };
+}
 function environment(options = {}) {
   const storage = new Map(Object.entries(options.storage || {}));
   const calls = [], navigation = [], scrolls = [], modals = [];
-  const data = { courses: clone(seed.courses), settings: clone(seed.settings), access: options.access !== false, network: false, wechatStatus: options.wechatStatus || 200, learning: new Map() };
+  const data = { courses: clone(seed.courses), settings: clone(seed.settings), access: options.access !== false, boardIds: options.boardIds || [], network: false, wechatStatus: options.wechatStatus || 200, learning: new Map() };
+  data.boards = clone(require('../miniprogram/utils/board-defaults').defaults()).concat(clone(options.nativeBoards || []));
+  const boardAccess = (userId, boardId) => Boolean(userId && (data.access || data.boardIds.includes(boardId)));
   const empty = () => ({ sections: [], positions: [], legacyChapters: [] });
   const state = id => { if (!data.learning.has(id)) data.learning.set(id, empty()); return data.learning.get(id); };
   const wx = {
@@ -33,17 +47,19 @@ function environment(options = {}) {
         let response;
         if (options.respond) response = await options.respond(route, value, data);
         if (!response) {
-          if (route === '/api/bootstrap') response = { settings: data.settings, categories: seed.categories, boards: require('../miniprogram/utils/board-defaults').defaults(), version: 1 };
-          else if (route === '/api/integrations/english') response = { ready: true, basePath: '/english/' };
-          else if (route === '/api/integrations/math') response = { ready: true, basePath: '/math/' };
-          else if (route === '/api/integrations/junior-math') response = { ready: true, basePath: '/junior-math/' };
+          if (route === '/api/bootstrap') response = { settings: data.settings, testLoginEnabled: options.testLoginEnabled === true, categories: seed.categories, boards: data.boards.map(board => ({ ...board, accessible: boardAccess(id, board.id) })), version: 1 };
           else if (route === '/api/auth/wechat') {
             if (data.wechatStatus !== 200) return value.success({ statusCode: data.wechatStatus, data: { error: '微信登录未配置 AppSecret', code: 'WECHAT_NOT_CONFIGURED' } });
             response = { token: 'token-wechat', user: { id: 'wechat', nickname: '微信学员' } };
           } else if (route === '/api/auth/dev') response = { token: 'token-local-test', user: { id: 'local-test', nickname: '本地测试' } };
           else if (route === '/api/courses') response = { courses: data.courses.map(({ chapters, published, ...course }) => ({ ...course, category: seed.categories.find(c => c.id === course.categoryId).title, lessons: chapters.length, accessible: Boolean(id && data.access) })) };
           else if (!id) return value.success({ statusCode: 401, data: { error: '未登录' } });
-          else if (route === '/api/me') response = { user: { id, nickname: id }, grants: [], hasAccess: data.access };
+          else if (route === '/api/me') response = { user: { id, nickname: id }, grants: [], hasAccess: data.access || data.boardIds.length > 0 };
+          else if (/^\/api\/boards\/[^/]+\/open$/.test(route)) {
+            const boardId = decodeURIComponent(route.split('/')[3]);
+            if (!boardAccess(id, boardId)) return value.success({ statusCode: 403, data: { error: '请兑换此板块的兑换码', code: 'BOARD_LOCKED' } });
+            response = { launchPath: launchPath(boardId) };
+          }
           else if (route.startsWith('/api/courses/')) {
             if (!data.access) return value.success({ statusCode: 403, data: { error: '当前账号暂无此课程权限' } });
             const course = data.courses.find(c => c.id === decodeURIComponent(route.split('/').pop()));
@@ -122,14 +138,42 @@ test('Unconfigured AppSecret 503 is accurate and never silently creates a dev us
   assert.equal(env.calls.some(c => c.url && c.url.includes('/api/auth/dev')), false);
   assert.equal(env.calls.some(c => c.url && c.url.endsWith('/api/redeem')), false);
 });
-test('Explicit devtools login is visibly a test session and forbidden on real phones', async () => {
+test('Explicit test login works in development tools and development phones but never release builds', async () => {
   const env = environment({ signedIn: false });
   const gate = env.page('gate'); await gate.devLogin();
   assert.equal(gate.data.testSession, true);
   assert.equal(env.calls.some(c => c.url && c.url.endsWith('/api/auth/dev')), true);
   const phone = environment({ signedIn: false, platform: 'ios' });
-  await assert.rejects(phone.load('utils/session').devLogin(), /仅允许开发工具/);
-  assert.equal(phone.calls.length, 0);
+  await phone.load('utils/session').devLogin();
+  assert.equal(phone.load('utils/session').current().test, true);
+  assert.equal(phone.calls.some(c => c.login), false);
+  const release = environment({ signedIn: false, platform: 'ios', env: 'release' });
+  await assert.rejects(release.load('utils/session').devLogin(), /仅允许开发版/);
+  assert.equal(release.calls.length, 0);
+});
+test('Phone test mode automatically creates a test identity without wx.login, keeps boards locked until redemption', async () => {
+  const env = environment({ signedIn: false, platform: 'ios', access: false, testLoginEnabled: true });
+  const gate = env.page('gate');
+  await gate.onLoad({ redeem: '1', board: 'module-english-chinese-words' });
+  assert.equal(gate.data.testMode, true);
+  assert.equal(gate.data.signedIn, true);
+  assert.equal(gate.data.testSession, true);
+  assert.equal(gate.data.hasAccess, false);
+  assert.equal(env.calls.some(c => c.login || c.url?.endsWith('/api/auth/wechat')), false);
+  const boot = await env.load('utils/catalog').bootstrap();
+  assert.equal(boot.boards.every(board => !board.accessible), true);
+  gate.data.code = 'VALID'; await gate.redeem();
+  const redeem = env.calls.find(c => c.url?.endsWith('/api/redeem'));
+  assert.equal(redeem.header.Authorization, 'Bearer token-local-test');
+  assert.equal(env.navigation.at(-1), '/pages/home/home');
+  assert.equal(env.calls.some(c => c.login || c.url?.endsWith('/api/auth/wechat')), false);
+});
+test('A phone does not automatically create a test identity when the server test mode is disabled', async () => {
+  const env = environment({ signedIn: false, platform: 'ios', access: false, testLoginEnabled: false });
+  const gate = env.page('gate'); await gate.onLoad({ redeem: '1' });
+  assert.equal(gate.data.testMode, false);
+  assert.equal(gate.data.signedIn, false);
+  assert.equal(env.calls.some(c => c.url?.endsWith('/api/auth/dev')), false);
 });
 test('Redemption requires Bearer and never writes local authorization flags', async () => {
   const env = environment({ signedIn: false, access: false });
@@ -215,6 +259,33 @@ test('Completing all current subsections is idempotent and proceeds directly to 
   await env.load('utils/lesson-sections').complete('focus', 'focus-chapter-0', 'focus-chapter-0-question');
   assert.equal(env.state('user-a').sections.length, 3);
 });
+for (const finishesInBackground of [true, false]) test(`Returning to the reader unlocks saving when the old request finishes ${finishesInBackground ? 'in the background' : 'after returning'}`, async () => {
+  let finishSave, savingStarted, held = false;
+  const pending = new Promise(resolve => { finishSave = resolve; });
+  const started = new Promise(resolve => { savingStarted = resolve; });
+  const env = environment({ respond: async (route, request) => {
+    if (route === '/api/me/learning' && request.method === 'PUT' && request.data.completed && !held) {
+      held = true; savingStarted(); await pending;
+    }
+  } });
+  const page = await lesson(env);
+  await page.openSection(tap({ id: 'focus-chapter-0-question' }));
+  const saving = page.nextSection();
+  await started;
+  assert.equal(page.data.saving, true);
+  page.onHide();
+  try {
+    if (finishesInBackground) { finishSave(); await saving; }
+    await page.onShow();
+    assert.equal(page.data.saving, false);
+    await page.openSection(tap({ id: 'focus-chapter-0-reading' }));
+    assert.equal(page.data.section.id, 'focus-chapter-0-reading');
+    finishSave(); await saving;
+    assert.equal(page.data.section.id, 'focus-chapter-0-reading', 'an old save must not navigate the resumed reader');
+    await page.nextSection();
+    assert.equal(page.data.section.id, 'focus-chapter-0-exercise');
+  } finally { finishSave(); await saving; }
+});
 test('Revocation and outages never fall back to seed or previously rendered article text', async () => {
   const env = environment(), page = await lesson(env);
   env.data.access = false;
@@ -237,6 +308,24 @@ test('Queues, current course and completion cache are isolated per user', async 
   env.signIn('user-b'); env.data.network = false; await learning.refresh();
   assert.equal(learning.state().sections.length, 0); assert.equal(learning.currentCourse(), undefined); assert.equal(env.storage.get(keyA).length, 1);
   env.signIn(); await learning.refresh(); assert.equal(learning.state().sections.length, 2); assert.equal(env.storage.get(keyA).length, 0);
+});
+test('Rate-limited saves and queue retries retain completion until the server accepts it', async () => {
+  let limited = true;
+  const env = environment({ respond: (route, request) => route === '/api/me/learning' && request.method === 'PUT' && limited
+    ? { statusCode: 429, data: { error: '操作过于频繁，请稍后重试' } } : null });
+  const learning = env.load('utils/learning'), key = env.load('utils/session').userKey('queue');
+  await assert.rejects(learning.record('focus', 'focus-chapter-0', 'focus-chapter-0-reading', true), error => error.status === 429);
+  assert.equal(env.storage.get(key).length, 1);
+  const queued = clone(env.storage.get(key));
+  assert.equal(env.state('user-a').sections.length, 0);
+  await assert.rejects(learning.refresh(), error => error.status === 429);
+  assert.deepEqual(clone(env.storage.get(key)), queued);
+  limited = false;
+  await learning.refresh();
+  assert.equal(env.storage.get(key).length, 0);
+  assert.deepEqual(clone(learning.state().sections), [{ sectionId: 'focus-chapter-0-reading', completed: true }]);
+  await learning.refresh();
+  assert.equal(env.state('user-a').sections.length, 1);
 });
 test('A server permission denial is not cached as a completed subsection or queued for bypass', async () => {
   const env = environment({ access: false }), learning = env.load('utils/learning');
@@ -282,22 +371,25 @@ test('Empty catalog, no access and failed refreshes have explicit state instead 
 });
 test('Guests can discover boards and course descriptions without requesting protected bodies', async () => {
   const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
-  assert.equal(home.data.boards.length, 6); assert.equal(env.navigation.length, 0);
+  assert.equal(home.data.boards.length, 17); assert.equal(env.navigation.length, 0);
+  assert(!home.data.boards.some(b => ['focus-space', 'thinking-space', 'energy-space'].includes(b.id)));
+  env.data.boards.push(nativeBoard('focus-space', 'focus-category'));
   const board = env.page('board'); board.onLoad({ id: 'focus-space' }); await board.onShow();
-  assert.equal(board.data.courses[0].id, 'focus'); assert.equal(board.data.exercises.length, 0);
+  assert.equal(board.data.board, null); assert.equal(board.data.courses.length, 0); assert.equal(board.data.exercises.length, 0);
+  assert.equal(env.navigation.at(-1), '/pages/gate/gate?redeem=1&board=focus-space');
   assert(!env.calls.some(c => c.url && /\/api\/(me|courses\/)/.test(c.url)));
   const course = env.page('course'); course.onLoad({ id: 'focus' }); await course.onShow();
   assert.equal(course.data.chapters.length, 0); assert.equal(course.data.current.accessible, false);
 });
 test('Learning classification and search combine, and clearing restores all visible boards', async () => {
   const env = environment(), page = env.page('learn'); await page.onShow();
-  page.selectGroup(tap({ id: 'growth' })); assert.equal(page.data.filtered.length, 2);
-  page.search({ detail: { value: '专注' } }); assert.equal(page.data.filtered[0].id, 'focus-space');
+  page.selectGroup(tap({ id: 'growth' })); assert.equal(page.data.filtered.length, 1);
+  page.search({ detail: { value: '注意力' } }); assert.equal(page.data.filtered[0].id, 'module-adhd-training-platform');
   page.search({ detail: { value: '没有的分类' } }); assert.equal(page.data.filtered.length, 0);
-  page.clearSearch(); assert.equal(page.data.filtered.length, 6);
+  page.clearSearch(); assert.equal(page.data.filtered.length, 17);
 });
 test('Board course and exercise entries stay scoped to linked categories with stable navigation IDs', async () => {
-  const env = environment(), page = env.page('board'); page.onLoad({ id: 'thinking-space' }); await page.onShow();
+  const env = environment({ nativeBoards: [nativeBoard('thinking-space', 'thinking-category')] }), page = env.page('board'); page.onLoad({ id: 'thinking-space' }); await page.onShow();
   assert.deepEqual(clone(page.data.courses.map(c => c.id)), ['thinking']);
   assert(page.data.exercises.length > 0); assert(page.data.exercises.every(e => e.courseId === 'thinking'));
   const exercise = page.data.exercises[0]; page.openExercise(tap({ id: exercise.id }));
@@ -309,73 +401,103 @@ test('A hidden or removed board is an explicit unavailable state and never expos
   const env = environment(), page = env.page('board'); page.onLoad({ id: 'removed-board' }); await page.onShow();
   assert.match(page.data.error, /下架/); assert.equal(page.data.board, null); assert.equal(page.data.courses.length, 0);
 });
-test('Home and learning English entries open the integrated UI without requesting a login', async () => {
-  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
+test('Home and learning entries retain stable destinations while access is checked by the host', async () => {
+  const env = environment(), home = env.page('home'), learn = env.page('learn');
+  await home.onShow(); await learn.onShow();
   home.openFeatured(); assert.equal(env.navigation.at(-1), '/pages/english/english?id=junior-english');
-  const learn = env.page('learn'); await learn.onShow(); learn.openBoard({ detail: { id: 'junior-english' } });
-  assert.equal(env.navigation.at(-1), '/pages/english/english?id=junior-english');
-  const english = env.page('english'); await english.onLoad({ id: 'junior-english' });
-  assert.equal(english.data.error, ''); assert.equal(english.data.src, 'http://127.0.0.1:3002/english/?embedded=1#/');
-  english.onWebLoad(); assert.equal(english.data.loaded, true);
-  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
-});
-test('English integration does not open when the board is disabled or its build is unavailable', async () => {
-  for (const respond of [
-    route => route === '/api/bootstrap' ? { boards: [], settings: seed.settings } : null,
-    route => route === '/api/integrations/english' ? { ready: false } : null
-  ]) {
-    const env = environment({ signedIn: false, respond }), page = env.page('english'); await page.onLoad({ id: 'junior-english' });
-    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
+  learn.selectGroup(tap({ id: 'subject' })); assert.equal(learn.data.filtered.length, 14);
+  assert.equal(home.data.boards.find(b => b.id === 'math-taxonomy').metaLabel, '小学至高中');
+  assert.equal(home.data.boards.find(b => b.id === 'junior-math').title, '初中数学');
+  for (const item of webHosts) {
+    home.openBoard({ detail: { id: item.id } });
+    assert.equal(env.navigation.at(-1), '/pages/' + item.page + '/' + item.page + '?id=' + item.id);
+    learn.clearSearch(); learn.openBoard({ detail: { id: item.id } });
+    assert.equal(env.navigation.at(-1), '/pages/' + item.page + '/' + item.page + '?id=' + item.id);
+    const host = env.page(item.page); await host.onLoad({ id: item.id });
+    assert.equal(host.data.error, '');
+    assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(item.id));
+    const open = env.calls.find(c => c.url && c.url.endsWith('/api/boards/' + item.id + '/open'));
+    assert.equal(open.method, 'POST'); assert.equal(open.header.Authorization, 'Bearer token-user-a');
   }
 });
-test('Math entries from home and learning open the local project without authentication', async () => {
-  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
-  const math = home.data.boards.find(b => b.id === 'math-taxonomy');
-  assert.equal(math.metaLabel, '小学至高中');
-  home.openBoard({ detail: { id: math.id } }); assert.equal(env.navigation.at(-1), '/pages/math/math?id=math-taxonomy');
-  const learn = env.page('learn'); await learn.onShow(); learn.selectGroup(tap({ id: 'subject' }));
-  assert.equal(learn.data.filtered.length, 3);
-  learn.openBoard({ detail: { id: math.id } }); assert.equal(env.navigation.at(-1), '/pages/math/math?id=math-taxonomy');
-  const page = env.page('math'); await page.onLoad({ id: math.id });
-  assert.equal(page.data.src, 'http://127.0.0.1:3002/math/?embedded=1'); assert.equal(page.data.error, '');
-  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
-});
-test('Math host respects disabled boards, wrong experience, missing builds and page disposal', async () => {
-  for (const respond of [
-    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [] } : null,
-    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: 'math-taxonomy', enabled: true, experience: 'courses' }] } : null,
-    route => route === '/api/integrations/math' ? { ready: false } : null
-  ]) {
-    const env = environment({ signedIn: false, respond }), page = env.page('math'); await page.onLoad({ id: 'math-taxonomy' });
-    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
+
+for (const item of webHosts) {
+  for (const user of [{ signedIn: false, label: 'guest' }, { signedIn: true, label: 'unredeemed account' }]) {
+    test(item.page + ' host redirects a ' + user.label + ' to board redemption without exposing a web URL', async () => {
+      const env = environment({ signedIn: user.signedIn, access: false }), host = env.page(item.page);
+      await host.onLoad({ id: item.id });
+      assert.equal(host.data.src, ''); assert.equal(host.data.loaded, false); assert.equal(host.data.loading, false);
+      assert.equal(env.navigation.at(-1), '/pages/gate/gate?redeem=1&board=' + item.id);
+      assert(!env.calls.some(c => c.login || c.url && /\/api\/auth/.test(c.url)));
+      const opens = env.calls.filter(c => c.url && /\/api\/boards\/.+\/open$/.test(c.url));
+      assert.equal(opens.length, user.signedIn ? 1 : 0);
+      if (user.signedIn) assert.equal(opens[0].header.Authorization, 'Bearer token-user-a');
+    });
   }
-  const env = environment({ signedIn: false }), page = env.page('math');
-  const pending = page.onLoad({ id: 'math-taxonomy' }); page.onUnload(); await pending;
-  assert.equal(page.data.src, '');
+  test(item.page + ' host rejects removed boards, other experience types and unavailable builds', async () => {
+    for (const respond of [
+      route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [] } : null,
+      route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: item.id, enabled: false, experience: item.experience }] } : null,
+      route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: item.id, enabled: true, experience: 'courses' }] } : null,
+      route => route === '/api/boards/' + item.id + '/open' ? { statusCode: 503, data: { error: '学习模块尚未构建' } } : null
+    ]) {
+      const env = environment({ respond }), host = env.page(item.page); await host.onLoad({ id: item.id });
+      assert.equal(host.data.src, ''); assert(host.data.error); assert.equal(host.data.loading, false);
+    }
+  });
+  test(item.page + ' host discards an in-flight open result after page disposal', async () => {
+    let release, started;
+    const held = new Promise(resolve => { release = resolve; });
+    const opening = new Promise(resolve => { started = resolve; });
+    const env = environment({ respond: async route => {
+      if (route === '/api/boards/' + item.id + '/open') { started(); await held; return { launchPath: launchPath(item.id) }; }
+    } });
+    const host = env.page(item.page), pending = host.onLoad({ id: item.id });
+    await opening; host.onUnload(); release(); await pending;
+    assert.equal(host.data.src, ''); assert.equal(host.data.loaded, false); assert.equal(env.navigation.length, 0);
+  });
+  test(item.page + ' host ignores a late board denial after page disposal', async () => {
+    let release, started;
+    const held = new Promise(resolve => { release = resolve; });
+    const opening = new Promise(resolve => { started = resolve; });
+    const env = environment({ respond: async route => {
+      if (route === '/api/boards/' + item.id + '/open') {
+        started(); await held;
+        return { statusCode: 403, data: { error: '此板块权限已撤销', code: 'BOARD_LOCKED' } };
+      }
+    } });
+    const host = env.page(item.page), pending = host.onLoad({ id: item.id });
+    await opening; host.onUnload(); release(); await pending;
+    assert.equal(host.data.src, ''); assert.equal(host.data.error, '');
+    assert.equal(env.navigation.length, 0, 'a disposed host cannot redirect the current page');
+  });
+}
+
+test('A board-specific entitlement opens its own board and cannot open other module or native boards', async () => {
+  const own = 'module-english-chinese-words', env = environment({ access: false, boardIds: [own], nativeBoards: [nativeBoard('focus-space', 'focus-category')] });
+  const home = env.page('home'); await home.onShow();
+  assert.equal(home.data.boards.find(b => b.id === own).accessible, true);
+  assert.equal(home.data.boards.filter(b => b.accessible).length, 1);
+  const ownHost = env.page('module'); await ownHost.onLoad({ id: own });
+  assert.equal(ownHost.data.src, 'http://127.0.0.1:3002' + launchPath(own));
+  const denied = env.page('module'); await denied.onLoad({ id: 'module-youwei-junior-science' });
+  assert.equal(denied.data.src, '');
+  assert.equal(env.navigation.at(-1), '/pages/gate/gate?redeem=1&board=module-youwei-junior-science');
+  const native = env.page('board'); native.onLoad({ id: 'focus-space' }); await native.onShow();
+  assert.equal(native.data.board, null); assert.equal(native.data.courses.length, 0);
+  assert.equal(env.navigation.at(-1), '/pages/gate/gate?redeem=1&board=focus-space');
 });
-test('Junior mathematics opens from both board lists and stays separate from the knowledge graph', async () => {
-  const env = environment({ signedIn: false }), home = env.page('home'); await home.onShow();
-  assert(home.data.boards.some(b => b.id === 'math-taxonomy'));
-  const board = home.data.boards.find(b => b.id === 'junior-math'); assert.equal(board.title, '初中数学');
-  home.openBoard({ detail: { id: 'junior-math' } }); assert.equal(env.navigation.at(-1), '/pages/junior-math/junior-math?id=junior-math');
-  const learn = env.page('learn'); await learn.onShow(); learn.openBoard({ detail: { id: 'junior-math' } });
-  assert.equal(env.navigation.at(-1), '/pages/junior-math/junior-math?id=junior-math');
-  const page = env.page('junior-math'); await page.onLoad({ id: 'junior-math' });
-  assert.equal(page.data.error, ''); assert.equal(page.data.src, 'http://127.0.0.1:3002/junior-math/');
-  assert(!env.calls.some(c => c.login || c.url && /\/api\/(auth|me)/.test(c.url)));
+
+test('Unredeemed native board pages require redemption while public course descriptions remain available', async () => {
+  const env = environment({ access: false, nativeBoards: [nativeBoard('thinking-space', 'thinking-category')] }), board = env.page('board');
+  board.onLoad({ id: 'thinking-space' }); await board.onShow();
+  assert.equal(board.data.board, null); assert.equal(board.data.courses.length, 0); assert.equal(board.data.exercises.length, 0);
+  assert.equal(env.navigation.at(-1), '/pages/gate/gate?redeem=1&board=thinking-space');
+  const course = env.page('course'); course.onLoad({ id: 'thinking' }); await course.onShow();
+  assert.equal(course.data.current.id, 'thinking'); assert.equal(course.data.current.accessible, false); assert.equal(course.data.chapters.length, 0);
+  assert(!env.calls.some(c => c.url && /\/api\/courses\//.test(c.url)));
 });
-test('Junior mathematics rejects hidden boards, other experience types, missing builds and stale loads', async () => {
-  for (const respond of [
-    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [] } : null,
-    route => route === '/api/bootstrap' ? { settings: seed.settings, boards: [{ id: 'junior-math', enabled: true, experience: 'cn-math-taxonomy' }] } : null,
-    route => route === '/api/integrations/junior-math' ? { ready: false } : null
-  ]) {
-    const env = environment({ signedIn: false, respond }), page = env.page('junior-math'); await page.onLoad({ id: 'junior-math' });
-    assert.equal(page.data.src, ''); assert(page.data.error); assert.equal(page.data.loading, false);
-  }
-  const env = environment({ signedIn: false }), page = env.page('junior-math'); const pending = page.onLoad({ id: 'junior-math' }); page.onUnload(); await pending;
-  assert.equal(page.data.src, '');
-});
+
 test('Reader has no modes and registers authenticated materials at course, chapter and subsection scopes', () => {
   const config = require('../miniprogram/pages/lesson/lesson.json');
   assert.equal(config.usingComponents['reading-materials'], '/components/reading-materials/reading-materials');
@@ -383,4 +505,74 @@ test('Reader has no modes and registers authenticated materials at course, chapt
   assert.doesNotMatch(text, /思维模式|理解模式|实践模式|复盘模式|selectMode|changeMode|mode-card/);
   for (const scope of ['course', 'chapter', 'section']) assert.match(text, new RegExp('scope="' + scope + '"'));
   for (const name of ['home', 'learn', 'profile']) assert.doesNotMatch(fs.readFileSync(path.join(mini, `pages/${name}/${name}.wxml`), 'utf8'), /内容已解锁，选择一门课程开始学习|课程与学习记录[，,]?都在这里|学习记录仅保存在当前设备|课程可以反复学习，不必一次学完/);
+});
+
+test('All eleven redeemed module entries use short-lived local launch paths and exact board titles', async () => {
+  const modules = require('../miniprogram/utils/integrations').modules;
+  const env = environment(), home = env.page('home'), learn = env.page('learn');
+  await home.onShow(); await learn.onShow();
+  for (const item of modules) {
+    const board = home.data.boards.find(b => b.experience === item.slug);
+    assert.equal(board.title, item.title); assert.equal(board.accessible, true);
+    home.openBoard({ detail: { id: board.id } });
+    assert.equal(env.navigation.at(-1), '/pages/module/module?id=' + board.id);
+    learn.openBoard({ detail: { id: board.id } });
+    assert.equal(env.navigation.at(-1), '/pages/module/module?id=' + board.id);
+    const host = env.page('module'); await host.onLoad({ id: board.id });
+    assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(board.id));
+    assert.equal(host.data.error, '');
+    host.onWebLoad(); assert.equal(host.data.loaded, true);
+    const opens = () => env.calls.filter(c => c.url && c.url.endsWith('/api/boards/' + board.id + '/open')).length;
+    const before = opens();
+    await host.onWebError(); assert.equal(opens(), before + 1); assert.equal(host.data.error, '');
+    host.onWebError(); assert.equal(host.data.src, ''); assert(host.data.error);
+    host.onHide(); await host.onShow();
+    assert.equal(opens(), before + 2); assert.equal(host.data.error, '');
+  }
+  assert(!env.calls.some(c => c.login || c.url && /\/api\/auth/.test(c.url)));
+});
+
+test('Module host rejects arbitrary experiences and unsafe launch URLs without exposing credentials', async () => {
+  const id = 'module-english-chinese-words';
+  for (const respond of [
+    route => route === '/api/bootstrap' ? { boards: [{ id, enabled: true, experience: 'https://untrusted.example' }], settings: seed.settings } : null,
+    ...['https://untrusted.example/', '/modules/english-chinese-words/', '/web-access/short', '/web-access/' + 'A'.repeat(20) + '?token=leak'].map(launchPath => route => route === '/api/boards/' + id + '/open' ? { launchPath } : null)
+  ]) {
+    const env = environment({ respond }), host = env.page('module');
+    await host.onLoad({ id }); assert.equal(host.data.src, ''); assert(host.data.error); assert.equal(host.data.loading, false);
+  }
+});
+
+test('A late launch from an earlier retry cannot overwrite the current board', async () => {
+  const oldId = 'module-english-chinese-words', newId = 'module-youwei-junior-science';
+  let release, started;
+  const held = new Promise(resolve => { release = resolve; });
+  const opening = new Promise(resolve => { started = resolve; });
+  const env = environment({ respond: async route => {
+    if (route === '/api/boards/' + oldId + '/open') { started(); await held; return { launchPath: launchPath(oldId) }; }
+  } });
+  const host = env.page('module'), oldLoad = host.onLoad({ id: oldId });
+  await opening; await host.onLoad({ id: newId });
+  assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(newId));
+  release(); await oldLoad;
+  assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(newId)); assert.equal(host.data.error, '');
+});
+
+test('A late denial from an earlier retry cannot redirect an already opened board', async () => {
+  const oldId = 'module-english-chinese-words', newId = 'module-youwei-junior-science';
+  let release, started;
+  const held = new Promise(resolve => { release = resolve; });
+  const opening = new Promise(resolve => { started = resolve; });
+  const env = environment({ respond: async route => {
+    if (route === '/api/boards/' + oldId + '/open') {
+      started(); await held;
+      return { statusCode: 403, data: { error: '此板块权限已撤销', code: 'BOARD_LOCKED' } };
+    }
+  } });
+  const host = env.page('module'), oldLoad = host.onLoad({ id: oldId });
+  await opening; await host.onLoad({ id: newId });
+  assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(newId));
+  release(); await oldLoad;
+  assert.equal(host.data.src, 'http://127.0.0.1:3002' + launchPath(newId)); assert.equal(host.data.error, '');
+  assert.equal(env.navigation.length, 0, 'an old denial cannot replace the new board with a gate');
 });

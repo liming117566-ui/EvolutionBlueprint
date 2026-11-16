@@ -1,0 +1,164 @@
+{
+  "format": "webp",
+  "width": 768,
+  "height": 432,
+  "items": [
+    {
+      "id": "junior-english",
+      "title": "初中英语",
+      "source": "output/imagegen/ui-v2/junior-english.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "c34b7a06fe42b9805948643b64c1bc9a529fd45b493d12428dc416b716d6cd98",
+      "packaged": "/assets/generated/junior-english-landscape.webp",
+      "bytes": 14584,
+      "sha256": "806e93cc718c9c5d2585aaaa0f5c4d793dda706ec965a52473a917eb47899863"
+    },
+    {
+      "id": "junior-math",
+      "title": "初中数学",
+      "source": "output/imagegen/ui-v2/junior-math.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "f9cae5da4631dd1e70e765a08771a915c1dfdd21bdb3011ce8f20f8b974d3cec",
+      "packaged": "/assets/generated/junior-math-landscape.webp",
+      "bytes": 12116,
+      "sha256": "9e3ce50221c2fcc50defffce4e2da8b9d7b3c797fee25e97679a1d5510ebb8c2"
+    },
+    {
+      "id": "math-taxonomy",
+      "title": "中小学高中知识图谱",
+      "source": "output/imagegen/ui-v2/math-taxonomy.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "ac5259989e4fc93373f978f1667201eb57bc8e6499b800322e6ac018f4db8d73",
+      "packaged": "/assets/generated/math-taxonomy-landscape.webp",
+      "bytes": 15588,
+      "sha256": "acba0f875dbb0408843732e90e752e968b849bb61b500ea39fbf09f072901ddf"
+    },
+    {
+      "id": "module-english-chinese-words",
+      "title": "英语单词",
+      "source": "output/imagegen/ui-v2/module-english-chinese-words.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "a84f67ca07ac29f18a3b824934b7cef1834735518be080c3907e429e687a2820",
+      "packaged": "/assets/generated/module-english-chinese-words-landscape.webp",
+      "bytes": 12142,
+      "sha256": "6bbae70205aefb7a3d845b811117121748dc3a0f6138e9e850f980cf26192839"
+    },
+    {
+      "id": "module-youwei-junior-science",
+      "title": "浙教版初中科学学习",
+      "source": "output/imagegen/ui-v2/module-youwei-junior-science.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "f5011dc5c1875d0b9e05a892c6b213123c9cea812ccbff2c75352b599218a37a",
+      "packaged": "/assets/generated/module-youwei-junior-science-landscape.webp",
+      "bytes": 21356,
+      "sha256": "5363d4b62b36ffb71eccef9d37b1d2534b4fe7214b35431fb6a3ba73e6cf3d37"
+    },
+    {
+      "id": "module-english-grammar-lab",
+      "title": "上海初高语法填空",
+      "source": "output/imagegen/ui-v2/module-english-grammar-lab.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "cebf27d56b25e3dff28c09b696315a38c947c930406c4b9f5ca93354e888a59b",
+      "packaged": "/assets/generated/module-english-grammar-lab-landscape.webp",
+      "bytes": 13070,
+      "sha256": "e4e5f93e3b04240623da18e4a541d0d5d2f5d8e9efefb3edae86e4017693e819"
+    },
+    {
+      "id": "module-MathKnowledgeAI",
+      "title": "人教版初中数学 AI 学习库",
+      "source": "output/imagegen/ui-v2/module-mathknowledgeai.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "364910b5447a85956443c2dbfd45c71b8c2141348c524438da4648962a3c1862",
+      "packaged": "/assets/generated/module-mathknowledgeai-landscape.webp",
+      "bytes": 14834,
+      "sha256": "1fd06e46adfdeef53b96d98616813cb37287a9c6d0df6d9ab1f0dfe693519033"
+    },
+    {
+      "id": "module-MathGraph",
+      "title": "初中数学图谱",
+      "source": "output/imagegen/ui-v2/module-mathgraph.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "12aec77a1fd1056315e314b3baa19939111bffcd828938dca6a734b956cb8d15",
+      "packaged": "/assets/generated/module-mathgraph-landscape.webp",
+      "bytes": 10116,
+      "sha256": "abfc92e78ea4dc446721649acd6ca66ad17df5ff453f48fc8dc2e7668765c4a4"
+    },
+    {
+      "id": "module-summer-camp-grade7",
+      "title": "小升初 40 天在线作业",
+      "source": "output/imagegen/ui-v2/module-summer-camp-grade7.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "8688507f5e2c76a474aa5bf6f80ffdbfc1b9e14e42934388ed66570800b2416d",
+      "packaged": "/assets/generated/module-summer-camp-grade7-landscape.webp",
+      "bytes": 14632,
+      "sha256": "74fbe98437aaa26da2af99c33f51a5577d1bf0ec116d5c955bfc1ac9478597dc"
+    },
+    {
+      "id": "module-primary-english-knowledge-graph",
+      "title": "小学英语知识图谱（小升初方向）",
+      "source": "output/imagegen/ui-v2/module-primary-english-knowledge-graph.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "1dc5a73d2ae7fa02d78b54806cad10bc888070d95e4d5cca80b5b898efe785c7",
+      "packaged": "/assets/generated/module-primary-english-knowledge-graph-landscape.webp",
+      "bytes": 12192,
+      "sha256": "b53762787492bee5e03e77298119115a724b7ab797294512cc9f7072659cb8d5"
+    },
+    {
+      "id": "module-zx-study",
+      "title": "小学 1-6 年级各学科学习",
+      "source": "output/imagegen/ui-v2/module-zx-study.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "39c58d0087aeae043d45ceb352954040fc4df864b5cb6bc856c52779ecee0199",
+      "packaged": "/assets/generated/module-zx-study-landscape.webp",
+      "bytes": 18074,
+      "sha256": "39f1982d869ae615ad6790645571a3486b4853319026017d8845fa0d96caa424"
+    },
+    {
+      "id": "module-adhd-training-platform",
+      "title": "ADHD儿童注意力训练平台",
+      "source": "output/imagegen/ui-v2/module-adhd-training-platform.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "160f4e4e2be1f46af2933b4ed3a9b8539004d803bdbb6cef0e7d8a26a3a9d64e",
+      "packaged": "/assets/generated/module-adhd-training-platform-landscape.webp",
+      "bytes": 13724,
+      "sha256": "b2242c5e3465c97b5becc9c37cab8deda33a20f11fd7c2d1b371140439ebad9a"
+    },
+    {
+      "id": "module-nihaixia-app",
+      "title": "倪师中医经方学习",
+      "source": "output/imagegen/ui-v2/module-nihaixia-app.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "bf88dd460950ff362261e6b5c55b0ab775f86fc8740b1cbb2b1e657a45ee5b95",
+      "packaged": "/assets/generated/module-nihaixia-app-landscape.webp",
+      "bytes": 22512,
+      "sha256": "7cd054c1e4783b34e25c4cb004eb051f6be517aabedf232b7ca7ce34be8f84af"
+    },
+    {
+      "id": "module-nihaisha-nishi-tcm",
+      "title": "倪海厦中医",
+      "source": "output/imagegen/ui-v2/module-nihaisha-nishi-tcm.png",
+      "sourceWidth": 1536,
+      "sourceHeight": 1024,
+      "sourceSha256": "4a5ea6999f16f79192d6c607d6e4013956a556a9d1be686cd736730c85f16b32",
+      "packaged": "/assets/generated/module-nihaisha-nishi-tcm-landscape.webp",
+      "bytes": 20826,
+      "sha256": "6424ea502fb8e830b2e2870e40aad18daeb51cee193a83c836109353595691b3"
+    }
+  ],
+  "count": 14,
+  "totalBytes": 215766,
+  "appIconUnchanged": true
+}

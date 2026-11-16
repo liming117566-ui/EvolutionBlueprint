@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}错题诊断 · 数学图谱{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-search text-gradient"></i> 错题诊断</h1>
+    <p class="page-sub">沿依赖链回溯，精准定位薄弱根因</p>
+  </div>
+  <a href="{{ url_for('diagnose.new') }}" class="btn btn-primary">
+    <i class="bi bi-plus-circle"></i> 新建诊断
+  </a>
+</div>
+
+{% if diagnoses %}
+<div class="card border-0 shadow-sm fade-in">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>日期</th>
+            <th>题目</th>
+            <th>出错知识点</th>
+            <th>根因知识点</th>
+            <th>预估时间</th>
+            <th class="text-end">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in diagnoses %}
+          <tr>
+            <td><small class="text-muted">{{ d.created_at.strftime('%m-%d %H:%M') }}</small></td>
+            <td>
+              <span class="d-inline-block text-truncate" style="max-width:200px;" title="{{ d.wrong_question.question_text if d.wrong_question else '' }}">
+                {% if d.wrong_question and d.wrong_question.image_path %}
+                <i class="bi bi-image text-primary me-1" title="含图片"></i>
+                {% endif %}
+                {{ d.wrong_question.question_text[:40] if d.wrong_question else '—' }}{% if d.wrong_question and d.wrong_question.question_text|length > 40 %}...{% endif %}
+              </span>
+            </td>
+            <td class="fw-semibold">{{ d.target_topic_name }}</td>
+            <td>
+              {% if d.root_cause_id != d.target_topic_id %}
+              <span class="badge bg-danger"><i class="bi bi-bullseye"></i> {{ d.root_cause_name }}</span>
+              {% else %}
+              <span class="text-muted">— 本身即为根因</span>
+              {% endif %}
+            </td>
+            <td><small>{{ d.estimated_time or '—' }}</small></td>
+            <td class="text-end">
+              <a href="{{ url_for('diagnose.result', diag_id=d.id) }}" class="btn btn-sm btn-outline-primary">
+                查看 <i class="bi bi-arrow-right"></i>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm fade-in">
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+    <h5>暂无诊断记录</h5>
+    <p>开始录入错题，让系统帮你找到薄弱根因</p>
+    <a href="{{ url_for('diagnose.new') }}" class="btn btn-primary">
+      <i class="bi bi-plus-circle"></i> 开始第一次诊断
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

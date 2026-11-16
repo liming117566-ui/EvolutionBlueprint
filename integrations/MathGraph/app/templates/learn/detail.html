@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}学习路径详情 · 数学图谱{% endblock %}
+{% block content %}
+<div class="fade-in">
+  <a href="{{ url_for('learn.index') }}" class="btn btn-outline-secondary btn-sm mb-3">
+    <i class="bi bi-arrow-left"></i> 返回路径列表
+  </a>
+
+  <div class="card shadow-sm mb-4 border-0">
+    <div class="card-header bg-gradient text-white d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-signpost-2"></i> {{ lp.target_topic_name }}</span>
+      {% if lp.status == 'completed' %}
+      <span class="badge bg-white text-success">已完成</span>
+      {% else %}
+      <span class="badge bg-white text-primary">进行中</span>
+      {% endif %}
+    </div>
+    <div class="card-body">
+      <div class="progress mb-2" style="height:12px">
+        <div class="progress-bar bg-gradient" style="width: {{ progress }}%">{{ progress|int }}%</div>
+      </div>
+      <small class="text-muted"><i class="bi bi-list-ol"></i> {{ lp.current_position }}/{{ lp.total_steps }} 步 · 更新于 {{ lp.updated_at.strftime('%m-%d %H:%M') }}</small>
+    </div>
+  </div>
+
+  <!-- 步骤列表 -->
+  <div class="list-group shadow-sm border-0">
+    {% for step in steps %}
+    <div class="list-group-item {% if step.is_target %}list-group-item-warning{% endif %} {% if step.current_status == 'mastered' %}list-group-item-success{% endif %}">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <span class="badge {% if step.is_target %}bg-warning text-dark{% else %}bg-primary{% endif %} me-2">#{{ step.step }}</span>
+          <a href="{{ url_for('graph.topic_detail', topic_id=step.topic_id) }}" class="text-decoration-none fw-bold">
+            {{ step.topic.name if step.topic else step.topic_id }}
+          </a>
+          <small class="text-muted ms-2">{{ step.grade_name }} · {{ step.type_label }}</small>
+          {% if step.is_target %}<span class="badge bg-warning text-dark ms-1">目标</span>{% endif %}
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          {% if step.current_status == 'mastered' %}
+          <span class="badge bg-success"><i class="bi bi-check-circle"></i> 已掌握</span>
+          {% elif step.current_status == 'weak' %}
+          <span class="badge bg-danger">薄弱</span>
+          {% elif step.current_status == 'learning' %}
+          <span class="badge bg-warning text-dark">学习中</span>
+          {% else %}
+          <span class="badge bg-secondary">未开始</span>
+          {% endif %}
+
+          {% if step.current_status != 'mastered' %}
+          <a href="{{ url_for('practice.start', topic_id=step.topic_id) }}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil"></i> 练习
+          </a>
+          {% if not step.is_target or lp.status != 'completed' %}
+          <form method="post" action="{{ url_for('learn.update_progress', path_id=lp.id, step_index=step.step) }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="mark_done">
+            <button type="submit" class="btn btn-sm btn-outline-success">
+              <i class="bi bi-check"></i> 完成
+            </button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

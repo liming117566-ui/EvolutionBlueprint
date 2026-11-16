@@ -39,4 +39,12 @@ function limiter(limit, windowMs) {
 }
 function paging(query) { const page = Math.max(1, Math.min(100000, parseInt(query.page, 10) || 1)); return { page, pageSize: 20, offset: (page - 1) * 20 }; }
 function loopback(req) { return ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress); }
-module.exports = { id, token, hash, now, fail, text, identifier, date, passwordHash, verifyPassword, limiter, paging, loopback };
+function privateNetwork(req) {
+  const address = (req.socket.remoteAddress || '').replace(/^::ffff:/, '');
+  const parts = address.split('.');
+  if (parts.length !== 4 || !parts.every(part => /^\d{1,3}$/.test(part) && +part <= 255)) return false;
+  const [a, b] = parts.map(Number);
+  return a === 10 || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+}
+function testLoginAllowed(req, config) { return !config.production && config.devAuth && (loopback(req) || (config.lanTestAuth && privateNetwork(req))); }
+module.exports = { id, token, hash, now, fail, text, identifier, date, passwordHash, verifyPassword, limiter, paging, loopback, privateNetwork, testLoginAllowed };

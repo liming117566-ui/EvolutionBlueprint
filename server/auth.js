@@ -1,4 +1,5 @@
-const { id, token, hash, now, fail, verifyPassword, passwordHash, limiter, text, loopback } = require('./security');
+const { id, token, hash, now, fail, verifyPassword, passwordHash, limiter, text, testLoginAllowed } = require('./security');
+const { isDefaultNickname, randomNickname } = require('./usernames');
 const asyncRoute = fn => (req, res, next) => Promise.resolve(fn(req, res)).catch(next);
 function createAuth(store, config, audit) {
   const anonymous = new Map();
@@ -36,7 +37,12 @@ function createAuth(store, config, audit) {
   function loginUser(openid) {
     let row = store.get('SELECT * FROM users WHERE openid=?', openid);
     if (row && row.status !== 'active') fail(403, '账号已被停用');
-    if (!row) { const userId = id(); store.run('INSERT INTO users(id,openid,created_at,last_login_at) VALUES(?,?,?,?)', userId, openid, now(), now()); row = store.get('SELECT * FROM users WHERE id=?', userId); }
+    if (!row) { const userId = id(); store.run('INSERT INTO users(id,openid,nickname,created_at,last_login_at) VALUES(?,?,?,?,?)', userId, openid, randomNickname(store), now(), now()); row = store.get('SELECT * FROM users WHERE id=?', userId); }
+    if (isDefaultNickname(row.nickname)) {
+      const nickname = randomNickname(store);
+      store.run('UPDATE users SET nickname=? WHERE id=?', nickname, row.id);
+      row = { ...row, nickname };
+    }
     store.run('UPDATE users SET last_login_at=? WHERE id=?', now(), row.id);
     const value = token();
     store.run('INSERT INTO user_sessions VALUES(?,?,?)', hash(value), row.id, new Date(Date.now() + config.sessionDays * 86400000).toISOString());
@@ -93,7 +99,7 @@ function createAuth(store, config, audit) {
       res.json(loginUser(config.appId + ':' + result.openid));
     }));
     app.post('/api/auth/dev', limiter(30, 15 * 60000), (req, res) => {
-      if (!config.devAuth || config.production || !loopback(req)) fail(404, '接口不存在');
+      if (!testLoginAllowed(req, config)) fail(404, '接口不存在');
       const device = text(req.body.deviceId, 100);
       if (!/^[A-Za-z0-9_-]{8,100}$/.test(device)) fail(400, '测试设备标识无效');
       res.json({ ...loginUser('local-test:' + device), developmentOnly: true });

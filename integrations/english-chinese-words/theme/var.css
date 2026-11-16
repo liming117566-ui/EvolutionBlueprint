@@ -1,0 +1,71 @@
+/* ===== 纸本色 — 参考 lixiaolai.com 配色 ===== */
+
+/* 纸色背景（Light 模式） */
+:where(html:not(.rp-dark)) {
+  --rp-c-bg: oklch(0.985 0.001 250);
+  --rp-c-bg-soft: oklch(0.965 0.002 250);
+  --rp-c-bg-mute: oklch(0.94 0.003 250);
+  --rp-c-bg-alt: oklch(0.985 0.001 250);
+
+  --rp-c-divider: oklch(0.84 0.004 250);
+  --rp-c-divider-light: oklch(0.90 0.003 250);
+
+  --rp-c-text-1: oklch(0.22 0.005 250);
+  --rp-c-text-2: oklch(0.40 0.005 250);
+  --rp-c-text-3: oklch(0.58 0.005 250);
+}
+
+/* 纸色背景（Dark 模式） */
+:where(html.rp-dark) {
+  --rp-c-bg: oklch(0.16 0.008 250);
+  --rp-c-bg-soft: oklch(0.21 0.009 250);
+  --rp-c-bg-mute: oklch(0.26 0.008 250);
+  --rp-c-bg-alt: oklch(0.16 0.008 250);
+
+  --rp-c-divider: oklch(0.34 0.008 250);
+  --rp-c-divider-light: oklch(0.28 0.008 250);
+}
+
+:root {
+  --rp-c-brand: #030303;
+  --rp-c-brand-dark: #030303;
+  --rp-c-brand-darker: #030303;
+  --rp-c-brand-light: #030303;
+  --rp-c-brand-lighter: #030303;
+  --rp-c-brand-tint: rgba(0, 0, 0, 0.06);
+
+  --rp-home-hero-secondary-color: #030303;
+
+  --shiki-foreground: #e1e4e8;
+  --shiki-background: #24292e;
+  --shiki-token-constant: #79b8ff;
+  --shiki-token-string: #9ecbff;
+  --shiki-token-comment: #6a737d;
+  --shiki-token-keyword: #f97583;
+  --shiki-token-parameter: #ffab70;
+  --shiki-token-function: #b392f0;
+  --shiki-token-string-expression: #9ecbff;
+  --shiki-token-punctuation: #6a737d;
+  --shiki-token-link: #dbedff;
+}
+
+.medium-zoom-image,
+video,
+.rp-home-hero__image-img,
+.rp-home-hero__image-img--light {
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 6px !important;
+}
+
+.rp-nav-menu__item__container {
+  font-weight: bold !important;
+}
+
+.rp-nav__title__link {
+  font-size: 2rem !important;
+}
+
+h1 {
+  font-size: 2.5rem !important;
+}

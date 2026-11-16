@@ -6,16 +6,20 @@
     "pages/english/english",
     "pages/math/math",
     "pages/junior-math/junior-math",
+    "pages/module/module",
     "pages/course/course",
     "pages/gate/gate",
     "pages/profile/profile",
-    "pages/lesson/lesson"
+    "pages/lesson/lesson",
+    "pages/interactive/interactive",
+    "pages/resources/resources",
+    "pages/notebook/notebook"
   ],
   "window": {
-    "navigationBarTitleText": "进化蓝图",
-    "navigationBarBackgroundColor": "#F8F8F9",
+    "navigationBarTitleText": "新博途",
+    "navigationBarBackgroundColor": "#f8f9fa",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#F8F8F9"
+    "backgroundColor": "#f8f9fa"
   },
   "usingComponents": {
     "ui-button": "/components/ui-button/ui-button",

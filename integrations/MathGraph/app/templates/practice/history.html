@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}练习历史 · 数学图谱{% endblock %}
+{% block content %}
+<div class="page-head fade-in">
+  <div>
+    <h1 class="page-title"><i class="bi bi-clock-history text-gradient"></i> 练习历史</h1>
+    <p class="page-sub">查看你的练习记录和进步轨迹</p>
+  </div>
+  <a href="{{ url_for('practice.index') }}" class="btn btn-outline-primary btn-sm">
+    <i class="bi bi-pencil"></i> 去练习
+  </a>
+</div>
+
+{% if sessions %}
+<div class="card border-0 shadow-sm fade-in">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0 align-middle">
+        <thead>
+          <tr>
+            <th>时间</th>
+            <th>知识点</th>
+            <th>得分</th>
+            <th>正确率</th>
+            <th>最高难度</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in sessions %}
+          <tr>
+            <td><small class="text-muted">{{ s.created_at.strftime('%m-%d %H:%M') }}</small></td>
+            <td class="fw-semibold">{{ s.topic_name }}</td>
+            <td>{{ s.score }}/{{ s.total }}</td>
+            <td>
+              {% set pct = (s.score / s.total * 100) | round if s.total > 0 else 0 %}
+              <div class="d-flex align-items-center gap-2">
+                <div class="progress" style="width:100px;height:6px">
+                  <div class="progress-bar {% if pct >= 75 %}bg-success{% elif pct >= 50 %}bg-warning{% else %}bg-danger{% endif %}" style="width:{{pct}}%"></div>
+                </div>
+                <small class="fw-semibold">{{pct}}%</small>
+              </div>
+            </td>
+            <td>
+              {% if s.difficulty_reached == '挑战' %}<span class="badge bg-danger">挑战</span>
+              {% elif s.difficulty_reached == '综合' %}<span class="badge bg-warning text-dark">综合</span>
+              {% elif s.difficulty_reached == '目标' %}<span class="badge bg-primary">目标</span>
+              {% else %}<span class="badge bg-secondary">夯基</span>{% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% else %}
+<div class="card border-0 shadow-sm fade-in">
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+    <h5>暂无练习记录</h5>
+    <p>开始练习，记录你的每一次进步</p>
+    <a href="{{ url_for('practice.index') }}" class="btn btn-primary">
+      <i class="bi bi-pencil"></i> 开始第一次练习
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

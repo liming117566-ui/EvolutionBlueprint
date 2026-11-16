@@ -4,12 +4,12 @@
   <view class="gate-art" aria-hidden="true"><image class="cover" src="{{settings.gateCover}}" mode="aspectFit" /><view class="art-label glass-card"><image src="/assets/icons/book.svg" /><text>你的课程，随时开始</text></view></view>
   <view class="gate-intro"><text class="page-heading">{{settings.gateTitle}}</text><text class="page-caption">{{settings.gateDescription}}</text></view>
   <view class="gate-form glass-card">
-    <text class="input-label">{{signedIn ? (testSession ? '本地测试账号（非微信身份）' : '微信账号已登录') : '请先登录，权益与学习记录绑定账号'}}</text>
-    <ui-button wx:if="{{!signedIn}}" label="微信登录" loading="{{loading}}" bind:activate="login" />
-    <button wx:if="{{canDevLogin && !signedIn}}" class="text-link" disabled="{{loading}}" bindtap="devLogin">本地测试登录（非微信，仅开发工具）</button>
+    <text class="input-label">{{signedIn ? (testSession ? '测试模式 · 当前设备测试账号' : '微信账号已登录') : (testMode ? '测试模式 · 无需微信登录' : '请先登录，权益与学习记录绑定账号')}}</text>
+    <ui-button wx:if="{{!signedIn && !testMode}}" label="微信登录" loading="{{loading}}" bind:activate="login" />
+    <button wx:if="{{canDevLogin && !signedIn}}" class="text-link" disabled="{{loading}}" bindtap="devLogin">开始测试（无需微信登录）</button>
     <text class="input-label">课程兑换码</text><view class="input-wrap {{error ? 'has-error' : ''}}"><input class="code-input" value="{{code}}" placeholder="请输入兑换码" placeholder-class="input-placeholder" maxlength="100" bindinput="onInput" bindconfirm="redeem" confirm-type="go" cursor-spacing="32" aria-label="课程兑换码" /></view>
     <text wx:if="{{error}}" class="form-error" role="alert">{{error}}</text><button wx:if="{{error}}" class="text-link" bindtap="retry">重新连接</button>
-    <ui-button id="redeem-action" label="{{loading ? '正在处理' : '登录并兑换进入'}}" loading="{{loading}}" bind:activate="redeem" />
+    <ui-button id="redeem-action" label="{{loading ? '正在处理' : (testMode ? '兑换并开始测试' : '登录并兑换进入')}}" loading="{{loading}}" bind:activate="redeem" />
     <button wx:if="{{signedIn}}" class="text-link" bindtap="logout">退出当前账号</button>
     <text class="form-hint">兑换与学习记录将保存到当前账号</text>
   </view>

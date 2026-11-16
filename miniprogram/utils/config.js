@@ -1,5 +1,5 @@
 // 开发工具使用回环新版 API；真机调试必须与电脑同一局域网。
-const developmentApiBaseUrl = 'http://10.12.195.50:3002';
+const developmentApiBaseUrl = 'http://10.12.195.41:3002';
 const devtoolsApiBaseUrl = 'http://127.0.0.1:3002';
 // 体验版/正式版需填写部署且已配置合法域名的 HTTPS origin（不能带路径）。
 const productionApiBaseUrl = '';
@@ -29,6 +29,7 @@ function validOrigin(origin, api) {
 }
 function canDevLogin(api) {
   api = api || wx;
-  return environment(api) === 'develop' && isDevtools(api) && /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(getApiBaseUrl(api));
+  const origin = getApiBaseUrl(api);
+  return environment(api) === 'develop' && origin.startsWith('http://') && validOrigin(origin, api);
 }
 module.exports = { getApiBaseUrl, validOrigin, canDevLogin, environment, isDevtools, developmentApiBaseUrl, devtoolsApiBaseUrl, productionApiBaseUrl };

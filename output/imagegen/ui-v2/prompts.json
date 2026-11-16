@@ -1,0 +1,134 @@
+{
+  "model": "gpt-image-2.6",
+  "provider": "https://auroraq.top",
+  "method": "imagegen skill bundled CLI generate-batch",
+  "reference": "artifacts/ui-redesign/reference/index.html",
+  "items": [
+    {
+      "id": "junior-english",
+      "title": "初中英语",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: An open pale-blue grammar notebook with a small ivory speech bubble, a yellow pencil and a simple charcoal headphone outline. Language learning and confident communication.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "junior-english.png"
+    },
+    {
+      "id": "junior-math",
+      "title": "初中数学",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A graphite triangular ruler, a pale mint geometry notebook, three solid geometric forms and a yellow pencil. Middle school geometry and clear mathematical thinking.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "junior-math.png"
+    },
+    {
+      "id": "math-taxonomy",
+      "title": "中小学高中知识图谱",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A broad sculptural network of charcoal connecting lines with several large mint, pale-blue and yellow circular knowledge nodes over a clean folded-paper map. Learning connections, prerequisite paths.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "math-taxonomy.png"
+    },
+    {
+      "id": "module-english-chinese-words",
+      "title": "英语单词",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A neat broad spread of pale-blue and ivory blank vocabulary flashcards, one charcoal card tray and a yellow page marker. Word memory and vocabulary practice.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-english-chinese-words.png"
+    },
+    {
+      "id": "module-youwei-junior-science",
+      "title": "浙教版初中科学学习",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A simple white laboratory microscope, a clear blue glass flask with a yellow drop, a mint leaf specimen on paper and one charcoal atom orbit silhouette. Junior science discovery.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-youwei-junior-science.png"
+    },
+    {
+      "id": "module-english-grammar-lab",
+      "title": "上海初高语法填空",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: Four large blank grammar cards with different charcoal sentence-line shapes, a yellow magnifying glass and a pale-blue pencil. Understanding sentence structure and grammar.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-english-grammar-lab.png"
+    },
+    {
+      "id": "module-MathKnowledgeAI",
+      "title": "人教版初中数学 AI 学习库",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: An open ivory mathematics notebook, a pale-blue set-square, three large abstract connected charcoal nodes and a single yellow geometric spark. Organized mathematics knowledge with AI assistance.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-mathknowledgeai.png"
+    },
+    {
+      "id": "module-MathGraph",
+      "title": "初中数学图谱",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A minimal broad geometry knowledge map, connecting a circle, a triangle and a cube with clean charcoal paths, on layered mint paper and a pale yellow base. Mathematics concepts and their relationships.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-mathgraph.png"
+    },
+    {
+      "id": "module-summer-camp-grade7",
+      "title": "小升初 40 天在线作业",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A broad blank pale-blue weekly planner sheet, three large charcoal checkmark symbols on small paper tabs, a bright yellow pencil and a mint school notebook. Step by step summer study and transition to junior school.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-summer-camp-grade7.png"
+    },
+    {
+      "id": "module-primary-english-knowledge-graph",
+      "title": "小学英语知识图谱（小升初方向）",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A branching arrangement of large paper speech bubbles in mint, ivory and pale blue, charcoal connector lines and a small yellow bookmark. Primary English knowledge connected to the next learning stage.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-primary-english-knowledge-graph.png"
+    },
+    {
+      "id": "module-zx-study",
+      "title": "小学 1-6 年级各学科学习",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A small wide stack of mint and pale-blue school notebooks beside a charcoal ruler, a yellow pencil and an ivory globe with simple land shapes. Primary school subjects and everyday learning.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-zx-study.png"
+    },
+    {
+      "id": "module-adhd-training-platform",
+      "title": "ADHD儿童注意力训练平台",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: An orderly composition of three large charcoal focus rings, a yellow target dot, mint wooden blocks and a pale-blue hourglass. Calm attention practice, pattern matching and concentration.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-adhd-training-platform.png"
+    },
+    {
+      "id": "module-nihaixia-app",
+      "title": "倪师中医经方学习",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: An ivory open traditional stitched book beside a charcoal ceramic herbal bowl, a few mint-green botanical leaves and one soft yellow page marker. Studying traditional Chinese medicine formulas, scholarly and calm.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-nihaixia-app.png"
+    },
+    {
+      "id": "module-nihaisha-nishi-tcm",
+      "title": "倪海厦中医",
+      "model": "gpt-image-2.6",
+      "prompt": "Use case: stylized-concept. Asset type: landscape course cover for a refined Chinese learning app. Create a new professional editorial paper-and-object illustration, minimal geometric still life with subtle tactile paper and matte ceramic details, precisely arranged and exceptionally clear at a small mobile thumbnail. Landscape canvas with a wide horizontal composition; subject fits inside the central 80 percent width and central 55 percent height, generous safe margins top and bottom for 16:9 crop. Palette restricted to warm clear yellow #f8d849, charcoal #242823, pale mint #e7efe8, pale powder blue #e6edf5 and off-white. Use a flat pale mint or powder blue backdrop with restrained soft shadows, frontal slightly elevated view, friendly academic calm. Two to five simple bold objects, not dense clutter, not a UI screenshot, no rounded-square app icon. No written words, no letters, no numbers, no logos, no brand name, no watermark. All objects are fully visible and the overall composition fills a horizontal rectangle harmoniously. Subject: A broad rolled ivory study scroll, a charcoal ceramic mortar and pestle with a few mint herb leaves, and a pale-blue traditional notebook. Traditional Chinese medicine learning and herbal knowledge.",
+      "size": "1536x1024",
+      "quality": "medium",
+      "out": "module-nihaisha-nishi-tcm.png"
+    }
+  ]
+}

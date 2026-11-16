@@ -54,6 +54,7 @@ async function fixture(t, overrides = {}) {
   f.request = async (route, options = {}) => {
     const { method = 'GET', json, token, admin = false, headers: extra = {}, body, status = 200 } = options;
     const headers = { ...extra };
+    if (options.webCookie) headers.Cookie = options.webCookie;
     if (token) headers.Authorization = 'Bearer ' + token;
     if (admin) { headers.Cookie = f.cookie; if (method !== 'GET') { headers.Origin = f.origin; headers['X-CSRF-Token'] = f.csrf; } }
     Object.assign(headers, extra);
@@ -95,6 +96,22 @@ async function fixture(t, overrides = {}) {
   f.batch = async (options = {}) => f.admin('/card-batches', {
     method: 'POST', status: 201, json: { title: 'Fixture batch', count: 1, scope: 'all', courseIds: [], redeemExpiresAt: null, accessDays: null, ...options }
   });
+  f.web = async (boardId, user) => {
+    if (!user) {
+      if (!f.webUser) { f.webUser = await f.user('web-reader'); await f.grant(f.webUser); }
+      user = f.webUser;
+    }
+    const opened = await f.request('/api/boards/' + boardId + '/open', { method: 'POST', token: user.token, json: {} });
+    assert.match(opened.body.launchPath, /^\/web-access\/[A-Za-z0-9_-]+$/);
+    assert(!opened.body.launchPath.includes(user.token));
+    const landing = await f.request(opened.body.launchPath);
+    assert.match(landing.bytes.toString(), /web-access-client\.js/);
+    assert.equal(landing.headers.getSetCookie().length, 0);
+    const exchanged = await f.request('/web-session', { method: 'POST', json: { ticket: opened.body.launchPath.split('/').at(-1) }, headers: { Origin: f.origin } });
+    const cookie = exchanged.headers.getSetCookie().find(value => value.startsWith('blueprint_web_'));
+    assert(cookie); assert.match(cookie, /HttpOnly/i); assert.match(cookie, /SameSite=Lax/i);
+    return cookie.split(';')[0];
+  };
   f.upload = async (filename, bytes, options = {}) => {
     const form = new FormData();
     form.append('file', new Blob([bytes], { type: options.mime || 'application/octet-stream' }), filename);
@@ -117,7 +134,8 @@ async function fixture(t, overrides = {}) {
 test('boards: draft edits remain private until publish, order and placements survive restart, hidden boards disappear', async t => {
   const f = await fixture(t);
   const before = (await f.request('/api/bootstrap')).body;
-  assert.equal(before.boards.length, 6);
+  assert.equal(before.boards.length, 17);
+  assert(!before.boards.some(b => ['focus-space', 'thinking-space', 'energy-space'].includes(b.id)));
   const tree = await f.tree();
   tree.boards[0].title = '英语进阶空间'; tree.boards[0].home = false;
   tree.boards[0].features[0].title = '我的英语课程';
@@ -128,7 +146,7 @@ test('boards: draft edits remain private until publish, order and placements sur
   await f.publish(saved);
   await f.stop(); await f.start(); await f.login();
   const boot = (await f.request('/api/bootstrap')).body;
-  assert.equal(boot.boards.length, 5); assert.equal(boot.boards[0].id, 'energy-space');
+  assert.equal(boot.boards.length, before.boards.length - 1); assert.equal(boot.boards[0].id, before.boards.at(-1).id);
   const english = boot.boards.find(b => b.id === 'junior-english');
   assert.equal(english.title, '英语进阶空间'); assert.equal(english.home, false); assert.equal(english.learn, true);
   assert.equal(english.features[0].title, '我的英语课程');
@@ -157,16 +175,18 @@ test('English integration readiness is public while admin responses keep their s
   const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
   assert(!admin.headers.get('content-security-policy').includes("'unsafe-inline'"));
   if (result.body.ready) {
-    const english = await f.request('/english/');
+    const webCookie = await f.web('junior-english');
+    const english = await f.request('/english/', { webCookie });
     assert.match(english.headers.get('content-type'), /text\/html/);
-    assert.match(english.bytes.toString(), /英语星空/);
+    assert.match(english.bytes.toString(), /初中英语/);
+    assert.doesNotMatch(english.bytes.toString(), /英语星空/);
     assert(!english.headers.get('x-frame-options'));
     assert.match(english.headers.get('content-security-policy'), /media-src 'self'/);
-    const index = (await f.request('/english/atlas/index.json')).body;
+    const index = (await f.request('/english/atlas/index.json', { webCookie })).body;
     assert(index.words.length > 200);
-    const audio = await f.request('/english/atlas/audio/uk/' + index.words.find(w => w[6] & 2)[0] + '.mp3', { headers: { Range: 'bytes=0-63' }, status: 206 });
+    const audio = await f.request('/english/atlas/audio/uk/' + index.words.find(w => w[6] & 2)[0] + '.mp3', { webCookie, headers: { Range: 'bytes=0-63' }, status: 206 });
     assert.equal(audio.bytes.length, 64);
-    await f.request('/english/licenses/CONTENT_LICENSE.md');
+    await f.request('/english/licenses/CONTENT_LICENSE.md', { webCookie });
   }
 });
 test('boards: uploaded covers are public only after the referencing board is published and enabled', async t => {
@@ -203,16 +223,17 @@ test('math: static pages and data use original CSS, remove About and keep admin 
   const board = (await f.request('/api/bootstrap')).body.boards.find(b => b.id === 'math-taxonomy');
   assert.equal(board.experience, 'cn-math-taxonomy'); assert.equal(board.home, true); assert.equal(board.learn, true);
   if (result.body.ready) {
+    const webCookie = await f.web('math-taxonomy');
     for (const route of ['/math/', '/math/explore/', '/math/diagnose/', '/math/children/', '/math/children/history.html']) {
-      const res = await f.request(route); assert.match(res.headers.get('content-type'), /text\/html/);
+      const res = await f.request(route, { webCookie }); assert.match(res.headers.get('content-type'), /text\/html/);
       assert.doesNotMatch(res.bytes.toString(), />\s*关于\s*<\/a>/);
       assert(!res.headers.get('x-frame-options'));
     }
-    const css = await f.request('/math/assets/site.css');
+    const css = await f.request('/math/assets/site.css', { webCookie });
     assert.equal(css.bytes.toString(), fs.readFileSync(path.join(__dirname, '../integrations/cn-math-taxonomy/assets/site.css'), 'utf8'));
-    for (const file of ['topics', 'questions', 'dependencies']) assert(Array.isArray((await f.request('/math/data/' + file + '.json')).body));
-    await f.request('/math/assets/vendor/cytoscape.min.js'); await f.request('/math/LICENSE'); await f.request('/math/NOTICE.md');
-    await f.request('/math/missing.html', { status: 404 });
+    for (const file of ['topics', 'questions', 'dependencies']) assert(Array.isArray((await f.request('/math/data/' + file + '.json', { webCookie })).body));
+    await f.request('/math/assets/vendor/cytoscape.min.js', { webCookie }); await f.request('/math/LICENSE', { webCookie }); await f.request('/math/NOTICE.md', { webCookie });
+    await f.request('/math/missing.html', { webCookie, status: 404 });
   }
   const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
   assert(!admin.headers.get('content-security-policy').includes("'unsafe-inline'"));
@@ -242,13 +263,14 @@ test('junior math: local assets use the new name, white theme and isolated secur
   assert.equal(boards.find(b => b.id === 'junior-math').experience, 'tainai-junior-math');
   assert(boards.some(b => b.id === 'math-taxonomy'));
   if (ready.ready) {
-    const response = await f.request('/junior-math/'), html = response.bytes.toString();
+    const webCookie = await f.web('junior-math');
+    const response = await f.request('/junior-math/', { webCookie }), html = response.bytes.toString();
     assert.match(html, /<title>初中数学｜零基础初中数学课程<\/title>/);
     assert.doesNotMatch(html, /小包子学数学/); assert(!response.headers.get('x-frame-options'));
     const js = html.match(/src="([^"]+\.js)"/)[1], css = html.match(/href="([^"]+\.css)"/)[1];
-    await f.request(js); const style = (await f.request(css)).bytes.toString();
+    await f.request(js, { webCookie }); const style = (await f.request(css, { webCookie })).bytes.toString();
     assert.match(style, /--paper:\s*#fff(?:fff)?\b/); assert.match(style, /background:\s*#fff(?:fff)?\b/);
-    await f.request('/junior-math/NOTICE.md'); await f.request('/junior-math/not-found', { status: 404 });
+    await f.request('/junior-math/NOTICE.md', { webCookie }); await f.request('/junior-math/not-found', { webCookie, status: 404 });
   }
   const admin = await f.request('/admin/'); assert.equal(admin.headers.get('x-frame-options'), 'DENY');
 });
@@ -290,6 +312,261 @@ function noContent(value) {
     noContent(item);
   }
 }
+
+test('modules: all eleven named boards publish, retain edits on migration and respect later removal', async t => {
+  const f = await fixture(t), modules = require('../miniprogram/utils/integrations').modules;
+  const boot = (await f.request('/api/bootstrap')).body;
+  for (const item of modules) {
+    const board = boot.boards.find(b => b.experience === item.slug);
+    assert.equal(board.title, item.title); assert.equal(board.enabled, true);
+  }
+  const row = f.store.get('SELECT * FROM catalog WHERE id=1');
+  const draft = JSON.parse(row.draft), published = JSON.parse(row.published);
+  draft.boards[0].subtitle = '保留未发布的副标题';
+  for (const tree of [draft, published]) tree.boards = tree.boards.filter(b => !modules.some(m => m.slug === b.experience));
+  f.store.run('UPDATE catalog SET draft=?,published=? WHERE id=1', JSON.stringify(draft), JSON.stringify(published));
+  f.store.run('DELETE FROM migrations WHERE version=5');
+  catalogModule.initCatalog(f.store);
+  assert.equal(catalogModule.draft(f.store).boards[0].subtitle, '保留未发布的副标题');
+  assert.notEqual(catalogModule.published(f.store).boards[0].subtitle, '保留未发布的副标题');
+  assert.equal(catalogModule.published(f.store).boards.length, 17);
+  const tree = await f.tree();
+  tree.boards = tree.boards.filter(b => b.experience !== modules[0].slug);
+  tree.boards.find(b => b.experience === modules[1].slug).enabled = false;
+  await f.publish(await f.save(tree));
+  await f.stop(); await f.start();
+  const after = (await f.request('/api/bootstrap')).body.boards;
+  assert(!after.some(b => [modules[0].slug, modules[1].slug].includes(b.experience)));
+  assert(!catalogModule.draft(f.store).boards.some(b => b.experience === modules[0].slug));
+});
+
+test('supplied courses: individual redemption protects each board and all-access includes the new set', async t => {
+  const f=await fixture(t),slugs=['geometry-between','geo-bio-exam','math-between-grade7'];
+  const all=await f.user('supplied-all');await f.grant(all);
+  for(const slug of slugs){
+    const boardId='module-'+slug,user=await f.user('only-'+slug),base='/modules/'+slug+'/';
+    await f.request('/api/boards/'+boardId+'/open',{method:'POST',token:user.token,json:{},status:403});
+    const batch=await f.batch({scope:'boards',boardIds:[boardId]});
+    await f.request('/api/redeem',{method:'POST',token:user.token,json:{code:batch.codes[0]}});
+    const own=(await f.request('/api/bootstrap',{token:user.token})).body.boards.filter(board=>board.accessible);
+    assert.deepEqual(own.map(board=>board.id),[boardId]);
+    const cookie=await f.web(boardId,user);
+    const originalPage=await f.request(base,{webCookie:cookie});
+    assert.equal(originalPage.bytes.toString(),fs.readFileSync(path.join(__dirname,'../integrations',slug,'web/index.html'),'utf8'),'supplied UI is delivered unchanged');
+    await f.request(base+'app.js',{webCookie:cookie});
+    await f.request(base+'styles.css',{webCookie:cookie});
+    await f.request(base+'xinbotu-theme.css',{webCookie:cookie,status:404});
+    await f.request(base+'integration.css',{webCookie:cookie,status:404});
+    await f.request(base+'server.js',{webCookie:cookie,status:404});
+    for(const other of slugs.filter(other=>other!==slug)){
+      await f.request('/api/boards/module-'+other+'/open',{method:'POST',token:user.token,json:{},status:403});
+      await f.request('/modules/'+other+'/app.js',{webCookie:cookie,status:401});
+    }
+    await f.request(base+'app.js',{status:401});
+    await f.web(boardId,all);
+  }
+});
+
+test('modules: readiness and static paths are allowlisted and keep the admin policy isolated', async t => {
+  const f = await fixture(t), modules = require('../miniprogram/utils/integrations').modules;
+  const list = (await f.request('/api/integrations/modules')).body.modules;
+  assert.equal(list.length, 14);
+  for (const item of modules) {
+    const status = (await f.request('/api/integrations/modules/' + item.slug)).body;
+    assert.equal(status.basePath, '/modules/' + item.slug + '/');
+    assert.equal(typeof status.ready, 'boolean');
+    if (status.ready) {
+      const webCookie = await f.web('module-' + item.slug);
+      const page = await f.request(status.basePath, { webCookie });
+      assert.match(page.headers.get('content-type'), /text\/html/);
+      assert(page.bytes.toString().replace(/\s/g,'').includes(item.title.replace(/\s/g,'')), item.slug + ' has the requested title');
+      assert(!page.headers.get('x-frame-options'));
+      await f.request(status.basePath + 'missing-resource.js', { webCookie, status: 404 });
+    } else await f.request(status.basePath, { status: 401 });
+  }
+  await f.request('/api/integrations/modules/untrusted', { status: 404 });
+  const admin = await f.request('/admin/');
+  assert.equal(admin.headers.get('x-frame-options'), 'DENY');
+  assert(!admin.headers.get('content-security-policy').includes("'unsafe-inline'"));
+});
+
+test('board access: anonymous and unredeemed users cannot open or directly read any learning website', async t => {
+  const f = await fixture(t), user = await f.user('unredeemed');
+  const boards = (await f.request('/api/bootstrap')).body.boards;
+  assert(boards.every(b => b.accessible === false));
+  for (const board of boards) {
+    await f.request('/api/boards/' + board.id + '/open', { method: 'POST', json: {}, status: 401 });
+    await f.request('/api/boards/' + board.id + '/open', { method: 'POST', token: user.token, json: {}, status: 403 });
+    const base = require('../server/web-access').webPath(board.experience);
+    if (base) {
+      await f.request(base, { status: 401 });
+      await f.request(base + 'catalog.json', { token: user.token, status: 401 });
+      await f.request(base + '?token=' + user.token, { status: 401 });
+    }
+  }
+  assert((await f.request('/api/bootstrap', { token: user.token })).body.boards.every(b => b.accessible === false));
+});
+
+test('board cards: one-board redemption unlocks only its board, while an all card unlocks every board and course', async t => {
+  const f = await fixture(t), user = await f.user('single-board'), all = await f.user('all-boards');
+  const tree = await f.tree(), board = tree.boards.find(b => b.id === 'module-adhd-training-platform');
+  const batch = await f.batch({ scope: 'boards', boardIds: [board.id], accessDays: 2 });
+  assert.deepEqual(batch.batch.boardIds, [board.id]); assert.deepEqual(batch.batch.courseIds, []);
+  const redeemed = (await f.request('/api/redeem', { method: 'POST', token: user.token, json: { code: batch.codes[0] } })).body;
+  assert.equal(redeemed.grants[0].scope, 'boards'); assert.deepEqual(redeemed.grants[0].boardIds, [board.id]);
+  assert(Math.abs(Date.parse(redeemed.grants[0].expiresAt) - Date.now() - 2 * 86400000) < 5000);
+  const boot = (await f.request('/api/bootstrap', { token: user.token })).body;
+  assert.deepEqual(boot.boards.filter(b => b.accessible).map(b => b.id), [board.id]);
+  await f.request('/api/boards/junior-math/open', { method: 'POST', token: user.token, json: {}, status: 403 });
+  const allBatch = await f.batch();
+  await f.request('/api/redeem', { method: 'POST', token: all.token, json: { code: allBatch.codes[0] } });
+  assert((await f.request('/api/bootstrap', { token: all.token })).body.boards.every(b => b.accessible));
+  assert((await f.request('/api/courses', { token: all.token })).body.courses.every(c => c.accessible));
+  await f.request('/api/courses/' + firstCourse(tree).id, { token: all.token });
+  for (const candidate of tree.boards.filter(b => b.enabled)) {
+    const base = require('../server/web-access').webPath(candidate.experience);
+    if (base) {
+      const ready = candidate.experience === 'english-starry-sky' ? require('../server/english-web').status() : candidate.experience === 'cn-math-taxonomy' ? require('../server/math-web').status() : candidate.experience === 'tainai-junior-math' ? require('../server/junior-math-web').status() : require('../server/modules-web').status(candidate.experience);
+      if (ready.ready) { const webCookie = await f.web(candidate.id, all); await f.request(base, { webCookie }); }
+    } else assert.equal((await f.request('/api/boards/' + candidate.id + '/open', { method: 'POST', token: all.token, json: {} })).body.ok, true);
+  }
+});
+
+test('native board grants: associated course bodies and attached materials recheck current board entitlement', async t => {
+  const f = await fixture(t), user = await f.user('native-board'), tree = await f.tree();
+  const linkedCourse = firstCourse(tree);
+  const board = { ...clone(tree.boards[0]), id: 'fixture-native-board', experience: 'courses', title: '原生课程权限回归', categoryIds: [linkedCourse.categoryId], featured: false };
+  tree.boards.push(board); await f.publish(await f.save(tree));
+  const course = tree.courses.find(c => c.published && board.categoryIds.includes(c.categoryId));
+  const unrelated = tree.courses.find(c => c.published && !board.categoryIds.includes(c.categoryId));
+  const grant = await f.grant(user, { scope: 'boards', boardIds: [board.id] });
+  assert.equal((await f.request('/api/boards/' + board.id + '/open', { method: 'POST', token: user.token, json: {} })).body.ok, true);
+  await f.request('/api/courses/' + course.id, { token: user.token });
+  await f.request('/api/courses/' + unrelated.id, { token: user.token, status: 403 });
+  const bytes = binary.pdf(), asset = (await f.upload('board-study.pdf', bytes)).asset;
+  const material = await f.material(asset, 'course', course.id), route = '/api/materials/' + material.id + '/file';
+  assert.deepEqual((await f.request(route, { token: user.token })).bytes, bytes);
+  await f.admin('/grants/' + grant.id + '/revoke', { method: 'POST', json: { reason: 'board access revoked' } });
+  await f.request('/api/courses/' + course.id, { token: user.token, status: 403 });
+  await f.request(route, { token: user.token, status: 403 });
+});
+
+test('legacy course grants: existing course cards retain their associated board access without unlocking unrelated modules', async t => {
+  const f = await fixture(t), user = await f.user('legacy-course-board'), tree = await f.tree();
+  const board = tree.boards.find(b => b.id === 'junior-english');
+  const course = tree.courses.find(c => c.published && board.categoryIds.includes(c.categoryId));
+  assert(board);
+  const batch = await f.batch({ scope: 'courses', courseIds: [course.id] });
+  await f.request('/api/redeem', { method: 'POST', token: user.token, json: { code: batch.codes[0] } });
+  const boot = (await f.request('/api/bootstrap', { token: user.token })).body;
+  assert.equal(boot.boards.find(b => b.id === board.id).accessible, true);
+  assert.equal(boot.boards.find(b => b.id === 'module-adhd-training-platform').accessible, false);
+  await f.request('/api/courses/' + course.id, { token: user.token });
+  await f.request('/api/boards/module-adhd-training-platform/open', { method: 'POST', token: user.token, json: {}, status: 403 });
+  const webPath = require('../server/web-access').webPath(board.experience);
+  if (!webPath) assert.equal((await f.request('/api/boards/' + board.id + '/open', { method: 'POST', token: user.token, json: {} })).body.ok, true);
+});
+
+test('web launch: tickets are single-use and expiring, cookies are path-scoped and cannot unlock another module', async t => {
+  const f = await fixture(t), user = await f.user('web-ticket'), slug = 'adhd-training-platform';
+  if (!require('../server/modules-web').status(slug).ready) return t.skip('build modules before browser asset contract checks');
+  const grant = await f.grant(user, { scope: 'boards', boardIds: ['module-' + slug] });
+  const route = '/api/boards/module-' + slug + '/open';
+  const opened = (await f.request(route, { method: 'POST', token: user.token, json: {} })).body;
+  assert(!opened.launchPath.includes(user.token));
+  for (const ua of ['desktop preflight', 'mobile webview']) {
+    const landing = await f.request(opened.launchPath, { headers: { 'User-Agent': ua } });
+    assert.match(landing.bytes.toString(), /web-access-client\.js/);
+    assert.equal(landing.headers.getSetCookie().length, 0, 'preflight GET cannot consume the ticket or set a cookie');
+  }
+  const ticket = opened.launchPath.split('/').at(-1);
+  await f.request('/web-session', { method: 'POST', json: { ticket }, status: 403 });
+  await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: 'https://hostile.example' }, status: 403 });
+  await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: f.origin, 'Sec-Fetch-Site': 'cross-site' }, status: 403 });
+  const exchange = await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: f.origin } }), cookies = exchange.headers.getSetCookie();
+  assert.equal(exchange.body.destination, '/modules/adhd-training-platform/');
+  assert.equal(exchange.headers.get('cache-control'), 'no-store');
+  const cookie = cookies.find(c => c.startsWith('blueprint_web_'));
+  assert.match(cookie, /HttpOnly/i); assert.match(cookie, /SameSite=Lax/i); assert.match(cookie, /Path=\/modules\/adhd-training-platform(?:;|$)/);
+  const webCookie = cookie.split(';')[0];
+  await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: f.origin }, status: 401 });
+  await f.request(opened.launchPath); // Restoration shell does not grant access on its own.
+  const resumeRoute = opened.launchPath + '/resume';
+  await f.request(resumeRoute, { method: 'POST', headers: { Origin: f.origin }, status: 401 });
+  const resumeCookie = cookies.find(c => c.startsWith('blueprint_resume_'));
+  assert.match(resumeCookie, /HttpOnly/i); assert.match(resumeCookie, /Path=\/web-access(?:;|$)/);
+  await f.request(resumeRoute, { method: 'POST', webCookie: resumeCookie.split(';')[0], headers: { Origin: 'https://hostile.example' }, status: 403 });
+  const resumed = await f.request(resumeRoute, { method: 'POST', webCookie: resumeCookie.split(';')[0], headers: { Origin: f.origin } });
+  assert.equal(resumed.body.destination, exchange.body.destination);
+  assert(resumed.headers.getSetCookie().some(c => c.startsWith('blueprint_web_')));
+  const other = await f.user('other-web-ticket'); await f.grant(other, { scope: 'boards', boardIds: ['module-' + slug] });
+  const otherLaunch = (await f.request(route, { method: 'POST', token: other.token, json: {} })).body;
+  const otherExchange = await f.request('/web-session', { method: 'POST', json: { ticket: otherLaunch.launchPath.split('/').at(-1) }, headers: { Origin: f.origin } });
+  const otherCookie = otherExchange.headers.getSetCookie().find(c => c.startsWith('blueprint_resume_')).split(';')[0];
+  await f.request(resumeRoute, { method: 'POST', webCookie: otherCookie, headers: { Origin: f.origin }, status: 401 });
+  const page = await f.request('/modules/' + slug + '/', { webCookie });
+  assert.equal(page.headers.get('cache-control'), 'no-store');
+  await f.request('/modules/nihaixia-app/', { webCookie, status: 401 });
+  await f.admin('/grants/' + grant.id + '/revoke', { method: 'POST', json: { reason: 'restored pages must recheck redemption' } });
+  await f.request(resumeRoute, { method: 'POST', webCookie: resumeCookie.split(';')[0], headers: { Origin: f.origin }, status: 403 });
+  f.store.run('DELETE FROM user_sessions WHERE hash=?', hash(user.token));
+  await f.request(resumeRoute, { method: 'POST', webCookie: resumeCookie.split(';')[0], headers: { Origin: f.origin }, status: 401 });
+  const freshUser = await f.user('expiring-web-ticket'); await f.grant(freshUser, { scope: 'boards', boardIds: ['module-' + slug] });
+  const expired = (await f.request(route, { method: 'POST', token: freshUser.token, json: {} })).body;
+  f.store.run('UPDATE web_sessions SET expires_at=? WHERE hash=?', past(), hash(expired.launchPath.split('/').at(-1)));
+  await f.request(expired.launchPath, { status: 401 });
+  await f.request('/web-session', { method: 'POST', json: { ticket: expired.launchPath.split('/').at(-1) }, headers: { Origin: f.origin }, status: 401 });
+});
+
+test('LAN web launch: explicitly allowed development origin exchanges tickets while unknown origins stay blocked', async t => {
+  const lanOrigin = 'http://10.12.195.41:3002';
+  const f = await fixture(t, { webOrigins: [lanOrigin] }), user = await f.user('lan-web-ticket');
+  await f.grant(user);
+  const opened = (await f.request('/api/boards/module-adhd-training-platform/open', { method: 'POST', token: user.token, json: {} })).body;
+  const ticket = opened.launchPath.split('/').at(-1);
+  await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: 'http://10.12.195.42:3002' }, status: 403 });
+  const result = await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: lanOrigin } });
+  assert.equal(result.body.destination, '/modules/adhd-training-platform/');
+  assert(result.headers.getSetCookie().some(cookie => /HttpOnly/i.test(cookie)));
+  await f.request('/web-session', { method: 'POST', json: { ticket }, headers: { Origin: lanOrigin }, status: 401 });
+});
+
+test('web resources: revocation, grant expiration, logout, account disable and session expiration invalidate existing cookies', async t => {
+  const f = await fixture(t), slug = 'adhd-training-platform', boardId = 'module-' + slug, base = '/modules/' + slug + '/';
+  if (!require('../server/modules-web').status(slug).ready) return t.skip('build modules before browser asset contract checks');
+  for (const condition of ['revoke', 'grant-expiry', 'logout', 'disable', 'session-expiry', 'cookie-expiry']) {
+    const user = await f.user('web-' + condition), grant = await f.grant(user, { scope: 'boards', boardIds: [boardId] });
+    const webCookie = await f.web(boardId, user); await f.request(base + 'app.js', { webCookie });
+    if (condition === 'revoke') await f.admin('/grants/' + grant.id + '/revoke', { method: 'POST', json: { reason: 'recheck every resource' } });
+    if (condition === 'grant-expiry') f.store.run('UPDATE grants SET expires_at=? WHERE id=?', past(), grant.id);
+    if (condition === 'logout') await f.request('/api/auth/logout', { method: 'POST', token: user.token, json: {} });
+    if (condition === 'disable') await f.admin('/users/' + user.user.id, { method: 'PATCH', json: { status: 'disabled' } });
+    if (condition === 'session-expiry') f.store.run('UPDATE user_sessions SET expires_at=? WHERE hash=?', past(), hash(user.token));
+    if (condition === 'cookie-expiry') f.store.run('UPDATE web_sessions SET expires_at=? WHERE hash=?', past(), hash(webCookie.split('=')[1]));
+    const status = ['revoke', 'grant-expiry'].includes(condition) ? 403 : 401;
+    await f.request(base, { webCookie, status });
+    await f.request(base + 'app.js', { webCookie, status });
+    await f.request(base + 'style.css', { webCookie, status });
+  }
+});
+
+test('web resources: board disabling, removal and experience changes block already-issued cookies immediately', async t => {
+  const f = await fixture(t), slug = 'adhd-training-platform', boardId = 'module-' + slug, base = '/modules/' + slug + '/';
+  if (!require('../server/modules-web').status(slug).ready) return t.skip('build modules before browser asset contract checks');
+  const user = await f.user('web-board-change'); await f.grant(user);
+  for (const condition of ['disable', 'experience', 'remove']) {
+    let tree = await f.tree();
+    if (!tree.boards.some(b => b.id === boardId)) tree.boards.push(require('../miniprogram/utils/board-defaults').moduleBoards().find(b => b.id === boardId));
+    Object.assign(tree.boards.find(b => b.id === boardId), { enabled: true, experience: slug }); await f.publish(await f.save(tree));
+    const webCookie = await f.web(boardId, user); await f.request(base + 'style.css', { webCookie });
+    tree = await f.tree();
+    if (condition === 'disable') tree.boards.find(b => b.id === boardId).enabled = false;
+    if (condition === 'experience') tree.boards.find(b => b.id === boardId).experience = 'nihaixia-app';
+    if (condition === 'remove') tree.boards = tree.boards.filter(b => b.id !== boardId);
+    await f.publish(await f.save(tree));
+    await f.request(base + 'style.css', { webCookie, status: 403 });
+  }
+});
 function assertNoSecrets(value, secrets) {
   const serialized = Buffer.isBuffer(value) ? value.toString('latin1') : JSON.stringify(value);
   for (const secret of secrets) if (secret) assert(!serialized.includes(secret), 'a plaintext credential/token/card code leaked');
@@ -337,7 +614,7 @@ test('admin: login Origin/CSRF checks and password change revoke all older admin
 test('public metadata: anonymous and authenticated listings never include chapter bodies', async t => {
   const f = await fixture(t), user = await f.user();
   const bootstrap = (await f.request('/api/bootstrap')).body;
-  assert.deepEqual(Object.keys(bootstrap).sort(), ['boards', 'categories', 'settings', 'version']); noContent(bootstrap);
+  assert.deepEqual(Object.keys(bootstrap).sort(), ['boards', 'categories', 'settings', 'testLoginEnabled', 'version']); noContent(bootstrap);
   for (const options of [{}, { token: user.token }]) {
     const result = (await f.request('/api/courses', options)).body;
     noContent(result); assert(result.courses.length > 0);
@@ -403,11 +680,28 @@ test('auth: explicit local dev login, no-secret WeChat 503, disabled dev route a
   await f.request('/api/auth/wechat', { method: 'POST', json: { code: 'does-not-call-network' }, status: 503 });
   await f.request('/api/auth/dev', { method: 'POST', json: { deviceId: 'short' }, status: 400 });
   const off = await fixture(t, { devAuth: false });
+  assert.equal((await off.request('/api/bootstrap')).body.testLoginEnabled, false);
   await off.request('/api/auth/dev', { method: 'POST', json: { deviceId: 'fixture-disabled' }, status: 404 });
   // Production with DEV_AUTH is invalid configuration, not a silently usable login bypass.
   assert.throws(() => createApp({ dataDir: f.dataDir, production: true, devAuth: true, publicOrigin: 'https://example.invalid', appSecret: 'test-only-secret' }), /DEV_AUTH/);
   const prod = await fixture(t, { production: true, devAuth: false, publicOrigin: 'https://example.invalid', appSecret: 'test-only-secret' });
   await prod.request('/api/auth/dev', { method: 'POST', json: { deviceId: 'fixture-production' }, status: 404 });
+  assert.equal((await prod.request('/api/bootstrap')).body.testLoginEnabled, false);
+  assert.throws(() => require('../server/config').loadConfig({ production: true, devAuth: false, lanTestAuth: true, publicOrigin: 'https://example.invalid', appSecret: 'test-only-secret' }), /LAN_TEST_AUTH/);
+});
+
+test('LAN test login requires both explicit test flags, a private socket address, and never trusts forwarded addresses', () => {
+  const { testLoginAllowed } = require('../server/security');
+  const config = { production: false, devAuth: true, lanTestAuth: true };
+  const req = address => ({ socket: { remoteAddress: address }, headers: { 'x-forwarded-for': '10.12.195.41' } });
+  for (const address of ['10.12.195.41', '::ffff:192.168.1.2', '172.16.0.2', '172.31.255.254']) {
+    assert.equal(testLoginAllowed(req(address), config), true);
+    assert.equal(Boolean(testLoginAllowed(req(address), { ...config, lanTestAuth: false })), false);
+    assert.equal(Boolean(testLoginAllowed(req(address), { ...config, devAuth: false })), false);
+    assert.equal(Boolean(testLoginAllowed(req(address), { ...config, production: true })), false);
+  }
+  for (const address of ['8.8.8.8', '172.32.0.1', '192.169.0.1', '10.999.0.1', '', '2001:db8::1']) assert.equal(Boolean(testLoginAllowed(req(address), config)), false);
+  assert.equal(testLoginAllowed(req('127.0.0.1'), { ...config, lanTestAuth: false }), true);
 });
 
 test('cards: plaintext codes returned only at creation, never in database/list/detail/audit', async t => {
@@ -437,6 +731,28 @@ test('redeem: same-user retry idempotent; another user gets 409 and no grant', a
   assert.equal(f.store.get('SELECT count(*) AS n FROM redemptions').n, 1);
   assert.equal(f.store.get('SELECT count(*) AS n FROM grants').n, 1);
   assert.equal((await f.me(b)).hasAccess, false);
+});
+
+test('redeem: deleting a course only from the draft does not invalidate issued course cards', async t => {
+  const f = await fixture(t), user = await f.user(), tree = await f.tree();
+  const [course, other] = tree.courses.filter(c => c.published);
+  const { codes } = await f.batch({ scope: 'courses', courseIds: [course.id], accessDays: 2 });
+  tree.courses = tree.courses.filter(c => c.id !== course.id);
+  await f.save(tree);
+  assert((await f.request('/api/courses')).body.courses.some(c => c.id === course.id));
+  // Newly issued scopes still validate admin input against the current draft.
+  await f.batch({ scope: 'courses', courseIds: [other.id] });
+  await f.admin('/card-batches', { method: 'POST', status: 400, json: { title: 'invalid draft scope', count: 1, scope: 'courses', courseIds: [course.id] } });
+  const result = (await f.request('/api/redeem', { method: 'POST', token: user.token, json: { code: codes[0] } })).body;
+  assert.equal(result.ok, true); assert.equal(result.grants.length, 1);
+  assert.deepEqual(result.grants[0].courseIds, [course.id]);
+  assert.equal(result.grants[0].scope, 'courses');
+  assert(Math.abs(Date.parse(result.grants[0].expiresAt) - Date.now() - 2 * 86400000) < 5000);
+  await f.request('/api/courses/' + course.id, { token: user.token });
+  await f.request('/api/courses/' + other.id, { token: user.token, status: 403 });
+  await f.request('/api/redeem', { method: 'POST', token: user.token, json: { code: codes[0] } });
+  assert.equal(f.store.get('SELECT count(*) AS n FROM redemptions').n, 1);
+  assert.equal(f.store.get('SELECT count(*) AS n FROM grants').n, 1);
 });
 
 test('redeem: two concurrent users produce exactly one winner, one 409 and one grant', async t => {
@@ -675,6 +991,97 @@ test('materials: course/chapter/section scope lists and downloads each require c
   await f.request('/api/materials/' + materials[0].id + '/file', { token: user.token });
   await f.request('/api/auth/logout', { method: 'POST', token: user.token, json: {} });
   await f.request('/api/materials/' + materials[0].id + '/file', { token: user.token, status: 401 });
+});
+
+test('materials library: course, chapter and section metadata follow each users current course entitlement', async t => {
+  const f = await fixture(t), first = await f.user('library-first'), second = await f.user('library-second'), locked = await f.user('library-locked');
+  const courses = (await f.tree()).courses.filter(c => c.published && c.chapters[0]?.sections.length);
+  assert(courses.length >= 2);
+  const firstGrant = await f.grant(first, { scope: 'courses', courseIds: [courses[0].id] });
+  await f.grant(second, { scope: 'courses', courseIds: [courses[1].id] });
+  const expected = [[], []], inputs = [['pdf', binary.pdf()], ['doc', binary.doc()], ['docx', binary.docx()]];
+  for (let courseIndex = 0; courseIndex < 2; courseIndex++) {
+    const course = courses[courseIndex], chapter = course.chapters[0];
+    const owners = [['course', course.id], ['chapter', chapter.id], ['section', chapter.sections[0].id]];
+    for (let i = 0; i < owners.length; i++) {
+      const [scope, ownerId] = owners[i], [type, bytes] = inputs[i];
+      const { asset } = await f.upload('library-' + courseIndex + '-' + i + '.' + type, bytes);
+      const material = await f.material(asset, scope, ownerId, { title: 'Private library ' + courseIndex + ' ' + scope, sortOrder: courseIndex * 3 + i });
+      expected[courseIndex].push({ id: material.id, title: material.title, fileType: type, url: '/api/materials/' + material.id + '/file', sizeBytes: bytes.length, scope, ownerId });
+    }
+  }
+  await f.request('/api/materials/library', { status: 401 });
+  await f.request('/api/materials/library', { headers: { Cookie: f.cookie }, status: 401 });
+  assert.deepEqual((await f.request('/api/materials/library', { token: locked.token })).body, { materials: [] });
+  for (const [index, user] of [first, second].entries()) {
+    const response = await f.request('/api/materials/library', { token: user.token });
+    assert.deepEqual(response.body, { materials: expected[index] });
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert(!JSON.stringify(response.body).includes('Private library ' + (1 - index)), 'unauthorized titles must not appear in the aggregate response');
+    for (const entry of expected[index]) await f.request(entry.url, { token: user.token });
+    for (const entry of expected[1 - index]) await f.request(entry.url, { token: user.token, status: 403 });
+  }
+  await f.admin('/grants/' + firstGrant.id + '/revoke', { method: 'POST', json: { reason: 'library must immediately remove revoked material metadata' } });
+  assert.deepEqual((await f.request('/api/materials/library', { token: first.token })).body, { materials: [] });
+  for (const entry of expected[0]) await f.request(entry.url, { token: first.token, status: 403 });
+  assert.deepEqual((await f.request('/api/materials/library', { token: second.token })).body, { materials: expected[1] });
+});
+
+test('materials library: unpublished material and owners, archived courses, missing files and invalid signatures are omitted', async t => {
+  const f = await fixture(t), user = await f.user('library-visibility'), tree = await f.tree(), course = firstCourse(tree);
+  await f.grant(user);
+  const { asset } = await f.upload('library-visible.pdf', binary.pdf());
+  const visible = await f.material(asset, 'course', course.id, { title: 'Available published reading' });
+  await f.material(asset, 'course', course.id, { published: false, title: 'Unpublished private reading' });
+  const draftChapter = { id: 'library-draft-chapter', title: 'Draft chapter', sections: [{ id: 'library-draft-section', title: 'Draft section', question: '', body: ['draft content'], practice: '' }] };
+  course.chapters.push(draftChapter); await f.save(tree);
+  await f.material(asset, 'chapter', draftChapter.id, { title: 'Private draft chapter reading' });
+  await f.material(asset, 'section', draftChapter.sections[0].id, { title: 'Private draft section reading' });
+  const missing = (await f.upload('library-missing.pdf', binary.pdf())).asset;
+  await f.material(missing, 'course', course.id, { title: 'Missing file reading' });
+  const missingName = f.store.get('SELECT storage_name FROM assets WHERE id=?', missing.id).storage_name;
+  fs.unlinkSync(path.join(f.dataDir, 'uploads', missingName));
+  const corrupt = (await f.upload('library-corrupt.pdf', binary.pdf())).asset;
+  await f.material(corrupt, 'course', course.id, { title: 'Corrupt file reading' });
+  const corruptName = f.store.get('SELECT storage_name FROM assets WHERE id=?', corrupt.id).storage_name;
+  fs.writeFileSync(path.join(f.dataDir, 'uploads', corruptName), Buffer.from('not a valid PDF document'));
+  const library = (await f.request('/api/materials/library', { token: user.token })).body;
+  assert.deepEqual(library.materials.map(entry => entry.id), [visible.id]);
+  assert.equal(library.materials[0].title, visible.title);
+  assert(!JSON.stringify(library).includes('Private draft'));
+  const archived = await f.tree(); archived.courses.find(item => item.id === course.id).published = false;
+  await f.publish(await f.save(archived));
+  assert.deepEqual((await f.request('/api/materials/library', { token: user.token })).body, { materials: [] });
+  await f.request('/api/materials/' + visible.id + '/file', { token: user.token, status: 404 });
+});
+
+test('materials library: authorization failures other than 403 and 404 abort instead of leaking a partial list', async t => {
+  const f = await fixture(t), { asset } = await f.upload('library-auth.pdf', binary.pdf());
+  const file = f.store.get('SELECT storage_name FROM assets WHERE id=?', asset.id).storage_name;
+  let status = 401, calls = [];
+  const entries = ['allowed', 'failure', 'last'].map(id => ({ id, file, scope: 'course', ownerId: 'owner-' + id, title: 'Private reading ' + id }));
+  const app = require('express')();
+  app.use('/materials', require('../server/materials').createMaterialsRouter({ filesDir: path.join(f.dataDir, 'uploads'), getEntries: () => entries, authorize: (_req, entry) => {
+    calls.push(entry.id);
+    if (entry.id === 'failure') throw Object.assign(new Error('Authorization service rejected access'), { status, code: 'LIBRARY_AUTH_REJECTED' });
+  } }));
+  const server = app.listen(0, '127.0.0.1'); await once(server, 'listening');
+  t.after(() => new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }));
+  const url = 'http://127.0.0.1:' + server.address().port + '/materials/library';
+  for (status of [401, 429, 500]) {
+    calls = [];
+    const response = await fetch(url), body = await response.json();
+    assert.equal(response.status, status); assert.equal(body.code, 'LIBRARY_AUTH_REJECTED');
+    assert(!Object.hasOwn(body, 'materials')); assert(!JSON.stringify(body).includes('Private reading'));
+    assert.deepEqual(calls, ['allowed', 'failure']);
+  }
+  for (status of [403, 404]) {
+    calls = [];
+    const response = await fetch(url), body = await response.json();
+    assert.equal(response.status, 200); assert.deepEqual(body.materials.map(entry => entry.id), ['allowed', 'last']);
+    assert.deepEqual(calls, ['allowed', 'failure', 'last']);
+  }
 });
 
 test('materials: unpublished material/entity and archived course cannot leak files even through known IDs', async t => {

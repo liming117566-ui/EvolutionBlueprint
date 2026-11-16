@@ -1,0 +1,7 @@
+{
+  "name": "geo-bio-exam-learning",
+  "version": "1.0.0",
+  "private": true,
+  "description": "地生会考学习空间：生物已开放，地理板块待定",
+  "scripts": { "start": "node web/server.js", "test": "node tests/verify.cjs && node tests/sprint.cjs && node tests/papers.cjs" }
+}

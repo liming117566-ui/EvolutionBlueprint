@@ -1,0 +1,139 @@
+/* 新博途 · shared learning surfaces. Source: the supplied UI design, 2026-11-16.
+   Layout, lesson interaction, graph colors and answer semantics stay with each module. */
+:root[data-xinbotu-learning] {
+  color-scheme: light;
+  --xbt-yellow: #f8d849;
+  --xbt-yellow-soft: #fff5c7;
+  --xbt-ink: #242823;
+  --xbt-muted: #6e736f;
+  --xbt-bg: #f8f9fa;
+  --xbt-white: #ffffff;
+  --xbt-line: #e9ece7;
+  --xbt-mint: #e7efe8;
+  --xbt-shadow: 0 8px 28px rgba(39,49,29,.045);
+  --bg: var(--xbt-bg); --bg1: var(--xbt-bg); --bg2: #f1f3ef; --bg3: #e7efe8;
+  --paper: #fff; --paper-2: #f8f9fa; --paper-3: #e7efe8;
+  --card: #fff; --card-2: #f8f9fa; --panel: #fff; --surface: #fff;
+  --bg-elev: #fff; --bg-muted: #edf0ec; --header-bg: #fff;
+  --glass: rgba(255,255,255,.88); --glass-strong: #fff;
+  --ink: var(--xbt-ink); --text: var(--xbt-ink); --on-accent: var(--xbt-ink);
+  --ink-2: #525a4f; --ink-3: #6e736f; --ink-4: #93998e;
+  --ink-dim: #6e736f; --ink-faint: #93998e;
+  --muted: var(--xbt-muted); --text-light: var(--xbt-muted);
+  --line: var(--xbt-line); --line-strong: #d6dbd0; --stroke: var(--xbt-line); --stroke-strong: #d6dbd0;
+  --primary: var(--xbt-yellow); --primary-light: var(--xbt-yellow-soft);
+  --brand: #242823; --brand-strong: #242823; --brand-soft: var(--xbt-yellow-soft); --on-brand: #fff;
+  --accent: #675b1e; --accent2: #8e9e6e; --accent-soft: var(--xbt-yellow-soft);
+  --terra: #675b1e; --terra-ink: #675b1e; --terra-soft: var(--xbt-yellow-soft);
+  --ochre: #8e9e6e; --ochre-soft: #e7efe8;
+  --sage: #617142; --sage-ink: #4f5e35; --sage-soft: #e7efe8;
+  --sky: #617142; --sky-soft: #e6edf5; --plum: #697063;
+  --soft: var(--xbt-yellow-soft); --chip: #edf0ec; --teal: #675b1e;
+  --green: #617142; --green-dark: #4f5e35; --green-soft: #e7efe8; --paper-deep: #edf0ec;
+  /* Grammar uses --hl as text ink, including knowledge headings and explanations. */
+  --hl: var(--xbt-ink); --focus: #8e9e6e;
+  --glow: transparent; --glow-bg: transparent; --mark: rgba(248,216,73,.26);
+  --radius: 20px; --radius-sm: 12px; --small-radius: 12px;
+  --shadow: var(--xbt-shadow); --shadow-sm: 0 2px 8px rgba(39,49,29,.035);
+  --font-body: -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  --font-display: var(--font-body);
+  font-family: var(--font-body);
+  color: var(--xbt-ink);
+  background: var(--xbt-bg);
+}
+html[data-xinbotu-learning] body {
+  color: var(--xbt-ink);
+  background: var(--xbt-bg);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+html[data-xinbotu-learning] body::before { background-image: none; }
+html[data-xinbotu-learning] :is(h1,h2,h3) { font-family: var(--font-display); letter-spacing: -.025em; }
+html[data-xinbotu-learning] :is(header,.topbar,.top-bar,.site-header,.header,.tabbar,.bottom-nav) {
+  color: var(--xbt-ink); background: var(--xbt-white); border-color: var(--xbt-line);
+  box-shadow: none;
+}
+html[data-xinbotu-learning] :is(header,.topbar) { border-bottom: 1px solid var(--xbt-line); }
+html[data-xinbotu-learning] :is(.card,.panel,.sheet,.quiz,.kcard,.practice-question,.illustration-card,.lab,.resource,.notice,.modal-content,.palette) {
+  border-color: var(--xbt-line); border-radius: 20px; box-shadow: var(--xbt-shadow);
+}
+html[data-xinbotu-learning] :is(.card,.panel,.quiz,.kcard,.practice-question,.illustration-card,.lab,.palette) { background-color: var(--xbt-white); }
+html[data-xinbotu-learning] :is(button,input,select,textarea,.button,.btn) { font-family: inherit; }
+html[data-xinbotu-learning] :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),select,textarea) {
+  color: var(--xbt-ink); background-color: var(--xbt-white); border-color: #d9dfd2; border-radius: 14px;
+}
+html[data-xinbotu-learning] :is(button,.button,.btn) { border-radius: 14px; }
+html[data-xinbotu-learning] :is(button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible) {
+  outline: 3px solid #8e9e6e; outline-offset: 3px;
+}
+html[data-xinbotu-learning] :is(.primary,.btn-primary,.btn.primary,.button.primary,.btn-terra,.btn-tier-unit,.btn-tier-weekly,button.primary,button.active,button.is-on,button[aria-pressed=true]) {
+  background: var(--xbt-yellow); color: #242823; border-color: var(--xbt-yellow);
+  font-weight: 700; box-shadow: none;
+}
+html[data-xinbotu-learning] .primary-button { background: var(--xbt-yellow); color: #242823; border-radius: 14px; box-shadow: none; }
+html[data-xinbotu-learning] .primary-button:hover { background: #efd044; }
+html[data-xinbotu-learning] :is(.site-shell,.body-layout,.main-content) { background: var(--xbt-bg); }
+html[data-xinbotu-learning] :is(.sidebar,.stage-card,.lesson-hero,.reassurance,.understanding-check,.completion-card,.example-card,.practice-card,.lesson-pager button) {
+  background: var(--xbt-white); border-color: var(--xbt-line); border-radius: 20px;
+}
+html[data-xinbotu-learning] :is(.welcome-card,.lesson-hero.grade-seven,.lesson-hero.grade-eight,.lesson-hero.grade-nine) {
+  background: var(--xbt-yellow); color: #242823; border-color: var(--xbt-yellow); border-radius: 20px;
+}
+html[data-xinbotu-learning] .welcome-card .primary-button { background: #242823; color: #fff; }
+html[data-xinbotu-learning] :is(.home-link.active,.unit-group button.active) { background: var(--xbt-yellow-soft); color: #242823; }
+html[data-xinbotu-learning] :is(.primary,.btn-primary,.btn-terra):hover:not(:disabled) { background: #efd044; box-shadow: none; }
+html[data-xinbotu-learning] :is(.btn-outline,.btn-ghost,.secondary,.ghost) {
+  color: var(--xbt-ink); border-color: #d6dbd0; background: var(--xbt-white); box-shadow: none;
+}
+html[data-xinbotu-learning] :is(nav a.active,nav a.is-on,nav button.on,button.tab.active,button.tab.on,.filter.active,.nav-btn.active,.tab-btn.active) {
+  background: var(--xbt-yellow); color: #242823; border-color: var(--xbt-yellow); border-radius: 999px;
+}
+html[data-xinbotu-learning] #results button.active { border-radius: 14px; background: var(--xbt-yellow-soft); color: #242823; border-color: var(--xbt-yellow); }
+html[data-xinbotu-learning] :is(.eyebrow,.brand-icon,.brand small,.muted,.hint,#summary,#status) { color: var(--xbt-muted); }
+html[data-xinbotu-learning] :is(.notice,article blockquote,.hint-panel,.explain) { background: var(--xbt-mint); color: #525a4f; border-color: var(--xbt-line); }
+html[data-xinbotu-learning] :is(article,.reader) { border-color: var(--xbt-line); border-radius: 20px; background: var(--xbt-white); }
+html[data-xinbotu-learning] :is(article a,.meaning,.tabbar a.is-on,.tabbar a.is-on svg) { color: #675b1e; }
+html[data-xinbotu-learning] body[class*="subject-"] { --brand:#242823; --brand-strong:#242823; --brand-soft:#fff5c7; --on-brand:#fff; --accent:#675b1e; --focus:#8e9e6e; --header-bg:var(--xbt-white); }
+html[data-xinbotu-learning] .subject-switch { max-width:100%; min-width:0; flex-wrap:wrap; border-radius:20px; }
+html[data-xinbotu-learning] .topbar :is(.logo,.subtitle,.brand,.btn-ghost) { color: var(--xbt-ink); }
+html[data-xinbotu-learning] .grid button { background: var(--xbt-yellow-soft); color: var(--xbt-ink); }
+html[data-xinbotu-learning] .grid button.done { background: #edf0ec; color: #93998e; }
+html[data-xinbotu-learning] .progress-bar > div { background: #8e9e6e; }
+html[data-xinbotu-learning] .journey { background: var(--xbt-yellow); color: #242823; border-radius: 20px; }
+html[data-xinbotu-learning] .journey::before { background: linear-gradient(90deg,#f8d849 0%,rgba(248,216,73,.7) 45%,rgba(248,216,73,0) 82%); }
+html[data-xinbotu-learning] .journey :is(h1,h2,h2 b,p,.eyebrow) { color: #242823; }
+html[data-xinbotu-learning] .journey .btn-primary { background: var(--xbt-ink); color: #fff; }
+html[data-xinbotu-learning] .chest-sheet .chest-actions .btn-primary { background: var(--xbt-yellow); color: #242823; }
+@media (max-width:759px) {
+  html[data-xinbotu-learning] .journey::before { background: linear-gradient(180deg,rgba(248,216,73,0) 0%,#f8d849 62%); }
+}
+/* Keep the existing reading-background controls and English system/dark setting. */
+:root[data-xinbotu-learning][data-bg="cream"] { --xbt-bg:#faf5e7; --xbt-white:#fffdf7; --bg1:var(--xbt-bg); --panel:var(--xbt-white); --glass:var(--xbt-white); }
+:root[data-xinbotu-learning][data-bg="slate"] { --xbt-bg:#eef2f5; --xbt-white:#fbfcfd; --bg1:var(--xbt-bg); --panel:var(--xbt-white); --glass:var(--xbt-white); }
+:root[data-xinbotu-learning]:is([data-theme="dark"],[data-bg="dark"]) {
+  color-scheme:dark; --xbt-bg:#1f231e; --xbt-white:#2a2f28; --xbt-ink:#edf0e9; --xbt-muted:#b5bdb0; --xbt-line:#41493b; --xbt-mint:#35402f;
+  --bg:var(--xbt-bg); --bg1:var(--xbt-bg); --bg2:#2a2f28; --bg3:#35402f; --paper:var(--xbt-bg); --paper-2:#2a2f28; --paper-3:#35402f;
+  --card:var(--xbt-white); --card-2:#30362d; --panel:var(--xbt-white); --glass:var(--xbt-white); --glass-strong:#35402f;
+  --ink:var(--xbt-ink); --text:var(--xbt-ink); --ink-2:#d1d9c9; --ink-3:var(--xbt-muted); --ink-4:#929d8b; --ink-dim:var(--xbt-muted); --ink-faint:#929d8b;
+  --muted:var(--xbt-muted); --text-light:var(--xbt-muted); --line:var(--xbt-line); --line-strong:#59634f; --stroke:var(--xbt-line); --stroke-strong:#59634f;
+  --accent:#f8d849; --terra:#f8d849; --terra-ink:#f8d849; --terra-soft:#4b4524; --accent-soft:#4b4524; --sage:#a9b88d; --sage-ink:#c3d1ad; --sage-soft:#35402f;
+  --error:#e49a94; --error-soft:#442c29;
+}
+@media (prefers-color-scheme:dark) {
+  :root[data-xinbotu-learning][data-xinbotu-auto-dark]:not([data-theme="light"]) {
+    color-scheme:dark; --xbt-bg:#1f231e; --xbt-white:#2a2f28; --xbt-ink:#edf0e9; --xbt-muted:#b5bdb0; --xbt-line:#41493b; --xbt-mint:#35402f;
+    --bg:var(--xbt-bg); --paper:var(--xbt-bg); --paper-2:#2a2f28; --paper-3:#35402f; --card:var(--xbt-white); --card-2:#30362d; --panel:var(--xbt-white);
+    --ink:var(--xbt-ink); --text:var(--xbt-ink); --ink-2:#d1d9c9; --ink-3:var(--xbt-muted); --ink-4:#929d8b; --muted:var(--xbt-muted); --line:var(--xbt-line); --line-strong:#59634f;
+    --accent:#f8d849; --terra:#f8d849; --terra-ink:#f8d849; --terra-soft:#4b4524; --sage:#a9b88d; --sage-ink:#c3d1ad; --sage-soft:#35402f; --error:#e49a94; --error-soft:#442c29;
+  }
+}
+/* Existing answer status classes stay red/green. Do not recolor diagram/SVG/canvas nodes. */
+html[data-xinbotu-learning] :is(.option.is-chosen,.slot.is-bad,.pt-fill input.is-bad,.rd-opt.is-wrong,.rd-pick.is-wrong) {
+  border-color: var(--error,#b84b49); background-color: var(--error-soft,#fbefee);
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-xinbotu-learning] :is(button,a,input,select,textarea) { transition: none; scroll-behavior: auto; }
+}
+@media print {
+  html[data-xinbotu-learning], html[data-xinbotu-learning] body { background: #fff; color: #000; }
+}

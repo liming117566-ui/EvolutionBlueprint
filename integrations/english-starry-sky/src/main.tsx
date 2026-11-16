@@ -16,11 +16,7 @@ createRoot(document.getElementById("root")!).render(
   </StrictMode>,
 );
 
-if (import.meta.env.PROD && "serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch(() => null);
-  });
-}
+// Entitled resources must be revalidated by the server rather than served from an offline worker.
 
 // 发现服务器上有新版就自动换（微信缓存页面很久，不能指望学生手动刷新）
 watchForUpdates();

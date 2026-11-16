@@ -29,10 +29,10 @@ async function login() {
   return store(result, false);
 }
 async function devLogin() {
-  if (!config.canDevLogin()) throw new Error('本地测试登录仅允许开发工具连接回环 API');
+  if (!config.canDevLogin()) throw new Error('测试登录仅允许开发版连接本机或局域网测试服务');
   let deviceId = wx.getStorageSync('blueprintDevDeviceId');
   if (typeof deviceId !== 'string' || !/^[A-Za-z0-9_-]{8,100}$/.test(deviceId)) {
-    deviceId = 'devtools-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    deviceId = 'test-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
     wx.setStorageSync('blueprintDevDeviceId', deviceId);
   }
   const result = await require('./api').request('/api/auth/dev', { method: 'POST', data: { deviceId }, auth: false });
