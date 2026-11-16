@@ -9595,10 +9595,6 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
   var REGION = '适配上海命题风格 · 全国其他地区也能用';
   // 构建时由 styles.css 的品牌区块替换（单一来源，删掉 CSS 也不影响运行时水印）
   var CSS = "/* ==================== 品牌署名 · 授权（Hison） ====================\n   注意：本区块会被 build.js 原样注入 brand.js，由运行时二次写入并自愈守护。\n   删除本区块不会移除署名（脚本会重建）；删除 brand.js 则应用拒绝启动。 */\n/* 右下角署名印章：平时是一枚小方签，悬停 / 点击后原地展开署名卡片（无弹窗） */\n.egl-seal {\n  position: fixed; right: 12px; bottom: 12px; z-index: 46;\n  display: block; text-align: left; overflow: hidden;\n  padding: 5px 10px; border-radius: var(--radius-sm); cursor: pointer;\n  font-family: var(--font-body); color: var(--ink-dim);\n  background: var(--panel);\n  border: 1px solid var(--stroke-strong);\n  box-shadow: var(--shadow);\n  opacity: 0.88; transform-origin: 100% 100%;\n  transition: padding 0.3s var(--ease), background 0.24s var(--ease),\n              box-shadow 0.3s var(--ease), opacity 0.2s var(--ease), transform 0.3s var(--ease);\n}\n.egl-seal-face {\n  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;\n  font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em;\n}\n.egl-seal-panel {\n  display: block; width: 0; max-height: 0; opacity: 0; margin-top: 0;\n  overflow: hidden; white-space: nowrap; transform: translateY(6px);\n  transition: width 0.3s var(--ease), max-height 0.3s var(--ease), opacity 0.24s var(--ease),\n              transform 0.3s var(--ease), margin-top 0.3s var(--ease);\n}\n.egl-seal-name { display: block; font-family: var(--font-display); font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }\n.egl-seal-row { display: block; font-size: 11.5px; color: var(--ink-dim); margin-top: 3px; }\n.egl-seal-row i { font-style: normal; color: var(--ink-faint); margin-right: 6px; }\n.egl-seal-row b { color: var(--hl); font-weight: 700; letter-spacing: 0.02em; }\n/* 展开态：键盘聚焦 / 点击（触摸） */\n.egl-seal:focus-visible,\n.egl-seal.on {\n  padding: 11px 14px 12px; border-radius: var(--radius);\n  background: var(--panel);\n  border-color: var(--ink-dim);\n  box-shadow: var(--shadow-sheet);\n  opacity: 1; transform: translateY(-2px);\n}\n.egl-seal:focus-visible .egl-seal-panel,\n.egl-seal.on .egl-seal-panel { width: 156px; max-height: 130px; opacity: 1; transform: none; margin-top: 8px; }\n/* 有鼠标的设备：悬停即展开 */\n@media (hover: hover) {\n  .egl-seal:hover {\n    padding: 11px 14px 12px; border-radius: var(--radius);\n    background: var(--panel);\n    border-color: var(--ink-dim);\n    box-shadow: var(--shadow-sheet);\n    opacity: 1; transform: translateY(-2px);\n  }\n  .egl-seal:hover .egl-seal-panel { width: 156px; max-height: 130px; opacity: 1; transform: none; margin-top: 8px; }\n}\n/* 题卡底纹已撤掉：部分机型浏览器（如荣耀浏览器）会把低透明度的水印墨迹\n   （SVG 图片版、文本 rgba 版都试过）自动提亮成实心白，糊在题干与选项上。\n   署名改由各处角标承担：题卡左下角 + 其它卡片右下角各一行小字，浓淡是\n   固定色 + 固定 opacity，与页面其它文字一致，各机型都不会被提亮，\n   截图、打印都带署名。 */\n/* 卡片角标 */\n.learn-head, .score-hero, .sq-card, .qbox { position: relative; }\n.learn-head { padding-bottom: 22px; }\n.sq-card { padding-bottom: 22px; }\n.score-hero { padding-bottom: 30px; }\n.learn-head::after, .score-hero::after, .sq-card::after, .qbox::after {\n  content: \"by __EGL_NM__\";\n  position: absolute; right: 10px; bottom: 6px;\n  font-family: var(--font-body);\n  font-size: 10px; letter-spacing: 0.1em; font-weight: 700;\n  color: var(--ink-faint); opacity: 0.6;\n  pointer-events: none; user-select: none;\n}\n/* 题卡角标放左下：右下是固定印章的位置，靠太近会叠在一起 */\n.qbox::after { right: auto; left: 12px; }\n/* 页脚署名 */\n.egl-foot { text-align: center; padding: 30px 16px 24px; color: var(--ink-faint); font-size: 12px; }\n.egl-foot .egl-foot-main { color: var(--ink-faint); }\n.egl-foot .egl-foot-brand { margin-top: 5px; color: var(--ink-dim); letter-spacing: 0.01em; line-height: 1.8; }\n.egl-foot .egl-foot-links { margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }\n.egl-foot .egl-link {\n  border: 0; background: transparent; color: var(--accent); cursor: pointer;\n  font-family: inherit; font-size: 12px; padding: 3px 4px; text-decoration: underline;\n}\n.egl-foot .egl-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }\n.egl-foot .egl-tip { color: var(--ink-faint); font-size: 11px; }\n/* 页脚版本号（构建时由 package.json 注入） */\n.egl-foot .egl-foot-ver {\n  margin-top: 4px; color: var(--ink-faint); font-size: 11px;\n  font-family: var(--font-mono); letter-spacing: 0.06em; opacity: 0.85;\n}\n/* 首页品牌小标签 */\n.egl-chip {\n  display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;\n  font-size: 11.5px; letter-spacing: 0.02em; color: var(--ink-faint);\n  border: 1px dashed var(--stroke-strong); border-radius: 4px; padding: 3px 9px;\n}\n/* 授权说明弹窗 */\n.egl-lic p { margin: 6px 0; font-size: 13.5px; color: var(--ink-dim); line-height: 1.75; }\n.egl-lic p b { color: var(--ink); }\n@media print {\n  body::before { display: none; }\n  .egl-seal { display: none; }\n  .learn-head::after, .score-hero::after, .sq-card::after, .qbox::after { color: #222; opacity: 0.75; }\n  .egl-foot { color: #333; }\n}\n";
-  // 版本号：构建时由 build.js 用 package.json 的 version 替换（单一来源，
-  // 发新版只需改 package.json）；未构建直接打开源码时不显示这一行。
-  var VER = "v1.8.0";
-  if (VER.charAt(0) === '_') VER = '';
   var _guardTimer = null;
 
   function doc() { return W.document || null; }
@@ -9642,53 +9638,11 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
     if (st.textContent !== text) st.textContent = text;
   }
 
-  function renderSeal() {
-    var el = byId(SEAL), id = ident();
-    if (!el || !id) return;
-    // 先是一枚小胶囊；悬停 / 聚焦 / 点击后在原地展开署名卡片（不用弹窗）
-    if (!el.getAttribute || el.getAttribute('data-egl-face') !== id.n) {
-      el.innerHTML = '<span class="egl-seal-face">by ' + esc(id.n) + '</span>'
-        + '<span class="egl-seal-panel">'
-        + '<span class="egl-seal-name">' + esc(id.tag) + '</span>'
-        + '<span class="egl-seal-row"><i>\u6296\u97f3</i><b>' + esc(id.dy) + '</b></span>'
-        + '<span class="egl-seal-row"><i>\u5c0f\u7ea2\u4e66</i><b>' + esc(id.xhs) + '</b></span>'
-        + '</span>';
-      if (el.setAttribute) el.setAttribute('data-egl-face', id.n);
-    }
-    if (el.setAttribute) {
-      el.setAttribute('title', id.tag + '\u3000\u6296\u97f3 ' + id.dy + '\u3000\u5c0f\u7ea2\u4e66 ' + id.xhs);
-      el.setAttribute('aria-label', '\u4f5c\u8005\u7f72\u540d\uff1a' + id.tag + '\uff0c\u6296\u97f3 ' + id.dy + '\uff0c\u5c0f\u7ea2\u4e66 ' + id.xhs);
-    }
-  }
-
-  // 胶囊展开 / 收起（触摸端点击切换；点空白处收起）
-  var _outsideBound = false;
-  function bindOutside() {
-    var d = doc();
-    if (_outsideBound || !d || !d.addEventListener) return;
-    _outsideBound = true;
-    d.addEventListener('click', function (e) {
-      var el = byId(SEAL);
-      if (!el || !el.classList || !el.classList.contains('on')) return;
-      var t = e.target;
-      if (t === el || (el.contains && el.contains(t))) return;
-      el.classList.remove('on');
-    }, true);
-  }
-
   function footHTML() {
     var id = ident();
     if (!id) return '';
     return '<div class="egl-foot-main" data-egl-main="1">' + esc(id.lab) + ' \u00b7 ' + SUB + '\uff08' + REGION + '\uff09</div>'
-      + '<div class="egl-foot-brand">\u00a9 2026 ' + esc(id.tag) + '\u3000\u00b7\u3000\u6296\u97f3 ' + esc(id.dy)
-      + '\u3000\u00b7\u3000\u5c0f\u7ea2\u4e66 ' + esc(id.xhs)
-      + '\u3000\u00b7\u3000\u4ec5\u4f9b\u4e2a\u4eba\u514d\u8d39\u5b66\u4e60' + sig() + '</div>'
-      + '<div class="egl-foot-links">'
-      + '<button class="egl-link" type="button" id="eglLicBtn">\u7248\u6743\u4e0e\u4f7f\u7528\u6388\u6743</button>'
-      + '<span class="egl-tip">\u7981\u6b62\u5546\u7528</span>'
-      + '<a class="egl-link" href="https://hison-tools.ribbedmeter8.chatgpt.site/zh/?task=study#projects" target="_blank" rel="noopener noreferrer">其他学习工具</a>'
-      + '</div>'
-      + (VER ? '<div class="egl-foot-ver">' + esc(VER) + '</div>' : '');
+      + sig();
   }
 
   function bindFoot(el) {
@@ -9697,40 +9651,10 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
     if (btn && btn.addEventListener) btn.addEventListener('click', function () { showLicense(); });
   }
 
-  // 首页 hero 里的品牌小标签（随视图重渲染自动补回）
-  function ensureChip() {
-    var d = doc();
-    if (!d || !d.querySelector) return;
-    var hero = d.querySelector('.hero');
-    if (!hero || !hero.appendChild || !hero.querySelector) return;
-    if (hero.querySelector('[data-egl-chip]')) return;
-    var id = ident();
-    if (!id) return;
-    var chip = make('div', 'eglChip', 'egl-chip');
-    if (chip.removeAttribute) chip.removeAttribute('id');
-    if (chip.setAttribute) chip.setAttribute('data-egl-chip', '1');
-    chip.innerHTML = '\u2726 ' + esc(id.tag) + ' \u00b7 \u6296\u97f3 ' + esc(id.dy) + ' \u00b7 \u5c0f\u7ea2\u4e66 ' + esc(id.xhs);
-    hero.appendChild(chip);
-  }
-
   function ensureNodes() {
     var b = body();
     if (!b || !doc().createElement) return;
-
-    if (!byId(SEAL)) {
-      drop(SEAL);
-      var seal = make('button', SEAL, 'egl-seal');
-      seal.type = 'button';
-      if (seal.addEventListener) {
-        seal.addEventListener('click', function (e) {
-          if (e && e.stopPropagation) e.stopPropagation();
-          if (seal.classList && seal.classList.toggle) seal.classList.toggle('on');
-        });
-      }
-      b.appendChild(seal);
-    }
-    renderSeal();
-    bindOutside();
+    drop(SEAL);
 
     var foot = byId(FOOT);
     if (!foot) {
@@ -9744,90 +9668,11 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
     bindFoot(foot);
   }
 
-  // 反隐藏：删除 style/class、opacity:0、display:none、尺寸归零等一律复位
-  function harden() {
-    var d = doc();
-    var el = byId(SEAL);
-    if (el && el.style && el.style.setProperty) {
-      var s = el.style;
-      s.setProperty('display', 'block', 'important');
-      s.setProperty('visibility', 'visible', 'important');
-      s.setProperty('filter', 'none', 'important');
-      s.setProperty('clip-path', 'none', 'important');
-      s.setProperty('z-index', '46', 'important');
-      if (typeof s.removeProperty === 'function') s.removeProperty('content');
-      // 展开面板本身也要在（被删除 / 被隐藏都会让署名看不全）
-      if (el.querySelector && !el.querySelector('.egl-seal-panel')) {
-        if (el.removeAttribute) el.removeAttribute('data-egl-face');
-        renderSeal();
-      }
-      var pn = el.querySelector ? el.querySelector('.egl-seal-panel') : null;
-      if (pn && pn.style && pn.style.setProperty) {
-        pn.style.setProperty('visibility', 'visible', 'important');
-        if (pn.style.setProperty) pn.style.setProperty('display', 'block', 'important');
-      }
-      if (d && d.defaultView && d.defaultView.getComputedStyle) {
-        var cs = d.defaultView.getComputedStyle(el);
-        if (cs && (cs.display === 'none' || cs.visibility === 'hidden' ||
-            cs.opacity === '0' || cs.transform === 'scale(0)')) {
-          s.setProperty('display', 'block', 'important');
-          s.setProperty('visibility', 'visible', 'important');
-          s.setProperty('opacity', '0.88', 'important');
-          s.setProperty('transform', 'none', 'important');
-        }
-      }
-    }
-    avoidOverlap();
-  }
-
-  // 署名印章压到按钮/输入框时自动让位：降到很淡且不拦截点击（避免挡住答题按钮）
-  function avoidOverlap() {
-    var d = doc(), el = byId(SEAL);
-    if (!el || !el.style || !el.style.setProperty) return;
-    // 展开态（鼠标悬停 / 键盘聚焦 / 触摸点击）不去打扰
-    var open = false;
-    try {
-      open = !!(el.classList && el.classList.contains('on')) ||
-        !!(el.matches && el.matches(':hover, :focus-visible'));
-    } catch (e) { open = false; }
-    if (open) {
-      el.style.setProperty('opacity', '1', 'important');
-      el.style.setProperty('pointer-events', 'auto', 'important');
-      return;
-    }
-    if (!d || !d.elementFromPoint || !el.getBoundingClientRect) {
-      el.style.setProperty('opacity', '0.88', 'important');
-      el.style.setProperty('pointer-events', 'auto', 'important');
-      return;
-    }
-    var r = el.getBoundingClientRect();
-    if (!r || !r.width || !r.height) return;
-    // 探测时先让自己不吃指针（探测完按结果恢复：压住按钮时彻底让位，避免抢走点击）
-    el.style.setProperty('pointer-events', 'none', 'important');
-    // 多点采样：印章可能只压住按钮的一角（居中点落在卡片上也要能发现）
-    var pts = [[0.5, 0.5], [0.08, 0.5], [0.92, 0.5], [0.5, 0.18], [0.5, 0.82]];
-    var busy = false, k, i;
-    for (k = 0; k < pts.length && !busy; k++) {
-      var node = d.elementFromPoint(r.left + r.width * pts[k][0], r.top + r.height * pts[k][1]);
-      for (i = 0; node && i < 4; i++) {
-        var tag = node.tagName ? String(node.tagName).toUpperCase() : '';
-        if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A' || tag === 'TEXTAREA' || tag === 'SELECT') { busy = true; break; }
-        if (node.classList && node.classList.contains && node.classList.contains('btn')) { busy = true; break; }
-        node = node.parentNode;
-      }
-    }
-    el.style.setProperty('opacity', busy ? '0.32' : '0.88', 'important');
-    // 压住按钮/输入框时连点击也让出去：署名入口还有页脚「版权与使用授权」兜底
-    el.style.setProperty('pointer-events', busy ? 'none' : 'auto', 'important');
-  }
-
   function guardOnce() {
     _guardTimer = null;
     if (!body() || !ident()) return;
     try { injectCSS(); } catch (e) {}
     try { ensureNodes(); } catch (e) {}
-    try { ensureChip(); } catch (e) {}
-    try { harden(); } catch (e) {}
   }
 
   function guardSoon() {
@@ -9856,7 +9701,6 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
   }
 
   /* ================= 4) 版权与使用授权（免责声明） ================= */
-  var NOTICE_KEY = 'EGL_BRAND_NOTICE_v1';
 
   function licenseHTML() {
     var id = ident() || { n: '', dy: '', xhs: '', lab: '' };
@@ -9934,24 +9778,12 @@ html[data-font="xl"] .answer-input input { font-size: 20px; }
     return ov;
   }
 
-  // 首次访问自动提示一次（作者署名与授权告知）
-  function firstVisit() {
-    var seen = null;
-    try { seen = W.localStorage ? W.localStorage.getItem(NOTICE_KEY) : null; } catch (e) {}
-    if (seen) return;
-    try { if (W.localStorage) W.localStorage.setItem(NOTICE_KEY, '1'); } catch (e2) {}
-    if (typeof W.setTimeout !== 'function') return;
-    W.setTimeout(function () { try { showLicense(); } catch (e3) {} }, 700);
-  }
-
   /* ================= 5) 对外 API ================= */
   function install() {
     if (!ident()) return false;
     try { injectCSS(); } catch (e) {}
     try { ensureNodes(); } catch (e) {}
-    try { ensureChip(); } catch (e) {}
     try { startGuard(); } catch (e) {}
-    try { firstVisit(); } catch (e) {}
     return true;
   }
 

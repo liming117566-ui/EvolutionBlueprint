@@ -16,7 +16,7 @@ function clean(text, title) {
 function shell(slug,title) {
   const dir=target(slug), base=path.join(source('nihaixia-app'),'integration');
   for(const file of ['index.html','style.css','app.js'])copy(path.join(base,file),path.join(dir,file));
-  fs.writeFileSync(path.join(dir,'index.html'),fs.readFileSync(path.join(dir,'index.html'),'utf8').replaceAll('倪师中医经方学习',title).replace('</main>','<footer><a href="NOTICE.txt">资料使用说明</a></footer></main>'),'utf8');
+  fs.writeFileSync(path.join(dir,'index.html'),fs.readFileSync(path.join(dir,'index.html'),'utf8').replaceAll('倪师中医经方学习',title),'utf8');
   fs.mkdirSync(path.join(dir,'documents'),{recursive:true});
   return dir;
 }

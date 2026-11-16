@@ -157,10 +157,6 @@
   var REGION = '适配上海命题风格 · 全国其他地区也能用';
   // 构建时由 styles.css 的品牌区块替换（单一来源，删掉 CSS 也不影响运行时水印）
   var CSS = "/*__BRAND_CSS__*/";
-  // 版本号：构建时由 build.js 用 package.json 的 version 替换（单一来源，
-  // 发新版只需改 package.json）；未构建直接打开源码时不显示这一行。
-  var VER = '__EGL_VER__';
-  if (VER.charAt(0) === '_') VER = '';
   var _guardTimer = null;
 
   function doc() { return W.document || null; }
@@ -204,53 +200,11 @@
     if (st.textContent !== text) st.textContent = text;
   }
 
-  function renderSeal() {
-    var el = byId(SEAL), id = ident();
-    if (!el || !id) return;
-    // 先是一枚小胶囊；悬停 / 聚焦 / 点击后在原地展开署名卡片（不用弹窗）
-    if (!el.getAttribute || el.getAttribute('data-egl-face') !== id.n) {
-      el.innerHTML = '<span class="egl-seal-face">by ' + esc(id.n) + '</span>'
-        + '<span class="egl-seal-panel">'
-        + '<span class="egl-seal-name">' + esc(id.tag) + '</span>'
-        + '<span class="egl-seal-row"><i>\u6296\u97f3</i><b>' + esc(id.dy) + '</b></span>'
-        + '<span class="egl-seal-row"><i>\u5c0f\u7ea2\u4e66</i><b>' + esc(id.xhs) + '</b></span>'
-        + '</span>';
-      if (el.setAttribute) el.setAttribute('data-egl-face', id.n);
-    }
-    if (el.setAttribute) {
-      el.setAttribute('title', id.tag + '\u3000\u6296\u97f3 ' + id.dy + '\u3000\u5c0f\u7ea2\u4e66 ' + id.xhs);
-      el.setAttribute('aria-label', '\u4f5c\u8005\u7f72\u540d\uff1a' + id.tag + '\uff0c\u6296\u97f3 ' + id.dy + '\uff0c\u5c0f\u7ea2\u4e66 ' + id.xhs);
-    }
-  }
-
-  // 胶囊展开 / 收起（触摸端点击切换；点空白处收起）
-  var _outsideBound = false;
-  function bindOutside() {
-    var d = doc();
-    if (_outsideBound || !d || !d.addEventListener) return;
-    _outsideBound = true;
-    d.addEventListener('click', function (e) {
-      var el = byId(SEAL);
-      if (!el || !el.classList || !el.classList.contains('on')) return;
-      var t = e.target;
-      if (t === el || (el.contains && el.contains(t))) return;
-      el.classList.remove('on');
-    }, true);
-  }
-
   function footHTML() {
     var id = ident();
     if (!id) return '';
     return '<div class="egl-foot-main" data-egl-main="1">' + esc(id.lab) + ' \u00b7 ' + SUB + '\uff08' + REGION + '\uff09</div>'
-      + '<div class="egl-foot-brand">\u00a9 2026 ' + esc(id.tag) + '\u3000\u00b7\u3000\u6296\u97f3 ' + esc(id.dy)
-      + '\u3000\u00b7\u3000\u5c0f\u7ea2\u4e66 ' + esc(id.xhs)
-      + '\u3000\u00b7\u3000\u4ec5\u4f9b\u4e2a\u4eba\u514d\u8d39\u5b66\u4e60' + sig() + '</div>'
-      + '<div class="egl-foot-links">'
-      + '<button class="egl-link" type="button" id="eglLicBtn">\u7248\u6743\u4e0e\u4f7f\u7528\u6388\u6743</button>'
-      + '<span class="egl-tip">\u7981\u6b62\u5546\u7528</span>'
-      + '<a class="egl-link" href="https://hison-tools.ribbedmeter8.chatgpt.site/zh/?task=study#projects" target="_blank" rel="noopener noreferrer">其他学习工具</a>'
-      + '</div>'
-      + (VER ? '<div class="egl-foot-ver">' + esc(VER) + '</div>' : '');
+      + sig();
   }
 
   function bindFoot(el) {
@@ -259,40 +213,10 @@
     if (btn && btn.addEventListener) btn.addEventListener('click', function () { showLicense(); });
   }
 
-  // 首页 hero 里的品牌小标签（随视图重渲染自动补回）
-  function ensureChip() {
-    var d = doc();
-    if (!d || !d.querySelector) return;
-    var hero = d.querySelector('.hero');
-    if (!hero || !hero.appendChild || !hero.querySelector) return;
-    if (hero.querySelector('[data-egl-chip]')) return;
-    var id = ident();
-    if (!id) return;
-    var chip = make('div', 'eglChip', 'egl-chip');
-    if (chip.removeAttribute) chip.removeAttribute('id');
-    if (chip.setAttribute) chip.setAttribute('data-egl-chip', '1');
-    chip.innerHTML = '\u2726 ' + esc(id.tag) + ' \u00b7 \u6296\u97f3 ' + esc(id.dy) + ' \u00b7 \u5c0f\u7ea2\u4e66 ' + esc(id.xhs);
-    hero.appendChild(chip);
-  }
-
   function ensureNodes() {
     var b = body();
     if (!b || !doc().createElement) return;
-
-    if (!byId(SEAL)) {
-      drop(SEAL);
-      var seal = make('button', SEAL, 'egl-seal');
-      seal.type = 'button';
-      if (seal.addEventListener) {
-        seal.addEventListener('click', function (e) {
-          if (e && e.stopPropagation) e.stopPropagation();
-          if (seal.classList && seal.classList.toggle) seal.classList.toggle('on');
-        });
-      }
-      b.appendChild(seal);
-    }
-    renderSeal();
-    bindOutside();
+    drop(SEAL);
 
     var foot = byId(FOOT);
     if (!foot) {
@@ -306,90 +230,11 @@
     bindFoot(foot);
   }
 
-  // 反隐藏：删除 style/class、opacity:0、display:none、尺寸归零等一律复位
-  function harden() {
-    var d = doc();
-    var el = byId(SEAL);
-    if (el && el.style && el.style.setProperty) {
-      var s = el.style;
-      s.setProperty('display', 'block', 'important');
-      s.setProperty('visibility', 'visible', 'important');
-      s.setProperty('filter', 'none', 'important');
-      s.setProperty('clip-path', 'none', 'important');
-      s.setProperty('z-index', '46', 'important');
-      if (typeof s.removeProperty === 'function') s.removeProperty('content');
-      // 展开面板本身也要在（被删除 / 被隐藏都会让署名看不全）
-      if (el.querySelector && !el.querySelector('.egl-seal-panel')) {
-        if (el.removeAttribute) el.removeAttribute('data-egl-face');
-        renderSeal();
-      }
-      var pn = el.querySelector ? el.querySelector('.egl-seal-panel') : null;
-      if (pn && pn.style && pn.style.setProperty) {
-        pn.style.setProperty('visibility', 'visible', 'important');
-        if (pn.style.setProperty) pn.style.setProperty('display', 'block', 'important');
-      }
-      if (d && d.defaultView && d.defaultView.getComputedStyle) {
-        var cs = d.defaultView.getComputedStyle(el);
-        if (cs && (cs.display === 'none' || cs.visibility === 'hidden' ||
-            cs.opacity === '0' || cs.transform === 'scale(0)')) {
-          s.setProperty('display', 'block', 'important');
-          s.setProperty('visibility', 'visible', 'important');
-          s.setProperty('opacity', '0.88', 'important');
-          s.setProperty('transform', 'none', 'important');
-        }
-      }
-    }
-    avoidOverlap();
-  }
-
-  // 署名印章压到按钮/输入框时自动让位：降到很淡且不拦截点击（避免挡住答题按钮）
-  function avoidOverlap() {
-    var d = doc(), el = byId(SEAL);
-    if (!el || !el.style || !el.style.setProperty) return;
-    // 展开态（鼠标悬停 / 键盘聚焦 / 触摸点击）不去打扰
-    var open = false;
-    try {
-      open = !!(el.classList && el.classList.contains('on')) ||
-        !!(el.matches && el.matches(':hover, :focus-visible'));
-    } catch (e) { open = false; }
-    if (open) {
-      el.style.setProperty('opacity', '1', 'important');
-      el.style.setProperty('pointer-events', 'auto', 'important');
-      return;
-    }
-    if (!d || !d.elementFromPoint || !el.getBoundingClientRect) {
-      el.style.setProperty('opacity', '0.88', 'important');
-      el.style.setProperty('pointer-events', 'auto', 'important');
-      return;
-    }
-    var r = el.getBoundingClientRect();
-    if (!r || !r.width || !r.height) return;
-    // 探测时先让自己不吃指针（探测完按结果恢复：压住按钮时彻底让位，避免抢走点击）
-    el.style.setProperty('pointer-events', 'none', 'important');
-    // 多点采样：印章可能只压住按钮的一角（居中点落在卡片上也要能发现）
-    var pts = [[0.5, 0.5], [0.08, 0.5], [0.92, 0.5], [0.5, 0.18], [0.5, 0.82]];
-    var busy = false, k, i;
-    for (k = 0; k < pts.length && !busy; k++) {
-      var node = d.elementFromPoint(r.left + r.width * pts[k][0], r.top + r.height * pts[k][1]);
-      for (i = 0; node && i < 4; i++) {
-        var tag = node.tagName ? String(node.tagName).toUpperCase() : '';
-        if (tag === 'BUTTON' || tag === 'INPUT' || tag === 'A' || tag === 'TEXTAREA' || tag === 'SELECT') { busy = true; break; }
-        if (node.classList && node.classList.contains && node.classList.contains('btn')) { busy = true; break; }
-        node = node.parentNode;
-      }
-    }
-    el.style.setProperty('opacity', busy ? '0.32' : '0.88', 'important');
-    // 压住按钮/输入框时连点击也让出去：署名入口还有页脚「版权与使用授权」兜底
-    el.style.setProperty('pointer-events', busy ? 'none' : 'auto', 'important');
-  }
-
   function guardOnce() {
     _guardTimer = null;
     if (!body() || !ident()) return;
     try { injectCSS(); } catch (e) {}
     try { ensureNodes(); } catch (e) {}
-    try { ensureChip(); } catch (e) {}
-    try { harden(); } catch (e) {}
   }
 
   function guardSoon() {
@@ -418,7 +263,6 @@
   }
 
   /* ================= 4) 版权与使用授权（免责声明） ================= */
-  var NOTICE_KEY = 'EGL_BRAND_NOTICE_v1';
 
   function licenseHTML() {
     var id = ident() || { n: '', dy: '', xhs: '', lab: '' };
@@ -496,24 +340,12 @@
     return ov;
   }
 
-  // 首次访问自动提示一次（作者署名与授权告知）
-  function firstVisit() {
-    var seen = null;
-    try { seen = W.localStorage ? W.localStorage.getItem(NOTICE_KEY) : null; } catch (e) {}
-    if (seen) return;
-    try { if (W.localStorage) W.localStorage.setItem(NOTICE_KEY, '1'); } catch (e2) {}
-    if (typeof W.setTimeout !== 'function') return;
-    W.setTimeout(function () { try { showLicense(); } catch (e3) {} }, 700);
-  }
-
   /* ================= 5) 对外 API ================= */
   function install() {
     if (!ident()) return false;
     try { injectCSS(); } catch (e) {}
     try { ensureNodes(); } catch (e) {}
-    try { ensureChip(); } catch (e) {}
     try { startGuard(); } catch (e) {}
-    try { firstVisit(); } catch (e) {}
     return true;
   }
 

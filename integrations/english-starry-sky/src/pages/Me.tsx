@@ -180,10 +180,6 @@ export function Me({ privateAvailable }: { privateAvailable: boolean }) {
           </section>
         )}
       </div>
-      <details className="panel resource-notice">
-        <summary>教材与资源许可</summary>
-        <p className="muted">教材、插画、音频及试题的版权归各自权利人所有。内容来源、修改说明及授权条件请查阅<a href={`${import.meta.env.BASE_URL}licenses/CONTENT_LICENSE.md`} target="_blank" rel="noreferrer">教材与资源许可说明</a>。</p>
-      </details>
     </div>
   );
 }
