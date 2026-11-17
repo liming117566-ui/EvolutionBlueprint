@@ -1,0 +1,5 @@
+<view wx:if="{{videos.length || error}}" class="video-card">
+  <view class="video-heading">课程视频</view>
+  <view wx:if="{{error}}" class="video-error">{{error}}<button bindtap="load">重新加载</button></view>
+  <button wx:for="{{videos}}" wx:key="id" class="video-row" data-id="{{item.id}}" bindtap="open"><text class="video-symbol">▶</text><view class="video-copy"><text class="video-title">{{item.title}}</text><text class="video-meta">{{item.fileType}} · 点击播放</text></view><text>›</text></button>
+</view>

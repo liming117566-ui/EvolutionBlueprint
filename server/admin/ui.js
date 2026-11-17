@@ -14,7 +14,7 @@ export function el(tag, attrs = {}, ...children) {
   }
   return node;
 }
-export function button(text, action, className = '') { return el('button', { type: 'button', class: className, onclick: action }, text); }
+export function button(text, action, className = '') { return el('button', { type: 'button', class: `btn ${className}`, onclick: action }, text); }
 export function field(label, { type = 'text', value = '', hint, options, ...attrs } = {}) {
   const id = `f-${crypto.randomUUID()}`;
   let input;
@@ -47,7 +47,7 @@ export function head(title, description, ...actions) {
 }
 export function table(columns, rows, empty = '暂无记录') {
   if (!rows.length) return el('p', { class: 'empty' }, empty);
-  return el('div', { class: 'table-wrap' }, el('table', {}, el('thead', {}, el('tr', {}, columns.map(c => el('th', { scope: 'col' }, c.label)))), el('tbody', {}, rows.map(row => el('tr', {}, columns.map(c => el('td', {}, c.render ? c.render(row) : display(row[c.key]))))))));
+  return el('div', { class: 'table-wrap' }, el('table', {}, el('thead', {}, el('tr', {}, columns.map(c => el('th', { scope: 'col' }, c.label)))), el('tbody', {}, rows.map(row => el('tr', {}, columns.map(c => el('td', { 'data-label': c.label }, c.render ? c.render(row) : display(row[c.key]))))))));
 }
 export function display(value) { if (value === null || value === undefined || value === '') return '—'; if (typeof value === 'object') return JSON.stringify(value); return String(value); }
 export function date(value) { if (!value) return '—'; const d = new Date(value); return Number.isNaN(d.valueOf()) ? String(value) : d.toLocaleString('zh-CN', { hour12: false }); }
@@ -65,8 +65,9 @@ export function searchForm(placeholder, onSearch) {
   return { node: form, input };
 }
 export function modal(title, { beforeClose = () => true } = {}) {
+  const returnFocus = document.activeElement;
   const dialog = el('dialog', { 'aria-label': title });
-  const close = () => { if (!beforeClose()) return; dialog.close(); dialog.remove(); };
+  const close = () => { if (!beforeClose()) return; dialog.close(); dialog.remove(); if (returnFocus?.isConnected) returnFocus.focus(); };
   const requestClose = () => { if (dialog.querySelector('[aria-busy="true"]')) { notify('操作正在提交，请等待结果后再关闭'); return; } close(); };
   dialog.addEventListener('cancel', e => { e.preventDefault(); requestClose(); });
   dialog.addEventListener('input', () => { dialog.dataset.unsaved = 'true'; });

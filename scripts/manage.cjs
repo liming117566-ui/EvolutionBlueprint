@@ -52,7 +52,7 @@ async function main() {
       const assets = snapshot.prepare('SELECT storage_name FROM assets').all(); snapshot.close();
       const relative = ['blueprint.sqlite'];
       for (const asset of assets) {
-        if (!/^[A-Za-z0-9_-]+\.(pdf|doc|docx|webp)$/.test(asset.storage_name)) throw new Error('资产名称无效');
+        if (!/^[A-Za-z0-9_-]+\.(pdf|doc|docx|webp|mp4|webm)$/.test(asset.storage_name)) throw new Error('资产名称无效');
         fs.mkdirSync(path.join(destination, 'uploads'), { recursive: true });
         fs.copyFileSync(path.join(config.dataDir, 'uploads', asset.storage_name), path.join(destination, 'uploads', asset.storage_name));
         relative.push('uploads/' + asset.storage_name);

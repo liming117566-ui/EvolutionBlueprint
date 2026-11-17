@@ -131,6 +131,86 @@ async function fixture(t, overrides = {}) {
   return f;
 }
 
+test('course creation: online text, PDF, Word and website uploads create private drafts, associated materials and ordered board entries', async t => {
+  const f = await fixture(t);
+  const initial = await f.tree(), originalCount = initial.courses.length;
+  const create = async (kind, extra = {}) => {
+    const tree = await f.tree();
+    return f.admin('/course-imports', { method: 'POST', status: 201, json: { version: tree.version, kind, title: 'Fixture ' + kind, categoryId: 'new', boardId: 'new', position: 'first', ...extra } });
+  };
+  const textCourse = await create('text', { body: '第一段课程正文\n第二段文字', home: false });
+  assert.equal(textCourse.catalog.courses[0].id, textCourse.courseId);
+  assert.equal(textCourse.catalog.boards[0].id, textCourse.boardId);
+  assert.equal(textCourse.catalog.boards[0].home, false);
+  assert.deepEqual(textCourse.catalog.courses[0].chapters[0].sections[0].body, ['第一段课程正文', '第二段文字']);
+  assert.equal((await f.request('/api/courses')).body.courses.length, originalCount);
+  assert.equal((await f.request('/api/bootstrap')).body.boards.some(b => b.id === textCourse.boardId), false);
+  for (const [name, data] of [['lesson.pdf', binary.pdf()], ['lesson.docx', binary.docx()]]) {
+    const { asset } = await f.upload(name, data);
+    const created = await create('document', { assetId: asset.id });
+    const material = (await f.admin('/materials')).items.find(m => m.id === created.materialId);
+    assert.equal(material.ownerId, created.courseId); assert.equal(material.assetId, asset.id); assert.equal(material.published, true);
+    assert.equal((await f.request('/api/materials/' + material.id + '/file', { token: (await f.user()).token, status: 404 })).body.error.length > 0, true);
+  }
+  const form = new FormData(); form.append('file', new Blob([binary.zip({ 'index.html': '<html><body>互动学习</body></html>', 'app.js': 'document.title="课程"' })]), 'lesson.zip');
+  const website = (await f.request('/api/admin/websites', { admin: true, method: 'POST', body: form, status: 201 })).body.website;
+  const web = await create('website', { websiteId: website.id });
+  assert.equal(web.catalog.boards[0].experience, website.slug);
+  await f.publish(web.catalog);
+  const user = await f.user(); await f.grant(user);
+  const cookie = await f.web(web.boardId, user);
+  const page = await f.request(website.basePath, { webCookie: cookie }); assert.match(page.bytes.toString(), /互动学习/);
+  const current = await f.tree(); current.boards.reverse(); current.courses.reverse(); current.categories.reverse();
+  const ordered = await f.save(current); await f.publish(ordered);
+  const front = (await f.request('/api/bootstrap')).body;
+  assert.deepEqual(front.boards.map(b => b.id), ordered.boards.filter(b => b.enabled).map(b => b.id));
+  assert.deepEqual(front.categories.map(c => c.id), ordered.categories.map(c => c.id));
+  assert.equal((await f.admin('/overview')).courses, originalCount + 4);
+});
+
+test('course creation: invalid files, missing body, stale versions and invalid references never leave partial course records', async t => {
+  const f = await fixture(t), tree = await f.tree();
+  const create = body => f.admin('/course-imports', { method: 'POST', status: 400, json: { version: tree.version, kind: 'text', title: 'Fixture', categoryId: 'new', boardId: 'new', ...body } });
+  await create({ body: '' }); await create({ body: '课程', categoryId: 'missing' });
+  await create({ kind: 'document', assetId: 'missing' }); await create({ kind: 'video', assetId: 'missing' }); await create({ kind: 'website', websiteId: 'missing' });
+  await f.admin('/course-imports', { method: 'POST', status: 409, json: { version: -1, kind: 'text', title: 'Fixture', body: '课程' } });
+  assert.equal((await f.tree()).courses.length, tree.courses.length); assert.equal((await f.tree()).categories.length, tree.categories.length);
+  assert.equal((await f.admin('/materials')).items.length, 0);
+});
+
+test('video courses: disk upload, entitlement, playback ranges, revocation and unpublishing stay enforced', async t => {
+  const f = await fixture(t);
+  const mp4 = Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from('ftypisom'), Buffer.alloc(4096)]);
+  async function upload(filename, data, status = 201) {
+    const form = new FormData(); form.append('file', new Blob([data]), filename); form.append('title', 'Video fixture');
+    return (await f.request('/api/admin/videos', { method: 'POST', admin: true, body: form, status })).body;
+  }
+  await f.request('/api/admin/videos', { method: 'POST', status: 401 });
+  await upload('invalid.mp4', Buffer.from('not a video'), 400); await upload('wrong.exe', mp4, 400);
+  assert.equal(fs.readdirSync(path.join(f.dataDir, 'uploads')).some(n => n.startsWith('pending-')), false);
+  const { asset } = await upload('lesson.mp4', mp4); assert.equal(asset.kind, 'video');
+  const tree = await f.tree();
+  const created = await f.admin('/course-imports', { method: 'POST', status: 201, json: { version: tree.version, kind: 'video', title: '视频课程', assetId: asset.id, categoryId: 'new', boardId: 'new' } });
+  const user = await f.user(), pathToVideo = '/api/videos/' + created.materialId;
+  await f.request(pathToVideo + '/play', { method: 'POST', token: user.token, json: {}, status: 404 });
+  await f.publish(created.catalog);
+  await f.request(pathToVideo + '/play', { method: 'POST', token: user.token, json: {}, status: 403 });
+  const grant = await f.grant(user, { scope: 'boards', boardIds: [created.boardId] });
+  const listing = (await f.request('/api/videos?scope=course&ownerId=' + created.courseId, { token: user.token })).body;
+  assert.equal(listing.videos[0].id, created.materialId);
+  const playback = (await f.request(pathToVideo + '/play', { method: 'POST', token: user.token, json: {} })).body;
+  assert(!playback.playbackPath.includes(user.token));
+  const range = await f.request(playback.playbackPath, { headers: { Range: 'bytes=0-15' }, status: 206 });
+  assert.equal(range.bytes.length, 16); assert.match(range.headers.get('content-type'), /video\/mp4/); assert.match(range.headers.get('content-range'), /bytes 0-15\//);
+  await f.admin('/grants/' + grant.id + '/revoke', { method: 'POST', json: { reason: 'Fixture revocation' } });
+  await f.request(playback.playbackPath, { status: 403 });
+  await f.grant(user);
+  const material = (await f.admin('/materials')).items.find(m => m.id === created.materialId);
+  await f.admin('/materials/' + material.id, { method: 'PUT', json: { ...material, published: false } });
+  await f.request(playback.playbackPath, { status: 404 });
+  assert.equal((await f.request('/api/materials?scope=course&ownerId=' + created.courseId, { token: user.token })).body.materials.length, 0);
+});
+
 test('boards: draft edits remain private until publish, order and placements survive restart, hidden boards disappear', async t => {
   const f = await fixture(t);
   const before = (await f.request('/api/bootstrap')).body;

@@ -1,4 +1,4 @@
-import { api, endpoint, query } from './api.js';
+import { api, endpoint, query, uploadFile } from './api.js';
 import { el, button, field, head, table, pager, searchForm, modal, busy, errorBox, showError, notify, confirmDanger, badge, image, safeImage, adminImageUrl } from './ui.js';
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const DOC_EXT = /\.(pdf|doc|docx)$/i;
@@ -11,7 +11,7 @@ export function uploadAsset(onUploaded, kind) {
   let changed = false;
   const m = modal('上传资源', { beforeClose: () => !changed || confirmDanger('尚未上传，确定放弃所选文件？') });
   const title = field('资源名称', { required: true, maxlength: 200, hint: '用于资源库检索；资料的展示标题可以单独修改。' });
-  const file = field('选择文件', { type: 'file', required: true, accept: kind === 'image' ? '.png,.jpg,.jpeg,.webp' : kind === 'document' ? '.pdf,.doc,.docx' : '.png,.jpg,.jpeg,.webp,.pdf,.doc,.docx', hint: '图片 PNG / JPEG / WebP ≤ 5 MiB；文档 PDF / DOC / DOCX ≤ 20 MiB。不支持 SVG 上传。' });
+  const file = field('选择文件', { type: 'file', required: true, accept: kind === 'image' ? '.png,.jpg,.jpeg,.webp' : kind === 'document' ? '.pdf,.doc,.docx' : kind === 'video' ? '.mp4,.webm' : '.png,.jpg,.jpeg,.webp,.pdf,.doc,.docx,.mp4,.webm', hint: '图片 ≤ 5 MB；PDF / Word ≤ 20 MB；MP4 / WebM 视频 ≤ 500 MB。网页课程请在“新增课程”选择网页类型。' });
   const errors = errorBox(), submit = el('button', { type: 'submit', class: 'primary' }, '上传');
   file.input.addEventListener('change', () => { const f = file.input.files[0]; if (f && !title.input.value) title.input.value = f.name.replace(/\.[^.]+$/, ''); });
   const form = el('form', { oninput: () => { changed = true; }, onsubmit: e => { e.preventDefault(); busy(submit, async () => {
@@ -19,23 +19,24 @@ export function uploadAsset(onUploaded, kind) {
     if (!selected) throw new Error('请选择文件');
     const isImage = IMAGE_TYPES.includes(selected.type) || /\.(png|jpe?g|webp)$/i.test(selected.name);
     const isDoc = DOC_EXT.test(selected.name);
-    if ((!isImage && !isDoc) || (kind === 'image' && !isImage) || (kind === 'document' && !isDoc)) throw new Error('请选择支持的文件类型');
-    if (selected.size > (isImage ? 5 : 20) * 1048576) throw new Error('文件超过大小限制');
+    const isVideo = /\.(mp4|webm)$/i.test(selected.name);
+    if ((!isImage && !isDoc && !isVideo) || (kind === 'image' && !isImage) || (kind === 'document' && !isDoc) || (kind === 'video' && !isVideo)) throw new Error('请选择支持的文件类型');
+    if (selected.size > (isImage ? 5 : isVideo ? 500 : 20) * 1048576) throw new Error('文件超过大小限制');
     const body = new FormData(); body.append('file', selected); body.append('title', title.input.value.trim());
-    const { asset } = await api('/api/admin/assets', { method: 'POST', body });
+    const { asset } = await uploadFile(isVideo ? '/api/admin/videos' : '/api/admin/assets', body, value => { submit.textContent = value < 100 ? `上传中 ${value}%` : '正在校验…'; });
     changed = false; m.close(); notify('资源已上传'); if (onUploaded) await onUploaded(asset);
   }, errors); } }, title.node, file.node, errors, submit);
   m.content.append(form);
 }
 export function chooseAsset(kind, onChoose) {
-  const m = modal(kind === 'image' ? '选择已上传图片' : '选择文档资源');
+  const m = modal(kind === 'image' ? '选择已上传图片' : kind === 'video' ? '选择视频资源' : '选择文档资源');
   const results = el('div'), errors = errorBox(); let q = '', request = 0;
   const search = searchForm('搜索资源名称', value => { q = value; load(1); });
   m.content.append(el('div', { class: 'toolbar' }, button('上传新资源', () => uploadAsset(async asset => { m.close(); await onChoose(asset); }, kind), 'primary')), search.node, errors, results);
   async function load(page) {
     const serial = ++request; results.replaceChildren(el('p', { role: 'status' }, '正在读取资源…'));
     try {
-      const data = await api(`/api/admin/assets?${query({ page, q })}`); if (serial !== request || !m.dialog.isConnected) return;
+      const data = await api(`/api/admin/assets?${query({ page, q, kind })}`); if (serial !== request || !m.dialog.isConnected) return;
       const items = data.items.filter(a => a.kind === kind);
       results.replaceChildren(table([{ label: '预览', render: assetPreview }, { label: '名称', key: 'title' }, { label: '大小', render: a => bytes(a.sizeBytes) }, { label: '操作', render: a => button('选用', async () => { m.close(); await onChoose(a); }, 'small primary') }], items, `此页没有${kind === 'image' ? '图片' : '文档'}，可翻页、搜索或上传。`), pager(data, load));
     } catch (error) { results.replaceChildren(); showError(errors, error); }
@@ -54,7 +55,7 @@ export async function renderAssets(host) {
   let q = '', serial = 0;
   const results = el('div'), errors = errorBox();
   const search = searchForm('搜索资源名称', value => { q = value; load(1); });
-  host.replaceChildren(head('资源库', '图片与文档统一管理。删除前服务端会检查草稿、已发布内容及资料关联。', button('上传资源', () => uploadAsset(() => load(1)), 'primary')), el('section', { class: 'panel' }, search.node, errors, results));
+  host.replaceChildren(head('资源库', '统一管理图片、PDF / Word 和视频。删除前检查课程资料与历史发布版本的引用。', button('上传资源', () => uploadAsset(() => load(1)), 'primary')), el('section', { class: 'panel' }, search.node, errors, results));
   async function load(page) {
     const stamp = ++serial; results.replaceChildren(el('p', { role: 'status' }, '正在读取资源…')); errors.textContent = '';
     try {
@@ -81,7 +82,7 @@ export async function renderMaterials(host, context) {
   const results = el('div'), errors = errorBox();
   const filter = field('筛选资料标题', { type: 'search' });
   const names = new Map(['course', 'chapter', 'section'].flatMap(scope => ownerOptions(catalog, scope).map(o => [o.value, o.label])));
-  host.replaceChildren(head('课程资料', '上传文档后关联到课程、章节或小节；可见资料仍受已发布内容与用户权益约束。', button('新增资料关联', () => editMaterial(), 'primary')), el('section', { class: 'panel' }, filter.node, errors, results));
+  host.replaceChildren(head('课程资料', '将 PDF、Word 或视频关联到课程、章节或小节，设置上下架与展示顺序。', button('新增资料关联', () => editMaterial(), 'primary')), el('section', { class: 'panel' }, filter.node, errors, results));
   filter.input.addEventListener('input', draw);
   async function load() { try { items = (await api('/api/admin/materials')).items; draw(); } catch (error) { showError(errors, error); } }
   function draw() {
@@ -102,9 +103,9 @@ export async function renderMaterials(host, context) {
   function editMaterial(item) {
     let changed = false; const m = modal(item ? '编辑资料关联' : '新增资料关联', { beforeClose: () => !changed || confirmDanger('资料表单尚未保存，确定放弃更改？') });
     const title = field('资料展示标题', { value: item?.title || '', required: true, maxlength: 200 });
-    const asset = field('文档资源 ID', { value: item?.assetId || '', required: true, readOnly: true, hint: '从资源库选择文档，或先上传文档。' });
+    const asset = field('文件资源 ID', { value: item?.assetId || '', required: true, readOnly: true, hint: '支持 PDF、Word 与视频。选择已上传资源，或直接上传。' });
     const selected = a => { asset.input.value = a.id; if (!title.input.value) title.input.value = a.title; changed = true; };
-    asset.node.append(el('div', { class: 'row' }, button('从资源库选择', () => chooseAsset('document', selected)), button('上传文档', () => uploadAsset(selected, 'document'))));
+    asset.node.append(el('div', { class: 'row' }, button('选择文档', () => chooseAsset('document', selected)), button('选择视频', () => chooseAsset('video', selected)), button('上传文档', () => uploadAsset(selected, 'document')), button('上传视频', () => uploadAsset(selected, 'video'))));
     const scope = field('关联层级', { type: 'select', value: item?.scope || 'course', options: [{ value: 'course', label: '课程' }, { value: 'chapter', label: '章节' }, { value: 'section', label: '小节' }] });
     const owner = field('归属内容', { type: 'select', required: true, options: ownerOptions(catalog, scope.input.value), value: item?.ownerId });
     const updateOwner = () => { owner.input.replaceChildren(...ownerOptions(catalog, scope.input.value).map(o => el('option', { value: o.value }, o.label))); };

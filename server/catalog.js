@@ -233,6 +233,7 @@ function validateTree(store, input, forPublish = false) {
     if (!categories.some(cat => cat.id === c.categoryId)) fail(400, '课程必须属于有效主题');
     if (!Array.isArray(c.chapters) || c.chapters.length > 300) fail(400, '章节数量有误');
     const course = { id: ident(c.id), categoryId: c.categoryId, title: text(c.title, 200), subtitle: text(c.subtitle || '', 300, false), description: text(c.description || '', 5000, false), duration: text(c.duration || '', 100, false), cover: assetReference(store, c.cover), published: c.published === true };
+    if (c.contentType !== undefined) { if (!['text', 'document', 'video', 'website'].includes(c.contentType)) fail(400, '课程内容类型无效'); course.contentType = c.contentType; }
     course.chapters = c.chapters.map(ch => {
       if (!Array.isArray(ch.sections) || ch.sections.length > 300) fail(400, '小章节数量有误');
       return { id: ident(ch.id), title: text(ch.title, 200), sections: ch.sections.map(s => {
@@ -251,13 +252,14 @@ function validateTree(store, input, forPublish = false) {
   }
   return tree;
 }
-function saveDraft(store, input) {
+function saveDraft(store, input, afterSave = () => {}) {
   const tree = validateTree(store, input);
   return store.transaction(() => {
     const current = draft(store);
     if (input.version !== current.version) fail(409, '草稿已被更新，请重新加载后编辑');
     registerEntities(store, tree);
     store.run('UPDATE catalog SET version=version+1,draft=? WHERE id=1', JSON.stringify(tree));
+    afterSave();
     return draft(store);
   });
 }

@@ -1,1 +1,8 @@
-{"navigationBarTitleText":"课程内容","enablePullDownRefresh":false,"usingComponents":{"reading-materials":"/components/reading-materials/reading-materials"}}
+{
+    "navigationBarTitleText":  "课程内容",
+    "enablePullDownRefresh":  false,
+    "usingComponents":  {
+                            "reading-materials":  "/components/reading-materials/reading-materials",
+                            "course-videos":  "/components/course-videos/course-videos"
+                        }
+}

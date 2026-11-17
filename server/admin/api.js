@@ -29,3 +29,18 @@ export async function api(path, { method = 'GET', body, signal } = {}) {
 }
 export const query = values => new URLSearchParams(Object.entries(values).filter(([, v]) => v !== '' && v !== undefined && v !== null)).toString();
 export const endpoint = (base, id, suffix = '') => `/api/admin/${base}/${encodeURIComponent(id)}${suffix}`;
+export function uploadFile(path, body, onProgress = () => {}) {
+  if (!['/api/admin/assets', '/api/admin/videos', '/api/admin/websites'].includes(path) || !csrf) return Promise.reject(new Error('上传会话无效，请刷新后重试'));
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest(); request.open('POST', path); request.withCredentials = true;
+    request.setRequestHeader('X-CSRF-Token', csrf); request.setRequestHeader('Accept', 'application/json');
+    request.upload.onprogress = event => { if (event.lengthComputable) onProgress(Math.round(event.loaded / event.total * 100)); };
+    request.onerror = () => reject(new Error('上传连接中断，请核对资源库后重试'));
+    request.onload = () => {
+      let data; try { data = JSON.parse(request.responseText); } catch { reject(new Error('上传服务返回异常')); return; }
+      if (request.status === 401) window.dispatchEvent(new CustomEvent('admin-session-expired'));
+      if (request.status < 200 || request.status >= 300) reject(new ApiError(data.error || '上传失败', request.status)); else resolve(data);
+    };
+    request.send(body);
+  });
+}

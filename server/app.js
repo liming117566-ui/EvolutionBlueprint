@@ -31,7 +31,7 @@ function createApp(overrides = {}) {
   app.get('/web-access-client.js', (_req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(__dirname, 'web-access-client.js')); });
   app.use((req, res, next) => {
     res.set('X-Content-Type-Options', 'nosniff'); res.set('Referrer-Policy', 'same-origin'); res.set('X-Frame-Options', 'DENY');
-    res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
+    res.set('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
     if (config.production) res.set('Strict-Transport-Security', 'max-age=31536000');
     if (req.path.startsWith('/api/')) res.set('Cache-Control', 'no-store');
     next();
@@ -55,6 +55,8 @@ function createApp(overrides = {}) {
   auth.registerAdminRoutes(admin);
   admin.use(auth.admin);
   admin.use((req, res, next) => ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ? next() : auth.csrf(req, res, next));
+  require('./admin-overview').register(admin, store);
+  require('./course-imports').register(admin, store, audit);
   admin.get('/catalog', (_req, res) => res.json(catalog.draft(store)));
   admin.put('/catalog', (req, res) => {
     const result = catalog.saveDraft(store, req.body);
@@ -169,6 +171,8 @@ function createApp(overrides = {}) {
   app.put('/api/me/learning', auth.user, limiter(200, 60000), (req, res) => { business.writeLearning(req.user.id, req.body); res.json({ ok: true }); });
   app.post('/api/me/learning/import', auth.user, limiter(10, 60000), (req, res) => { business.importLearning(req.user.id, req.body); res.json({ ok: true }); });
   app.use('/api/materials', auth.user, media.materialRouter);
+  app.use('/api/videos', auth.user, media.videoRouter);
+  app.get('/video-playback/:ticket', media.videoPlayback);
   app.use((_req, res) => res.status(404).json({ error: '接口或页面不存在' }));
   app.use((error, req, res, _next) => {
     if (res.headersSent) return res.destroy();

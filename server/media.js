@@ -5,7 +5,7 @@ const yauzl = require('yauzl');
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { id, now, text, fail, paging, limiter } = require('./security');
+const { id, now, text, fail, paging, limiter, token, hash } = require('./security');
 const { asyncRoute } = require('./auth');
 const catalog = require('./catalog');
 const { createMaterialsRouter } = require('./materials');
@@ -48,6 +48,7 @@ function createMedia(store, config, auth, business, audit) {
   const root = fs.realpathSync(filesDir);
   let active = 0;
   const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: MAX, files: 1, fields: 1, fieldSize: 1000, parts: 2, fieldNameSize: 50 } }).single('file');
+  const videoUpload = multer({ storage: multer.diskStorage({ destination: root, filename: (_req, _file, cb) => cb(null, 'pending-' + id() + '.upload') }), limits: { fileSize: 500 * 1048576, files: 1, fields: 1, fieldSize: 1000, parts: 2 } }).single('file');
   const assetView = row => ({ id: row.id, title: row.title, originalName: row.original_name, kind: row.kind, fileType: row.file_type, sizeBytes: row.size_bytes, url: row.kind === 'image' ? '/api/assets/' + row.id : '/api/admin/assets/' + row.id + '/file', createdAt: row.created_at });
   function checkedPath(row) {
     assertNoLinks(root);
@@ -59,16 +60,16 @@ function createMedia(store, config, auth, business, audit) {
   }
   function sendAsset(row, res) {
     const target = checkedPath(row);
-    const mime = { pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', webp: 'image/webp' };
+    const mime = { pdf: 'application/pdf', doc: 'application/msword', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', webp: 'image/webp', mp4: 'video/mp4', webm: 'video/webm' };
     res.set('Cache-Control', 'no-store'); res.set('X-Content-Type-Options', 'nosniff');
     res.type(mime[row.file_type] || 'application/octet-stream');
     if (row.kind === 'document') res.attachment(row.original_name);
     res.sendFile(target);
   }
-  function materialView(row) { return { id: row.id, assetId: row.asset_id, title: row.title, scope: row.scope, ownerId: row.owner_id, sortOrder: row.sort_order, published: !!row.published }; }
+  function materialView(row) { const asset = store.get('SELECT file_type,kind FROM assets WHERE id=?', row.asset_id); return { id: row.id, assetId: row.asset_id, title: row.title, scope: row.scope, ownerId: row.owner_id, sortOrder: row.sort_order, published: !!row.published, fileType: asset?.file_type, kind: asset?.kind }; }
   function materialInput(input) {
-    const asset = store.get("SELECT * FROM assets WHERE id=? AND kind='document'", input.assetId);
-    if (!asset) fail(400, '请选择已上传的 PDF 或 Word');
+    const asset = store.get("SELECT * FROM assets WHERE id=? AND kind IN ('document','video')", input.assetId);
+    if (!asset) fail(400, '请选择已上传的 PDF、Word 或视频');
     if (!['course', 'chapter', 'section'].includes(input.scope)) fail(400, '请选择课程、章节或小章节归属');
     const tree = catalog.draft(store);
     const exists = input.scope === 'course' ? tree.courses.some(c => c.id === input.ownerId) : catalog.entries(tree).some(e => e.type === input.scope && e.id === input.ownerId);
@@ -78,9 +79,42 @@ function createMedia(store, config, auth, business, audit) {
     return { assetId: asset.id, title: text(input.title, 200), scope: input.scope, ownerId: input.ownerId, sortOrder: sort, published: input.published === true };
   }
   function adminRoutes(router) {
+    router.post('/videos', limiter(10, 60000), (req, res, next) => {
+      if (active >= 3) return next(Object.assign(new Error('上传任务繁忙，请稍后再试'), { status: 429 }));
+      active++;
+      videoUpload(req, res, async error => {
+        let target;
+        try {
+          if (error) fail(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400, '上传失败：视频不超过 500 MiB，每次一个文件');
+          if (!req.file?.size || req.aborted) fail(400, '请选择非空视频');
+          const original = text(Buffer.from(req.file.originalname, 'latin1').toString('utf8'), 180);
+          if (/[\\/\x00-\x1f]/.test(original)) fail(400, '文件名称无效');
+          const type = path.extname(original).slice(1).toLowerCase();
+          const file = await fs.promises.open(req.file.path, 'r');
+          const header = Buffer.alloc(32);
+          try { await file.read(header, 0, 32, 0); } finally { await file.close(); }
+          if (!(type === 'mp4' && header.subarray(4, 8).toString() === 'ftyp') && !(type === 'webm' && header.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3])))) fail(400, '请选择有效的 MP4 或 WebM 视频');
+          const used = store.get('SELECT COALESCE(SUM(size_bytes),0) AS n FROM assets').n;
+          if (used + req.file.size > config.uploadQuota) fail(413, '资源存储已达到配额');
+          const digest = crypto.createHash('sha256');
+          for await (const chunk of fs.createReadStream(req.file.path)) digest.update(chunk);
+          const assetId = id(), storageName = assetId + '.' + type;
+          const title = text(req.body.title || original, 200);
+          target = path.join(root, storageName); await fs.promises.rename(req.file.path, target);
+          store.transaction(() => {
+            store.run('INSERT INTO assets VALUES(?,?,?,?,?,?,?,?,?)', assetId, title, original, storageName, type, 'video', req.file.size, digest.digest('hex'), now());
+            audit(req.admin.id, 'asset.upload', assetId, { kind: 'video', size: req.file.size });
+          });
+          target = null;
+          res.status(201).json({ asset: assetView(store.get('SELECT * FROM assets WHERE id=?', assetId)) });
+        } catch (e) { if (target) await fs.promises.unlink(target).catch(() => {}); next(e); }
+        finally { active--; if (req.file?.path) await fs.promises.unlink(req.file.path).catch(() => {}); }
+      });
+    });
     router.get('/assets', (req, res) => {
       const p = paging(req.query), q = '%' + text(req.query.q || '', 100, false) + '%';
-      res.json({ ...p, items: store.all('SELECT * FROM assets WHERE title LIKE ? ORDER BY created_at DESC LIMIT ? OFFSET ?', q, p.pageSize, p.offset).map(assetView), total: store.get('SELECT count(*) AS n FROM assets WHERE title LIKE ?', q).n });
+      const kind = ['image', 'document', 'video'].includes(req.query.kind) ? req.query.kind : '';
+      res.json({ ...p, items: store.all('SELECT * FROM assets WHERE title LIKE ? AND (?=\'\' OR kind=?) ORDER BY created_at DESC LIMIT ? OFFSET ?', q, kind, kind, p.pageSize, p.offset).map(assetView), total: store.get('SELECT count(*) AS n FROM assets WHERE title LIKE ? AND (?=\'\' OR kind=?)', q, kind, kind).n });
     });
     router.post('/assets', limiter(30, 60000), (req, res, next) => {
       if (active >= 3) return next(Object.assign(new Error('上传任务繁忙，请稍后再试'), { status: 429 }));
@@ -158,13 +192,52 @@ function createMedia(store, config, auth, business, audit) {
     auth.admin(req, res, error => { if (error) return next(Object.assign(new Error('图片不存在'), { status: 404 })); sendAsset(row, res); });
   }
   const materialRouter = createMaterialsRouter({ filesDir: root,
-    getEntries: () => store.all('SELECT m.*,a.storage_name FROM materials m JOIN assets a ON a.id=m.asset_id WHERE m.published=1 ORDER BY m.sort_order,m.id').map(r => ({ id: r.id, title: r.title, file: r.storage_name, scope: r.scope, ownerId: r.owner_id })),
+    getEntries: () => store.all("SELECT m.*,a.storage_name FROM materials m JOIN assets a ON a.id=m.asset_id WHERE m.published=1 AND a.kind='document' ORDER BY m.sort_order,m.id").map(r => ({ id: r.id, title: r.title, file: r.storage_name, scope: r.scope, ownerId: r.owner_id })),
     authorize: (req, entry) => {
       const course = catalog.findOwner(catalog.published(store), entry.scope, entry.ownerId);
       if (!course) fail(404, '资料所属内容不存在或未发布');
       business.access(req.user.id, course.id);
     }
   });
-  return { adminRoutes, assetRoute, materialRouter, filesDir: root };
+  const videoRouter = express.Router();
+  const videoTickets = new Map();
+  const videos = () => store.all("SELECT m.*,a.storage_name,a.file_type,a.size_bytes FROM materials m JOIN assets a ON a.id=m.asset_id WHERE m.published=1 AND a.kind='video' ORDER BY m.sort_order,m.id");
+  const authorizeVideo = (req, row) => {
+    const course = catalog.findOwner(catalog.published(store), row.scope, row.owner_id);
+    if (!course) fail(404, '视频所属课程不存在或未发布');
+    business.access(req.user.id, course.id);
+  };
+  videoRouter.get('/', (req, res) => {
+    if (!['course', 'chapter', 'section'].includes(req.query.scope)) fail(400, '请选择有效的视频归属');
+    authorizeVideo(req, { scope: req.query.scope, owner_id: req.query.ownerId });
+    res.json({ videos: videos().filter(r => r.scope === req.query.scope && r.owner_id === req.query.ownerId).map(r => ({ id: r.id, title: r.title, fileType: r.file_type, sizeBytes: r.size_bytes, url: '/api/videos/' + r.id + '/file' })) });
+  });
+  videoRouter.get('/:id/file', (req, res) => {
+    const row = videos().find(r => r.id === req.params.id);
+    if (!row) fail(404, '视频不存在或已下架'); authorizeVideo(req, row);
+    const asset = store.get('SELECT * FROM assets WHERE id=?', row.asset_id);
+    sendAsset(asset, res);
+  });
+  videoRouter.post('/:id/play', limiter(60, 60000), (req, res) => {
+    const row = videos().find(r => r.id === req.params.id);
+    if (!row) fail(404, '视频不存在或已下架'); authorizeVideo(req, row);
+    for (const [key, value] of videoTickets) if (value.until < Date.now()) videoTickets.delete(key);
+    if (videoTickets.size >= 5000) fail(429, '视频播放任务繁忙，请稍后重试');
+    const value = token(), until = Date.now() + 2 * 3600000;
+    videoTickets.set(hash(value), { materialId: row.id, sessionHash: req.user.session_hash, userId: req.user.id, until });
+    res.json({ title: row.title, fileType: row.file_type, playbackPath: '/video-playback/' + value, expiresAt: new Date(until).toISOString() });
+  });
+  function videoPlayback(req, res) {
+    const ticket = videoTickets.get(hash(req.params.ticket));
+    if (!ticket || ticket.until < Date.now()) fail(401, '播放入口已过期，请重新打开视频');
+    const user = store.get("SELECT u.id FROM users u JOIN user_sessions s ON s.user_id=u.id WHERE s.hash=? AND s.expires_at>? AND u.status='active'", ticket.sessionHash, now());
+    if (!user || user.id !== ticket.userId) fail(401, '登录已失效，请重新打开视频');
+    const row = videos().find(r => r.id === ticket.materialId);
+    if (!row) fail(404, '视频已下架');
+    authorizeVideo({ user }, row);
+    res.set('Referrer-Policy', 'no-referrer');
+    sendAsset(store.get('SELECT * FROM assets WHERE id=?', row.asset_id), res);
+  }
+  return { adminRoutes, assetRoute, materialRouter, videoRouter, videoPlayback, filesDir: root };
 }
 module.exports = { createMedia, checkDocx };

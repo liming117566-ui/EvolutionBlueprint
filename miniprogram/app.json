@@ -11,6 +11,7 @@
     "pages/gate/gate",
     "pages/profile/profile",
     "pages/lesson/lesson",
+    "pages/video/video",
     "pages/interactive/interactive",
     "pages/resources/resources",
     "pages/notebook/notebook"

@@ -13,7 +13,8 @@ if (require.main === module) {
     if (!appSecret) console.log('微信正式登录尚未配置；不会伪造正式登录。');
     if (devAuth) console.log(lanTestAuth ? '测试身份已显式开启，可用于本机和局域网真机开发调试。' : '本地测试身份已显式开启，仅回环地址可用。');
   });
-  server.requestTimeout = 60000;
+  // Large course videos may take several minutes to upload over a normal connection.
+  server.requestTimeout = 10 * 60 * 1000;
   function shutdown() { server.close(() => { app.locals.close(); process.exit(0); }); }
   process.on('SIGTERM', shutdown); process.on('SIGINT', shutdown);
 }
