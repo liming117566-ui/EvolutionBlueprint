@@ -1,10 +1,35 @@
 <view class="page home-page">
   <view class="brand-bar" style="height:{{chrome.height}}px;padding-top:{{chrome.top}}px"><image src="{{settings.logo}}"/><text>{{settings.brandName}}</text></view>
-  <view class="greeting"><view><text class="greeting-title">嗨，今天想学点什么？</text><text class="greeting-copy">每天一刻，让成长悄悄发生。</text></view><button class="checkin" bindtap="checkin" aria-label="今日学习打卡"><image src="/assets/icons/ui-sun.svg"/><text>{{stats.checked ? '已打卡' : '去打卡'}}</text></button></view>
+  <view class="greeting">
+    <view class="greeting-copy-wrap"><text class="greeting-title">嗨，今天想学点什么？</text><text class="greeting-copy">每天一刻，让成长悄悄发生。</text></view>
+    <view class="greeting-actions">
+      <button class="checkin" bindtap="showAnnouncement" aria-label="首页公告"><image src="/assets/icons/ui-message.svg"/><text>公告</text><view wx:if="{{announcement}}" class="announcement-dot"></view></button>
+      <button class="checkin" bindtap="checkin" aria-label="今日学习打卡"><image src="/assets/icons/ui-sun.svg"/><text>{{stats.checked ? '已打卡' : '去打卡'}}</text></button>
+    </view>
+  </view>
   <view class="search-box"><image src="/assets/icons/ui-search.svg"/><input value="{{query}}" bindinput="search" bindconfirm="searchCourses" placeholder="搜索感兴趣的课程" confirm-type="search" maxlength="80" aria-label="搜索感兴趣的课程"/><button wx:if="{{query}}" bindtap="searchCourses">搜索</button></view>
-  <view class="daily-hero"><view class="hero-copy"><text class="hero-eyebrow">— A LITTLE EVERY DAY</text><text class="hero-title">今天，也要
-向前一点点</text><text class="hero-caption">从一节好课，开启新的可能</text><button class="hero-button" bindtap="goInteractive">探索好课<image src="/assets/icons/ui-arrow.svg"/></button></view><view class="hero-art" aria-hidden="true"><view class="paper-book"><text>ONE
-STEP.</text><image src="/assets/icons/ui-sun.svg"/><view></view></view></view></view>
+  <swiper class="home-banners" indicator-dots="{{printing.enabled}}" indicator-color="rgba(36,40,35,0.25)" indicator-active-color="#242823" autoplay="{{printing.enabled}}" circular="{{printing.enabled}}" interval="6000" duration="400" aria-label="首页轮播">
+    <swiper-item>
+      <view class="daily-hero">
+        <view class="hero-copy"><text class="hero-eyebrow">— A LITTLE EVERY DAY</text><text class="hero-title">今天，也要
+向前一点点</text><text class="hero-caption">从一节好课，开启新的可能</text><button class="hero-button" bindtap="goInteractive">探索好课<image src="/assets/icons/ui-arrow.svg"/></button></view>
+        <view class="hero-art" aria-hidden="true"><view class="paper-book"><text>ONE
+STEP.</text><image src="/assets/icons/ui-sun.svg"/><view></view></view></view>
+      </view>
+    </swiper-item>
+    <swiper-item wx:if="{{printing.enabled}}">
+      <view class="daily-hero print-hero">
+        <view class="hero-copy">
+          <text class="hero-title">在线打印资料</text>
+          <text class="hero-caption">上传文档，选择打印规格</text>
+          <button class="hero-button" bindtap="goPrinting">去打印<image src="/assets/icons/ui-arrow.svg"/></button>
+        </view>
+        <view class="hero-art" aria-hidden="true">
+          <view class="print-illustration"><view class="print-paper"></view><view class="print-machine"><view class="print-light"></view><view class="print-slot"></view></view><view class="printed-sheet"></view></view>
+        </view>
+      </view>
+    </swiper-item>
+  </swiper>
   <view class="quick-links"><button bindtap="goInteractive"><view class="quick-icon warm"><image src="/assets/icons/ui-screen.svg"/></view><text>互动学习</text></button><button bindtap="goResources"><view class="quick-icon mint"><image src="/assets/icons/ui-file.svg"/></view><text>电子资料</text></button><button bindtap="goPractice"><view class="quick-icon blue"><image src="/assets/icons/ui-pencil.svg"/></view><text>练习自测</text></button><button bindtap="goPlan"><view class="quick-icon violet"><image src="/assets/icons/ui-calendar.svg"/></view><text>学习计划</text></button></view>
   <view wx:if="{{loading}}" class="skeleton-stack"><view class="skeleton skeleton-row"></view><view class="skeleton skeleton-hero"></view></view>
   <view wx:elif="{{error}}" class="empty-state surface-card"><text class="empty-title">暂时没有连接上</text><text class="empty-copy">{{error}}</text><ui-button size="small" label="重新加载" bind:activate="retry"/></view>
@@ -18,4 +43,7 @@ STEP.</text><image src="/assets/icons/ui-sun.svg"/><view></view></view></view></
     <view wx:if="{{!recommendations.length}}" class="empty-state"><text class="empty-copy">这个分类正在准备，试试其他学习方向。</text></view>
     <text class="footnote">保持好奇，进步自然发生。</text>
   </block>
+  <ui-sheet wx:if="{{announcement}}" visible="{{announcementOpen}}" title="{{announcement.title}}" bind:close="closeAnnouncement">
+    <rich-text class="announcement-body" nodes="{{announcement.html}}" selectable/>
+  </ui-sheet>
 </view><glass-nav id="main-nav" active="home" settings="{{settings}}"/>

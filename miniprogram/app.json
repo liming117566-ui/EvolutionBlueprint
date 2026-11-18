@@ -22,6 +22,7 @@
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f8f9fa"
   },
+  "lazyCodeLoading": "requiredComponents",
   "usingComponents": {
     "ui-button": "/components/ui-button/ui-button",
     "ui-sheet": "/components/ui-sheet/ui-sheet",

@@ -7,6 +7,11 @@
   <view class="module-grid">
     <button class="module module-yellow" bindtap="goInteractive"><view class="module-icon"><image src="/assets/icons/ui-screen.svg"/></view><text class="module-title">互动式学习</text><text class="module-copy">在互动中，学得更透</text><view class="module-foot"><text>{{loading ? '正在读取课程' : boards.length + ' 个学习板块'}}</text><image src="/assets/icons/ui-arrow.svg"/></view></button>
     <button class="module module-mint" bindtap="goResources"><view class="module-icon"><image src="/assets/icons/ui-file.svg"/></view><text class="module-title">电子资料</text><text class="module-copy">好知识，随时翻一翻</text><view class="module-foot"><text>PDF · Word 学习资料</text><image src="/assets/icons/ui-arrow.svg"/></view></button>
+    <button wx:if="{{printing.enabled}}" class="module print-module" bindtap="goPrinting">
+      <view class="module-icon"><image src="/assets/icons/ui-file.svg"/></view>
+      <view class="print-module-copy"><text class="module-title">在线打印资料</text><text class="module-copy">上传文档，选择打印规格</text></view>
+      <image class="print-module-arrow" src="/assets/icons/ui-arrow.svg"/>
+    </button>
     <button class="module" bindtap="goRecords"><view class="module-icon"><image src="/assets/icons/ui-clock.svg"/></view><text class="module-title">最近学习</text><text class="module-copy">再学一次，温故知新</text><view class="module-foot"><text>回到学过的课堂</text><image src="/assets/icons/ui-arrow.svg"/></view></button>
     <button class="module" bindtap="goPractice"><view class="module-icon"><image src="/assets/icons/ui-pencil.svg"/></view><text class="module-title">练习自测</text><text class="module-copy">小小练习，巩固所学</text><view class="module-foot"><text>选择课程开始练习</text><image src="/assets/icons/ui-arrow.svg"/></view></button>
     <button class="module" bindtap="goNotes"><view class="module-icon"><image src="/assets/icons/ui-book.svg"/></view><text class="module-title">学习笔记</text><text class="module-copy">把灵感，留给未来</text><view class="module-foot"><text>{{stats.notesCount}} 条学习收获</text><image src="/assets/icons/ui-arrow.svg"/></view></button>

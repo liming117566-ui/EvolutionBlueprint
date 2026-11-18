@@ -38,6 +38,7 @@ Page({
       await (test || this.data.testMode ? session.devLogin() : session.login());
       const me = await session.me();
       this.setData({ signedIn: true, testSession: session.current().test, hasAccess: me.hasAccess });
+      if (!this.data.testSession) wx.showToast({ title: '微信登录成功', icon: 'success' });
       if (me.hasAccess && !this._redeeming) wx.redirectTo({ url: '/pages/home/home' });
     } catch (error) { this.setData({ error: error.message }); }
     finally { this.setData({ loading: false }); }

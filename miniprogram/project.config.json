@@ -1,10 +1,17 @@
 {
   "description": "新博途课程小程序",
-  "packOptions": { "ignore": [] },
-  "setting": { "urlCheck": false, "es6": true, "enhance": true, "postcss": true, "minified": true },
+  "packOptions": {
+    "ignore": [{ "type": "suffix", "value": ".webp" }],
+    "include": [
+      { "type": "glob", "value": "assets/**/*.jpg" },
+      { "type": "glob", "value": "assets/**/*.png" },
+      { "type": "glob", "value": "assets/**/*.svg" }
+    ]
+  },
+  "setting": { "urlCheck": false, "es6": true, "enhance": true, "postcss": true, "minified": true, "ignoreDevUnusedFiles": false, "ignoreUploadUnusedFiles": false },
   "compileType": "miniprogram",
   "libVersion": "3.6.5",
-  "appid": "wx08fe2b1891297fce",
+  "appid": "wxdca377fd50c310cf",
   "projectname": "新博途",
   "condition": {}
 }

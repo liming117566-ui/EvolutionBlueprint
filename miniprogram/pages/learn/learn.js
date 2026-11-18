@@ -2,13 +2,18 @@ const learning = require('../../utils/learning');
 const catalog = require('../../utils/catalog');
 const boards = require('../../utils/boards');
 const study = require('../../utils/study-space');
+const printing = require('../../utils/printing');
+const siteFeatures = require('../../utils/site-features');
 Page({
-  data: { courses: [], boards: [], filtered: [], groups: boards.GROUPS, group: 'all', query: '', loading: true, error: '', settings: catalog.settings(), chrome: study.chrome(), stats: study.summary() },
+  data: { printing: siteFeatures.defaults.printing, courses: [], boards: [], filtered: [], groups: boards.GROUPS, group: 'all', query: '', loading: true, error: '', settings: catalog.settings(), chrome: study.chrome(), stats: study.summary() },
   onShow() { return this.retry(); },
   onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [] }); },
   onUnload() { this._version = (this._version || 0) + 1; },
   async retry() {
     const version = this._version = (this._version || 0) + 1;
+    siteFeatures.load().then(({ printing }) => {
+      if (version === this._version) this.setData({ printing });
+    });
     this.setData({ loading: true, error: '', boards: [], filtered: [] });
     try {
       const result = await learning.browse();
@@ -25,6 +30,7 @@ Page({
   openBoard(event) { const board = this.data.filtered.find(b => b.id === event.detail.id); if (board) boards.open(board.id, board.experience); },
   goInteractive() { wx.navigateTo({ url: '/pages/interactive/interactive' }); },
   goResources() { wx.navigateTo({ url: '/pages/resources/resources' }); },
+  goPrinting() { printing.open(this.data.printing); },
   goRecords() { wx.navigateTo({ url: '/pages/interactive/interactive?mode=records' }); },
   goPractice() { wx.navigateTo({ url: '/pages/interactive/interactive?mode=practice' }); },
   goNotes() { wx.navigateTo({ url: '/pages/notebook/notebook' }); },

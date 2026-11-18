@@ -38,7 +38,8 @@ function createApp(overrides = {}) {
   });
   app.use(express.json({ limit: '2mb', strict: true }));
   app.use((req, _res, next) => { if (req.body === undefined) req.body = {}; next(); });
-  app.get('/', (_req, res) => res.redirect('/admin/'));
+  app.get('/', (_req, res) => { res.set('Cache-Control', 'no-cache'); res.sendFile(path.join(__dirname, 'student', 'index.html')); });
+  app.use('/student', express.static(path.join(__dirname, 'student'), { index: 'index.html', dotfiles: 'deny', etag: true }));
   app.get('/api/health', (_req, res) => res.json({ ok: true, name: catalog.published(store).settings.brandName, wechatConfigured: !!config.appSecret }));
   app.get('/api/integrations/english', (_req, res) => res.json(require('./english-web').status()));
   app.get('/api/integrations/math', (_req, res) => res.json(require('./math-web').status()));
@@ -57,6 +58,7 @@ function createApp(overrides = {}) {
   admin.use((req, res, next) => ['GET', 'HEAD', 'OPTIONS'].includes(req.method) ? next() : auth.csrf(req, res, next));
   require('./admin-overview').register(admin, store);
   require('./course-imports').register(admin, store, audit);
+  require('./site-features').register(app, admin, store, audit);
   admin.get('/catalog', (_req, res) => res.json(catalog.draft(store)));
   admin.put('/catalog', (req, res) => {
     const result = catalog.saveDraft(store, req.body);

@@ -18,7 +18,7 @@ function request(path, options) {
         success(response) {
           if (options.auth !== false && (!session.current() || session.current().token !== saved.token)) return reject(new Error('账号已切换，请重新加载'));
           if (response.statusCode >= 200 && response.statusCode < 300) return resolve(response.data || {});
-          if (response.statusCode === 401 && saved && session.current() && session.current().token === saved.token) session.clear();
+          if (options.auth !== false && response.statusCode === 401 && saved && session.current() && session.current().token === saved.token) session.clear();
           const result = response.data || {};
           const error = new Error(result.error || (response.statusCode === 401 ? '登录已失效，请重新登录' : response.statusCode === 403 ? '当前账号暂无此课程权限，请兑换或联系课程提供方' : '服务暂时不可用，请稍后重试'));
           error.status = response.statusCode; error.code = result.code;

@@ -2,7 +2,7 @@ const api = require('./api');
 const config = require('./config');
 const session = require('./session');
 const defaults = {
-  brandName: '新博途', logo: '/assets/generated/app-icon.webp', avatar: '/assets/icons/user.svg', gateCover: '/assets/generated/home-hero.webp',
+  brandName: '新博途', logo: '/assets/generated/app-icon.png', avatar: '/assets/icons/user.svg', gateCover: '/assets/generated/home-hero.jpg',
   welcomeTitle: '让学习成为日常', gateTitle: '开启你的学习空间', gateDescription: '登录并兑换课程，开始学习。',
   nav: [{ id: 'home', label: '首页', icon: '/assets/icons/home.svg' }, { id: 'learn', label: '学习', icon: '/assets/icons/book.svg' }, { id: 'profile', label: '我的', icon: '/assets/icons/user.svg' }],
   help: [], about: [], redeemHelp: []
@@ -10,7 +10,11 @@ const defaults = {
 let settings = defaults;
 function asset(url) {
   if (typeof url !== 'string') return '';
-  if (/^\/assets\/[A-Za-z0-9_./-]+$/.test(url) && !url.includes('..')) return url;
+  if (/^\/assets\/[A-Za-z0-9_./-]+$/.test(url) && !url.includes('..')) {
+    if (!/^\/assets\/generated\/[a-z0-9-]+\.webp$/.test(url)) return url;
+    const transparent = /\/(?:app-icon|module-(?:geo-bio-exam|geometry-between|math-between-grade7)-(?:icon|landscape))\.webp$/.test(url);
+    return url.replace(/\.webp$/, transparent ? '.png' : '.jpg');
+  }
   if (/^\/api\/assets\/[A-Za-z0-9_-]+$/.test(url) && config.validOrigin(config.getApiBaseUrl())) return config.getApiBaseUrl() + url;
   return '';
 }

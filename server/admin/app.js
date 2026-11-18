@@ -9,6 +9,7 @@ import { renderWebsites } from './websites.js';
 import { renderDashboard } from './dashboard.js';
 import { renderCourses, renderOrder, importCourse } from './courses.js';
 import { icon } from './icons.js';
+import { renderSiteFeatures } from './site-features.js';
 const root = document.querySelector('#app');
 const context = {
   catalog: null, catalogDirty: false, pending: new Map(), view: 'dashboard',
@@ -55,6 +56,7 @@ function shell() {
     ['catalog', '内容与发布', renderCourses, 'book'], ['order', '前端排序', renderOrder, 'sort'],
     ['materials', '课程资料', renderMaterials, 'folder'], ['websites', '学习网页资源', renderWebsites, 'globe'], ['assets', '资源库', renderAssets, 'folder'],
     ['users', '用户与权益', renderUsers, 'users'], ['cards', '卡密与核销', renderCards, 'ticket'], ['audit', '操作审计', (host, ctx) => renderLogs(host, ctx, 'audit'), 'audit'],
+    ['site-features', '打印与公告', renderSiteFeatures, 'settings'],
     ['editor', '完整内容编辑', renderCatalog, 'settings']
   ];
   async function navigate(id, renderer) {
@@ -80,7 +82,7 @@ function shell() {
     guide.content.append(el('div', { class: 'help-copy' }, el('h3', {}, '1. 新增课程'), el('p', {}, '支持在线图文、PDF / Word、MP4 / WebM 视频，以及 HTML / ZIP 静态网页。选择课程主题和学习板块，系统会自动创建课程目录和文件关联。'), el('h3', {}, '2. 编辑与排序'), el('p', {}, '在“内容与发布”编辑章节、小节、正文和练习；在“前端排序”拖动或上下移动板块、主题和课程，并设置首页展示与推荐位。'), el('h3', {}, '3. 保存与发布'), el('p', {}, '目录调整先保存为草稿，再发布到前端。课程资料的上下架独立生效，但所属课程仍须已发布，且学员须具备对应权益。'), el('h3', {}, '4. 学员与卡密'), el('p', {}, '原有用户搜索、禁用、学习记录、权益授予与撤销、卡密生成、批次停用、核销记录和操作审计均保留。'), el('h3', {}, '网页课程要求'), el('p', {}, '上传已构建好的静态网页，ZIP 内包含唯一 index.html，资源使用相对路径。服务器程序和依赖远程接口的应用需单独部署。')));
   };
   routes.forEach(([id, label, renderer, symbol], index) => {
-    if (index === 0 || index === 1 || index === 7 || index === 10) nav.append(el('div', { class: 'nav-label' }, index === 0 ? '总览' : index === 1 ? '学习内容' : index === 7 ? '运营管理' : '高级管理'));
+    if (index === 0 || index === 1 || index === 7 || id === 'editor') nav.append(el('div', { class: 'nav-label' }, index === 0 ? '总览' : index === 1 ? '学习内容' : index === 7 ? '运营管理' : '高级管理'));
     const b = button(el('span', { class: 'row' }, icon(symbol), label), () => navigate(id, renderer), 'nav-item'); b.dataset.view = id; nav.append(b);
   });
   const logout = button('退出登录', () => busy(logout, async () => {

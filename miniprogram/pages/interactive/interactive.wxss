@@ -1,1 +1,4 @@
 .interactive-page{padding-bottom:70rpx}.list-caption{display:flex;align-items:center;justify-content:space-between;font-size:22rpx;color:#6e736f;margin:0 0 28rpx}.filter-tab{font-size:22rpx}.page-intro{margin-top:22rpx}
+.access-filters{display:flex;align-items:center;gap:12rpx}
+.access-filter{margin:0;padding:0 20rpx;min-height:64rpx;border-radius:32rpx;background:#edf0ec;color:#565d56;font-size:22rpx;line-height:64rpx}
+.access-filter.is-active{background:#242823;color:#fff;font-weight:600}

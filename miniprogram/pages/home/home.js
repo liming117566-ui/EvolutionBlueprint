@@ -2,13 +2,18 @@ const learning = require('../../utils/learning');
 const catalog = require('../../utils/catalog');
 const boards = require('../../utils/boards');
 const study = require('../../utils/study-space');
+const printing = require('../../utils/printing');
+const siteFeatures = require('../../utils/site-features');
 Page({
-  data: { courses: [], boards: [], recommendations: [], featured: null, continuing: null, settings: catalog.settings(), loading: true, error: '', dateLabel: '', query: '', group: 'all', chrome: study.chrome(), stats: study.summary(), groups: [{ id: 'all', title: '全部' }, { id: 'subject', title: '学科提升' }, { id: 'other', title: '兴趣拓展' }] },
+  data: { ...siteFeatures.defaults, announcementOpen: false, courses: [], boards: [], recommendations: [], featured: null, continuing: null, settings: catalog.settings(), loading: true, error: '', dateLabel: '', query: '', group: 'all', chrome: study.chrome(), stats: study.summary(), groups: [{ id: 'all', title: '全部' }, { id: 'subject', title: '学科提升' }, { id: 'other', title: '兴趣拓展' }] },
   onShow() { return this.retry(); },
   onHide() { this._version = (this._version || 0) + 1; this.setData({ courses: [], continuing: null }); },
   onUnload() { this._version = (this._version || 0) + 1; },
   async retry() {
     const version = this._version = (this._version || 0) + 1;
+    siteFeatures.load().then(features => {
+      if (version === this._version) this.setData({ printing: features.printing, announcement: features.announcement });
+    });
     this.setData({ loading: true, error: '', boards: [], featured: null });
     try {
       const result = await learning.browse();
@@ -26,6 +31,12 @@ Page({
   search(event) { this.setData({ query: event.detail.value }); },
   searchCourses() { wx.navigateTo({ url: '/pages/interactive/interactive?q=' + encodeURIComponent(this.data.query.trim()) }); },
   goInteractive() { wx.navigateTo({ url: '/pages/interactive/interactive' }); },
+  goPrinting() { printing.open(this.data.printing); },
+  showAnnouncement() {
+    if (this.data.announcement) this.setData({ announcementOpen: true });
+    else wx.showToast({ title: '暂无公告', icon: 'none' });
+  },
+  closeAnnouncement() { this.setData({ announcementOpen: false }); },
   goResources() { wx.navigateTo({ url: '/pages/resources/resources' }); },
   goPractice() { wx.navigateTo({ url: '/pages/interactive/interactive?mode=practice' }); },
   goPlan() { wx.navigateTo({ url: '/pages/notebook/notebook?mode=plan' }); },
